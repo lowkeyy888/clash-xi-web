@@ -82,7 +82,7 @@
                 <div><span class="muted tiny">24h:</span> <span id="m-chg">—</span></div>
               </div>
             </div>
-            <div class="muted tiny">Step 1 ships the live app shell. API + real packs come in Step 2.</div>
+            <div class="muted tiny">Step 3 upgrades pack opening visuals. Market comes next.</div>
           </div>
         </div>
       </section>
@@ -96,7 +96,7 @@
 
         <div class="card">
           <div class="sectionTitle">Pack Results</div>
-          <div class="muted tiny">Duplicates → shards later (Step 2).</div>
+          <div class="muted tiny">Duplicates → shards later (Step 4).</div>
           <div class="cards" id="cards"></div>
         </div>
       </section>
@@ -105,6 +105,33 @@
     <footer class="footer muted tiny">
       CLASH XI — Web/PWA on Cloudflare. Fictional players. No licensing risk.
     </footer>
+  </div>
+
+  <!-- PACK REVEAL OVERLAY (Step 3) -->
+  <div class="overlay hidden" id="revealOverlay" aria-hidden="true">
+    <div class="overlayInner card" id="overlayInner">
+      <div class="overlayHeader">
+        <div>
+          <div class="overlayTitle">Pack Open</div>
+          <div class="muted tiny" id="overlaySub">Revealing…</div>
+        </div>
+        <button class="btn ghost" id="btn-close" type="button">Close</button>
+      </div>
+
+      <div class="revealStage">
+        <div class="revealPack" id="revealPack" role="button" tabindex="0" aria-label="Reveal next card">
+          <div class="revealPackLabel">DAILY PACK</div>
+          <div class="revealPackHint muted tiny" id="revealHint">Tap to reveal</div>
+          <div class="revealPackGlow"></div>
+        </div>
+
+        <div class="revealCards" id="revealCards"></div>
+      </div>
+
+      <div class="overlayFooter">
+        <button class="btn primary" id="btn-claim" type="button" disabled>Claim</button>
+      </div>
+    </div>
   </div>
 
   <script src="./app.js"></script>
