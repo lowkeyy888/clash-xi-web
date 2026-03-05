@@ -24,11 +24,11 @@
         </div>
       </div>
 
-     <div class="pillRow">
-  <div class="pill" id="pill-conn">API: …</div>
-  <div class="pill" id="pill-coins">Coins: —</div>
-  <div class="pill" id="pill-user">Guest</div>
-</div>
+      <div class="pillRow">
+        <div class="pill" id="pill-conn">API: …</div>
+        <div class="pill" id="pill-coins">Coins: —</div>
+        <div class="pill" id="pill-user">Guest</div>
+      </div>
     </header>
 
     <main class="shell">
@@ -83,7 +83,44 @@
                 <div><span class="muted tiny">24h:</span> <span id="m-chg">—</span></div>
               </div>
             </div>
-            <div class="muted tiny">Step 4 adds Locker + Equip + Synergy.</div>
+            <div class="muted tiny">Step 5 adds Arena + Battle Pass.</div>
+          </div>
+
+          <!-- STEP 5.3A: ARENA -->
+          <div class="card arenaCard">
+            <div class="row">
+              <div>
+                <div class="sectionTitle">Arena</div>
+                <div class="muted tiny">Simulated match • Win coins • Earn BP XP</div>
+              </div>
+              <div class="tag" id="arena-mode">BRONZE</div>
+            </div>
+
+            <div class="chipRow">
+              <button class="chip active" data-arena="BRONZE">Bronze</button>
+              <button class="chip" data-arena="SILVER">Silver</button>
+              <button class="chip" data-arena="GOLD">Gold</button>
+            </div>
+
+            <button class="btn primary" id="btn-arena" style="width:100%; margin-top:10px">Play Match</button>
+
+            <div class="arenaLog" id="arenaLog">Equip at least 3 players to enter Arena.</div>
+          </div>
+
+          <!-- STEP 5.3A: BATTLE PASS -->
+          <div class="card passCard">
+            <div class="row">
+              <div>
+                <div class="sectionTitle">Battle Pass</div>
+                <div class="muted tiny">Auto leveling • Cosmetics later</div>
+              </div>
+              <div class="tag" id="bp-level">Lv 1</div>
+            </div>
+
+            <div class="bar" style="margin-top:12px">
+              <div class="barFill" id="bpFill"></div>
+            </div>
+            <div class="muted tiny" id="bpText">0 / 100 XP</div>
           </div>
         </div>
       </section>
