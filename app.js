@@ -1,5 +1,5 @@
 // Step 2 will give you the Worker URL. Leave this as-is for now:
-const API_BASE = "REPLACE_WITH_YOUR_WORKER_URL";
+const API_BASE = "https://clash-xi-api.lowkeyy9191.workers.dev";
 
 const el = (id) => document.getElementById(id);
 const state = {
