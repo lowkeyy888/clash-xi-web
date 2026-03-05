@@ -1,15 +1,28 @@
-// CLASH XI — Step 3 Pack Reveal
+// CLASH XI — Step 4 (Locker + Equip + Synergy) on top of Step 3 reveal
 const API_BASE = "https://clash-xi-api.lowkeyy9191.workers.dev";
 
 const el = (id) => document.getElementById(id);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+// Unique slot keys (so both CB and CM duplicates can exist)
+const SLOT_KEYS = ["GK","LB","CB1","CB2","RB","CM1","CM2","CAM","LW","ST","RW"];
+const slotLabel = (k) => k.replace("1","").replace("2",""); // CB1->CB, CM2->CM
+
 const state = {
   token: localStorage.getItem("cx_token") || null,
   userId: localStorage.getItem("cx_user") || null,
+
+  // Step 3 reveal
   revealIndex: 0,
   revealCards: [],
   revealing: false,
+
+  // Step 4 locker/squad
+  inventory: [],
+  squad: {},           // slotKey -> cardId
+  selectedCardId: null,
+  filter: "ALL",
+  style: localStorage.getItem("cx_style") || "PRESS",
 };
 
 function setConn(ok) {
@@ -22,17 +35,8 @@ function setUserLabel() {
   n.textContent = state.userId ? `User: ${state.userId.slice(0, 8)}` : "Guest";
 }
 
-function seedXI() {
-  const grid = el("xi");
-  if (!grid) return;
-  grid.innerHTML = "";
-  const slots = ["GK","LB","CB","CB","RB","CM","CM","CAM","LW","ST","RW"];
-  slots.forEach((p) => {
-    const d = document.createElement("div");
-    d.className = "slot";
-    d.innerHTML = `<div class="p">${p}</div><div class="n muted">Empty</div>`;
-    grid.appendChild(d);
-  });
+function rarityClass(r) {
+  return r === "LEGENDARY" ? "rLegend" : r === "EPIC" ? "rEpic" : r === "RARE" ? "rRare" : "rCommon";
 }
 
 async function api(path, opts = {}) {
@@ -48,14 +52,8 @@ async function api(path, opts = {}) {
 }
 
 async function healthCheck() {
-  try {
-    await api("/health", { method: "GET" });
-    setConn(true);
-    return true;
-  } catch {
-    setConn(false);
-    return false;
-  }
+  try { await api("/health", { method: "GET" }); setConn(true); return true; }
+  catch { setConn(false); return false; }
 }
 
 async function ensureSession() {
@@ -68,12 +66,188 @@ async function ensureSession() {
   setUserLabel();
 }
 
-/* ---------- Pack Results list (below) ---------- */
-function rarityClass(r) {
-  return r === "LEGENDARY" ? "rLegend" : r === "EPIC" ? "rEpic" : r === "RARE" ? "rRare" : "rCommon";
+/* ========== XI (squad) ========== */
+function seedXI() {
+  const grid = el("xi");
+  if (!grid) return;
+  grid.innerHTML = "";
+
+  SLOT_KEYS.forEach((slotKey) => {
+    const d = document.createElement("div");
+    d.className = "slot";
+    d.dataset.slot = slotKey;
+    d.innerHTML = `<div class="p">${slotLabel(slotKey)}</div><div class="n muted">Empty</div>`;
+    d.addEventListener("click", () => onSlotClick(slotKey));
+    grid.appendChild(d);
+  });
+
+  refreshSlotStates();
 }
 
-function renderCards(cards) {
+function refreshSlotStates() {
+  const grid = el("xi");
+  if (!grid) return;
+  [...grid.querySelectorAll(".slot")].forEach((node) => {
+    const slotKey = node.dataset.slot;
+    node.classList.toggle("armed", !!state.selectedCardId);
+    node.classList.toggle("equipped", !!state.squad[slotKey]);
+  });
+}
+
+function getCardById(id) {
+  return state.inventory.find((c) => c.id === id) || null;
+}
+
+function renderSquad() {
+  const grid = el("xi");
+  if (!grid) return;
+
+  [...grid.querySelectorAll(".slot")].forEach((node) => {
+    const slotKey = node.dataset.slot;
+    const cardId = state.squad[slotKey];
+
+    if (!cardId) {
+      node.innerHTML = `<div class="p">${slotLabel(slotKey)}</div><div class="n muted">Empty</div>`;
+      return;
+    }
+
+    const c = getCardById(cardId);
+    if (!c) {
+      node.innerHTML = `<div class="p">${slotLabel(slotKey)}</div><div class="n muted">Equipped</div>`;
+      return;
+    }
+
+    node.innerHTML = `
+      <div class="p">${slotLabel(slotKey)}</div>
+      <div class="n">${c.display_name}</div>
+      <div class="muted tiny">${c.position} • ${c.role} • ${c.rarity}</div>
+    `;
+  });
+
+  refreshSlotStates();
+  updateSynergy();
+}
+
+async function onSlotClick(slotKey) {
+  // No selection => clicking an equipped slot unequips it
+  if (!state.selectedCardId) {
+    if (!state.squad[slotKey]) return;
+    await api("/v1/squad/unequip", { method: "POST", body: JSON.stringify({ slot: slotKey }) });
+    delete state.squad[slotKey];
+    renderSquad();
+    return;
+  }
+
+  // Equip selected card to slot
+  const cardId = state.selectedCardId;
+  await api("/v1/squad/equip", { method: "POST", body: JSON.stringify({ slot: slotKey, cardId }) });
+
+  // Locally ensure card is only in one slot
+  for (const k of Object.keys(state.squad)) {
+    if (state.squad[k] === cardId) delete state.squad[k];
+  }
+  state.squad[slotKey] = cardId;
+
+  state.selectedCardId = null;
+  renderSelectedCard();
+  renderInventory();
+  renderSquad();
+}
+
+/* ========== Locker ========== */
+function renderInventory() {
+  const list = el("invList");
+  if (!list) return;
+
+  const items = state.inventory.filter((c) => (state.filter === "ALL" ? true : c.rarity === state.filter));
+
+  list.innerHTML = "";
+  if (!items.length) {
+    list.innerHTML = `<div class="muted tiny">No cards yet. Open a pack.</div>`;
+    return;
+  }
+
+  items.forEach((c) => {
+    const row = document.createElement("div");
+    row.className = "invItem";
+    if (state.selectedCardId === c.id) row.classList.add("selected");
+
+    row.addEventListener("click", () => {
+      state.selectedCardId = (state.selectedCardId === c.id) ? null : c.id;
+      renderSelectedCard();
+      renderInventory();
+      refreshSlotStates();
+    });
+
+    row.innerHTML = `
+      <div>
+        <div class="invName">${c.display_name}</div>
+        <div class="invMeta">${c.position} • ${c.role}</div>
+      </div>
+      <div class="rarity ${rarityClass(c.rarity)}">${c.rarity}</div>
+    `;
+    list.appendChild(row);
+  });
+}
+
+function renderSelectedCard() {
+  const box = el("selectedCard");
+  if (!box) return;
+
+  const c = state.selectedCardId ? getCardById(state.selectedCardId) : null;
+
+  if (!c) {
+    box.innerHTML = `
+      <div class="muted tiny">Selected</div>
+      <div style="font-weight:900; margin-top:6px">None</div>
+      <div class="muted tiny" style="margin-top:6px">Pick a card to arm slots.</div>
+    `;
+    return;
+  }
+
+  box.innerHTML = `
+    <div class="muted tiny">Selected</div>
+    <div style="font-weight:900; margin-top:6px">${c.display_name}</div>
+    <div class="muted tiny" style="margin-top:6px">${c.position} • ${c.role}</div>
+    <div class="muted tiny" style="margin-top:6px">Tap a slot to equip.</div>
+    <div style="margin-top:10px" class="rarity ${rarityClass(c.rarity)}">${c.rarity}</div>
+  `;
+}
+
+/* ========== Synergy ========== */
+function roleStyle(role) {
+  const r = (role || "").toLowerCase();
+  if (r.includes("press") || r.includes("ball winner") || r.includes("aggressive") || r.includes("overlap")) return "PRESS";
+  if (r.includes("playmaking") || r.includes("tempo") || r.includes("ball-playing")) return "POSSESSION";
+  if (r.includes("poacher") || r.includes("direct") || r.includes("ghost")) return "COUNTER";
+  return "PRESS";
+}
+
+function updateSynergy() {
+  const pct = el("chemPct");
+  const fill = el("chemFill");
+  const note = el("chemNote");
+
+  const equippedIds = Object.values(state.squad).filter(Boolean);
+  const equipped = equippedIds.map(getCardById).filter(Boolean);
+
+  if (!equipped.length) {
+    if (pct) pct.textContent = "0%";
+    if (fill) fill.style.width = "0%";
+    if (note) note.textContent = "Equip players to build synergy.";
+    return;
+  }
+
+  const matches = equipped.filter((c) => roleStyle(c.role) === state.style).length;
+  const p = Math.round((matches / equipped.length) * 100);
+
+  if (pct) pct.textContent = `${p}%`;
+  if (fill) fill.style.width = `${p}%`;
+  if (note) note.textContent = `Style: ${state.style} • Matching roles: ${matches}/${equipped.length}`;
+}
+
+/* ========== Pack Results panel ========== */
+function renderPackResults(cards) {
   const wrap = el("cards");
   if (!wrap) return;
   wrap.innerHTML = "";
@@ -91,7 +265,7 @@ function renderCards(cards) {
   });
 }
 
-/* ---------- Reveal Overlay ---------- */
+/* ========== Reveal Overlay (Step 3) ========== */
 function showOverlay() {
   const o = el("revealOverlay");
   if (!o) return;
@@ -167,7 +341,6 @@ function injectRevealData(cards) {
   const nodes = [...list.querySelectorAll(".flipCard")];
   nodes.forEach((node, i) => {
     const c = cards[i];
-    const front = node.querySelector(".flipFront");
     const badge = node.querySelector(".badge");
     const name = node.querySelector(".cardName");
     const meta = node.querySelector(".cardMeta");
@@ -178,14 +351,6 @@ function injectRevealData(cards) {
     if (badge) badge.textContent = c.rarity;
     if (name) name.textContent = c.displayName;
     if (meta) meta.textContent = `${c.position} • ${c.role}`;
-
-    if (front) {
-      front.style.borderColor =
-        c.rarity === "LEGENDARY" ? "rgba(168,255,46,.28)" :
-        c.rarity === "EPIC" ? "rgba(200,120,255,.28)" :
-        c.rarity === "RARE" ? "rgba(46,245,255,.28)" :
-        "rgba(255,255,255,.10)";
-    }
   });
 }
 
@@ -222,7 +387,6 @@ async function flipNext() {
   }
 
   await sleep(550);
-
   state.revealIndex += 1;
   state.revealing = false;
 
@@ -237,33 +401,35 @@ async function flipNext() {
   }
 }
 
-/* ---------- Main pack open ---------- */
+/* ========== Load data ========== */
+async function loadInventory() {
+  const data = await api("/v1/inventory", { method: "GET" });
+  state.inventory = data.cards || [];
+  renderInventory();
+  renderSelectedCard();
+  renderSquad();
+}
+async function loadSquad() {
+  const data = await api("/v1/squad", { method: "GET" });
+  state.squad = data.slots || {};
+  renderSquad();
+}
+
+/* ========== Pack open ========== */
 async function openPack() {
   const btn = el("btn-pack");
   if (btn) { btn.disabled = true; btn.textContent = "Opening…"; }
 
   showOverlay();
   resetRevealUI();
-  setOverlaySub("Connecting…");
+  setOverlaySub("Generating cards…");
 
   try {
     await ensureSession();
-
-    setOverlaySub("Generating cards…");
-    const data = await api("/v1/packs/open", {
-      method: "POST",
-      body: JSON.stringify({ kind: "DAILY" }),
-    });
-
+    const data = await api("/v1/packs/open", { method: "POST", body: JSON.stringify({ kind: "DAILY" }) });
     state.revealCards = data.cards || [];
     injectRevealData(state.revealCards);
-
-    setOverlaySub("Tap to reveal");
-    const claim = el("btn-claim");
-    if (claim) claim.disabled = true;
-
-    renderCards(state.revealCards);
-
+    renderPackResults(state.revealCards);
   } catch (e) {
     hideOverlay();
     alert(e.message);
@@ -272,12 +438,38 @@ async function openPack() {
   }
 }
 
-/* ---------- Boot ---------- */
+/* ========== Chips ========== */
+function initChips() {
+  document.querySelectorAll("[data-filter]").forEach((b) => {
+    b.addEventListener("click", () => {
+      state.filter = b.dataset.filter;
+      document.querySelectorAll("[data-filter]").forEach((x) => x.classList.remove("active"));
+      b.classList.add("active");
+      renderInventory();
+    });
+  });
+
+  document.querySelectorAll("[data-style]").forEach((b) => {
+    if (b.dataset.style === state.style) b.classList.add("active");
+    b.addEventListener("click", () => {
+      state.style = b.dataset.style;
+      localStorage.setItem("cx_style", state.style);
+      document.querySelectorAll("[data-style]").forEach((x) => x.classList.remove("active"));
+      b.classList.add("active");
+      updateSynergy();
+    });
+  });
+}
+
+/* ========== Boot ========== */
 (async function boot() {
   seedXI();
   setUserLabel();
+  initChips();
 
   const ok = await healthCheck();
+  setConn(ok);
+
   const playBtn = el("btn-play");
   const packBtn = el("btn-pack");
 
@@ -287,19 +479,27 @@ async function openPack() {
       if (!ok2) return alert("API offline. Check your Worker.");
       await ensureSession();
       if (packBtn) packBtn.disabled = false;
+
+      await loadInventory();
+      await loadSquad();
+      updateSynergy();
     });
   }
 
-  if (packBtn) {
-    packBtn.addEventListener("click", openPack);
-  }
+  if (packBtn) packBtn.addEventListener("click", openPack);
 
+  // Overlay controls
   const closeBtn = el("btn-close");
   const claimBtn = el("btn-claim");
   const pack = el("revealPack");
+  const list = el("revealCards");
 
   if (closeBtn) closeBtn.addEventListener("click", () => hideOverlay());
-  if (claimBtn) claimBtn.addEventListener("click", () => hideOverlay());
+  if (claimBtn) claimBtn.addEventListener("click", async () => {
+    hideOverlay();
+    await loadInventory(); // Claim refreshes locker
+    await loadSquad();
+  });
 
   const revealAction = async () => {
     if (!state.revealCards?.length) return;
@@ -312,9 +512,5 @@ async function openPack() {
       if (e.key === "Enter" || e.key === " ") revealAction();
     });
   }
-
-  const list = el("revealCards");
   if (list) list.addEventListener("click", revealAction);
-
-  setConn(ok);
 })();
