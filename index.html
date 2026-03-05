@@ -82,7 +82,7 @@
                 <div><span class="muted tiny">24h:</span> <span id="m-chg">—</span></div>
               </div>
             </div>
-            <div class="muted tiny">Step 3 upgrades pack opening visuals. Market comes next.</div>
+            <div class="muted tiny">Step 4 adds Locker + Equip + Synergy.</div>
           </div>
         </div>
       </section>
@@ -90,14 +90,62 @@
       <section class="grid2">
         <div class="card">
           <div class="sectionTitle">Your XI</div>
-          <div class="muted tiny">Formation + style synergy (Press / Possession / Counter)</div>
+          <div class="muted tiny">Click a card in Locker → click a slot to equip</div>
           <div class="xi" id="xi"></div>
         </div>
 
         <div class="card">
           <div class="sectionTitle">Pack Results</div>
-          <div class="muted tiny">Duplicates → shards later (Step 4).</div>
+          <div class="muted tiny">Claim → Locker updates instantly.</div>
           <div class="cards" id="cards"></div>
+        </div>
+      </section>
+
+      <!-- LOCKER (Step 4) -->
+      <section class="locker card">
+        <div class="lockerHeader">
+          <div>
+            <div class="sectionTitle">Locker</div>
+            <div class="muted tiny">Click a card → then click a slot to equip. Click an equipped slot to unequip.</div>
+          </div>
+
+          <div class="styleToggle">
+            <div class="muted tiny" style="margin-right:8px">Team style</div>
+            <button class="chip" data-style="PRESS">Press</button>
+            <button class="chip" data-style="POSSESSION">Possession</button>
+            <button class="chip" data-style="COUNTER">Counter</button>
+          </div>
+        </div>
+
+        <div class="lockerBody">
+          <div class="invPanel">
+            <div class="filterRow">
+              <button class="chip active" data-filter="ALL">All</button>
+              <button class="chip" data-filter="COMMON">Common</button>
+              <button class="chip" data-filter="RARE">Rare</button>
+              <button class="chip" data-filter="EPIC">Epic</button>
+              <button class="chip" data-filter="LEGENDARY">Legendary</button>
+            </div>
+
+            <div class="invList" id="invList"></div>
+          </div>
+
+          <div class="detailPanel">
+            <div class="detailCard" id="selectedCard">
+              <div class="muted tiny">Selected</div>
+              <div style="font-weight:900; margin-top:6px">None</div>
+              <div class="muted tiny" style="margin-top:6px">Pick a card to arm slots.</div>
+            </div>
+
+            <div class="chemBox">
+              <div class="chemRow">
+                <div style="font-weight:900">Synergy</div>
+                <div id="chemPct" style="font-weight:900">0%</div>
+              </div>
+              <div class="bar"><div class="barFill" id="chemFill"></div></div>
+              <div class="muted tiny" id="chemNote">Equip players to build synergy.</div>
+            </div>
+          </div>
         </div>
       </section>
     </main>
@@ -107,7 +155,7 @@
     </footer>
   </div>
 
-  <!-- PACK REVEAL OVERLAY (Step 3) -->
+  <!-- PACK REVEAL OVERLAY -->
   <div class="overlay hidden" id="revealOverlay" aria-hidden="true">
     <div class="overlayInner card" id="overlayInner">
       <div class="overlayHeader">
