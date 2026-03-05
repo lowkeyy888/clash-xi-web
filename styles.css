@@ -457,6 +457,19 @@ body{
 .flipCard:not(.flipped) .flipFront{opacity:0}
 .flipCard.flipped .flipFront{opacity:1}
 
+/* ===== STEP 5 — ARENA + PASS ===== */
+.arenaCard, .passCard{padding:16px}
+.chipRow{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px}
+.arenaLog{
+  margin-top:10px;
+  border:1px solid rgba(255,255,255,.10);
+  background:rgba(0,0,0,.16);
+  border-radius:14px;
+  padding:10px;
+  font-size:12px;
+  color:rgba(234,242,255,.75);
+}
+
 /* Mobile locker */
 @media (max-width: 900px){
   .lockerBody{grid-template-columns:1fr}
