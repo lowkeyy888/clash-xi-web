@@ -1,10 +1,10 @@
-// CLASH XI — Step 4 (Locker + Equip + Synergy) on top of Step 3 reveal
+// CLASH XI — Step 5 (Arena + Battle Pass) on top of Step 4 (Locker + Equip) + Step 3 (Pack Reveal)
 const API_BASE = "https://clash-xi-api.lowkeyy9191.workers.dev";
 
 const el = (id) => document.getElementById(id);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-// Unique slot keys (so both CB and CM duplicates can exist)
+// Unique slot keys (supports duplicates)
 const SLOT_KEYS = ["GK","LB","CB1","CB2","RB","CM1","CM2","CAM","LW","ST","RW"];
 const slotLabel = (k) => k.replace("1","").replace("2",""); // CB1->CB, CM2->CM
 
@@ -23,6 +23,10 @@ const state = {
   selectedCardId: null,
   filter: "ALL",
   style: localStorage.getItem("cx_style") || "PRESS",
+
+  // Step 5 arena/pass
+  arenaMode: "BRONZE",
+  me: null,
 };
 
 function setConn(ok) {
@@ -33,6 +37,10 @@ function setUserLabel() {
   const n = el("pill-user");
   if (!n) return;
   n.textContent = state.userId ? `User: ${state.userId.slice(0, 8)}` : "Guest";
+}
+function setCoins(coins) {
+  const n = el("pill-coins");
+  if (n) n.textContent = `Coins: ${coins ?? "—"}`;
 }
 
 function rarityClass(r) {
@@ -66,7 +74,9 @@ async function ensureSession() {
   setUserLabel();
 }
 
-/* ========== XI (squad) ========== */
+/* =========================
+   XI (SQUAD)
+   ========================= */
 function seedXI() {
   const grid = el("xi");
   if (!grid) return;
@@ -129,7 +139,7 @@ function renderSquad() {
 }
 
 async function onSlotClick(slotKey) {
-  // No selection => clicking an equipped slot unequips it
+  // If nothing selected: click equipped slot => unequip
   if (!state.selectedCardId) {
     if (!state.squad[slotKey]) return;
     await api("/v1/squad/unequip", { method: "POST", body: JSON.stringify({ slot: slotKey }) });
@@ -138,11 +148,11 @@ async function onSlotClick(slotKey) {
     return;
   }
 
-  // Equip selected card to slot
+  // Equip selected card to clicked slot
   const cardId = state.selectedCardId;
   await api("/v1/squad/equip", { method: "POST", body: JSON.stringify({ slot: slotKey, cardId }) });
 
-  // Locally ensure card is only in one slot
+  // Ensure a card can only be equipped once locally
   for (const k of Object.keys(state.squad)) {
     if (state.squad[k] === cardId) delete state.squad[k];
   }
@@ -154,7 +164,9 @@ async function onSlotClick(slotKey) {
   renderSquad();
 }
 
-/* ========== Locker ========== */
+/* =========================
+   LOCKER
+   ========================= */
 function renderInventory() {
   const list = el("invList");
   if (!list) return;
@@ -214,7 +226,9 @@ function renderSelectedCard() {
   `;
 }
 
-/* ========== Synergy ========== */
+/* =========================
+   SYNERGY
+   ========================= */
 function roleStyle(role) {
   const r = (role || "").toLowerCase();
   if (r.includes("press") || r.includes("ball winner") || r.includes("aggressive") || r.includes("overlap")) return "PRESS";
@@ -246,7 +260,9 @@ function updateSynergy() {
   if (note) note.textContent = `Style: ${state.style} • Matching roles: ${matches}/${equipped.length}`;
 }
 
-/* ========== Pack Results panel ========== */
+/* =========================
+   PACK RESULTS PANEL
+   ========================= */
 function renderPackResults(cards) {
   const wrap = el("cards");
   if (!wrap) return;
@@ -265,7 +281,9 @@ function renderPackResults(cards) {
   });
 }
 
-/* ========== Reveal Overlay (Step 3) ========== */
+/* =========================
+   REVEAL OVERLAY (Step 3)
+   ========================= */
 function showOverlay() {
   const o = el("revealOverlay");
   if (!o) return;
@@ -278,7 +296,6 @@ function hideOverlay() {
   o.classList.add("hidden");
   o.setAttribute("aria-hidden", "true");
 }
-
 function setOverlaySub(text) {
   const n = el("overlaySub");
   if (n) n.textContent = text;
@@ -401,7 +418,9 @@ async function flipNext() {
   }
 }
 
-/* ========== Load data ========== */
+/* =========================
+   LOAD DATA (Step 5)
+   ========================= */
 async function loadInventory() {
   const data = await api("/v1/inventory", { method: "GET" });
   state.inventory = data.cards || [];
@@ -409,13 +428,65 @@ async function loadInventory() {
   renderSelectedCard();
   renderSquad();
 }
+
 async function loadSquad() {
   const data = await api("/v1/squad", { method: "GET" });
   state.squad = data.slots || {};
   renderSquad();
 }
 
-/* ========== Pack open ========== */
+function updateBattlePassUI(bp) {
+  const bpLevel = el("bp-level");
+  const bpFill  = el("bpFill");
+  const bpText  = el("bpText");
+
+  if (!bp) return;
+  if (bpLevel) bpLevel.textContent = `Lv ${bp.level}`;
+  if (bpFill)  bpFill.style.width = `${Math.round((bp.xp / bp.need) * 100)}%`;
+  if (bpText)  bpText.textContent = `${bp.xp} / ${bp.need} XP`;
+}
+
+async function loadMe(){
+  const data = await api("/v1/me", { method:"GET" });
+  state.me = data;
+  setCoins(data.coins);
+  updateBattlePassUI(data.battlepass);
+}
+
+/* =========================
+   ARENA (Step 5)
+   ========================= */
+async function playArena(){
+  const log = el("arenaLog");
+  const btn = el("btn-arena");
+
+  if (btn) { btn.disabled = true; btn.textContent = "Playing…"; }
+  if (log) log.textContent = "Match starting…";
+
+  try{
+    const res = await api("/v1/arena/play", {
+      method:"POST",
+      body: JSON.stringify({ mode: state.arenaMode, style: state.style })
+    });
+
+    if (log) {
+      log.textContent =
+        `${res.result} • Team ${res.teamRating} vs Opp ${res.oppRating} • +${res.rewards.coins} coins • +${res.rewards.bpXp} BP XP`;
+    }
+
+    setCoins(res.coins);
+    updateBattlePassUI(res.battlepass);
+
+  }catch(e){
+    if (log) log.textContent = e.message;
+  }finally{
+    if (btn) { btn.disabled = false; btn.textContent = "Play Match"; }
+  }
+}
+
+/* =========================
+   PACK OPEN
+   ========================= */
 async function openPack() {
   const btn = el("btn-pack");
   if (btn) { btn.disabled = true; btn.textContent = "Opening…"; }
@@ -438,8 +509,11 @@ async function openPack() {
   }
 }
 
-/* ========== Chips ========== */
+/* =========================
+   CHIP INIT (Filter / Style / Arena)
+   ========================= */
 function initChips() {
+  // Filter chips
   document.querySelectorAll("[data-filter]").forEach((b) => {
     b.addEventListener("click", () => {
       state.filter = b.dataset.filter;
@@ -449,6 +523,7 @@ function initChips() {
     });
   });
 
+  // Style chips
   document.querySelectorAll("[data-style]").forEach((b) => {
     if (b.dataset.style === state.style) b.classList.add("active");
     b.addEventListener("click", () => {
@@ -459,9 +534,23 @@ function initChips() {
       updateSynergy();
     });
   });
+
+  // Arena chips
+  document.querySelectorAll("[data-arena]").forEach((b) => {
+    if (b.dataset.arena === state.arenaMode) b.classList.add("active");
+    b.addEventListener("click", () => {
+      state.arenaMode = b.dataset.arena;
+      document.querySelectorAll("[data-arena]").forEach((x) => x.classList.remove("active"));
+      b.classList.add("active");
+      const t = el("arena-mode");
+      if (t) t.textContent = state.arenaMode;
+    });
+  });
 }
 
-/* ========== Boot ========== */
+/* =========================
+   BOOT
+   ========================= */
 (async function boot() {
   seedXI();
   setUserLabel();
@@ -477,16 +566,23 @@ function initChips() {
     playBtn.addEventListener("click", async () => {
       const ok2 = await healthCheck();
       if (!ok2) return alert("API offline. Check your Worker.");
+
       await ensureSession();
       if (packBtn) packBtn.disabled = false;
 
+      // Load everything
       await loadInventory();
       await loadSquad();
+      await loadMe();
       updateSynergy();
     });
   }
 
   if (packBtn) packBtn.addEventListener("click", openPack);
+
+  // Arena button
+  const arenaBtn = el("btn-arena");
+  if (arenaBtn) arenaBtn.addEventListener("click", playArena);
 
   // Overlay controls
   const closeBtn = el("btn-close");
@@ -495,10 +591,13 @@ function initChips() {
   const list = el("revealCards");
 
   if (closeBtn) closeBtn.addEventListener("click", () => hideOverlay());
+
+  // Claim => refresh locker + squad + me
   if (claimBtn) claimBtn.addEventListener("click", async () => {
     hideOverlay();
-    await loadInventory(); // Claim refreshes locker
+    await loadInventory();
     await loadSquad();
+    await loadMe();
   });
 
   const revealAction = async () => {
@@ -513,4 +612,8 @@ function initChips() {
     });
   }
   if (list) list.addEventListener("click", revealAction);
+
+  // set arena mode tag on load
+  const t = el("arena-mode");
+  if (t) t.textContent = state.arenaMode;
 })();
