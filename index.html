@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta name="theme-color" content="#0B0F14"/>
+  <title>CLASH XI</title>
+  <meta name="description" content="Build your XI. Open packs. Climb Arena. Trade the market."/>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="./styles.css"/>
+</head>
+<body>
+  <div id="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo">XI</div>
+        <div>
+          <div class="brandName">CLASH XI</div>
+          <div class="brandTag">Arena • Packs • Market</div>
+        </div>
+      </div>
+
+      <div class="pillRow">
+        <div class="pill" id="pill-conn">API: …</div>
+        <div class="pill" id="pill-user">Guest</div>
+      </div>
+    </header>
+
+    <main class="shell">
+      <section class="hero card">
+        <div class="heroLeft">
+          <h1>Build a meta XI.<br/>Win the Arena.<br/>Move the market.</h1>
+          <p class="muted">
+            Fictional players with real progression. Ultra-rare Signature Legends.
+            Marketplace prices are driven by actual trades — up or down.
+          </p>
+
+          <div class="ctaRow">
+            <button class="btn primary" id="btn-play">Play Now</button>
+            <button class="btn ghost" id="btn-pack" disabled>Open Pack</button>
+          </div>
+
+          <div class="microRow">
+            <div class="micro cardMini">
+              <div class="microTitle">Daily loop</div>
+              <div class="microText">Pack → Arena → Upgrades → Market</div>
+            </div>
+            <div class="micro cardMini">
+              <div class="microTitle">Meta chase</div>
+              <div class="microText">Signature Legends are scarce — craftable later</div>
+            </div>
+            <div class="micro cardMini">
+              <div class="microTitle">No pay-to-win</div>
+              <div class="microText">Cosmetics + PRO comfort, not instant god squads</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="heroRight">
+          <div class="pack card packBox">
+            <div class="packTop">Starter Pack</div>
+            <div class="packGlow"></div>
+            <div class="packHint">Open to reveal 3 cards</div>
+          </div>
+
+          <div class="market card">
+            <div class="row">
+              <div>
+                <div class="sectionTitle">Market Pulse</div>
+                <div class="muted tiny">Driven by real trades</div>
+              </div>
+              <div class="tag">v1</div>
+            </div>
+            <div class="sparkWrap">
+              <div class="sparkLine" id="spark"></div>
+              <div class="sparkMeta">
+                <div><span class="muted tiny">Last:</span> <span id="m-last">—</span></div>
+                <div><span class="muted tiny">24h:</span> <span id="m-chg">—</span></div>
+              </div>
+            </div>
+            <div class="muted tiny">Step 1 ships the live app shell. API + real packs come in Step 2.</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="grid2">
+        <div class="card">
+          <div class="sectionTitle">Your XI</div>
+          <div class="muted tiny">Formation + style synergy (Press / Possession / Counter)</div>
+          <div class="xi" id="xi"></div>
+        </div>
+
+        <div class="card">
+          <div class="sectionTitle">Pack Results</div>
+          <div class="muted tiny">Duplicates → shards later (Step 2).</div>
+          <div class="cards" id="cards"></div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer muted tiny">
+      CLASH XI — Web/PWA on Cloudflare. Fictional players. No licensing risk.
+    </footer>
+  </div>
+
+  <script src="./app.js"></script>
+</body>
+</html>
