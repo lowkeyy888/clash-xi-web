@@ -349,3 +349,115 @@ body{
   .revealCards{grid-template-columns: 1fr; }
   .flipCard{height:170px;}
 }
+
+/* ===== STEP 4 — LOCKER + EQUIP + SYNERGY ===== */
+
+.locker{margin-top:18px; padding:16px}
+.lockerHeader{
+  display:flex; align-items:flex-end; justify-content:space-between; gap:12px;
+  padding:2px 2px 12px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+.styleToggle{display:flex; align-items:center; gap:8px; flex-wrap:wrap}
+
+.chip{
+  border-radius:999px;
+  padding:8px 10px;
+  border:1px solid rgba(255,255,255,.10);
+  background:rgba(255,255,255,.03);
+  color:rgba(234,242,255,.82);
+  font-weight:800;
+  font-size:12px;
+  cursor:pointer;
+}
+.chip.active{
+  border-color: rgba(168,255,46,.35);
+  background: rgba(168,255,46,.10);
+  color: var(--text);
+}
+
+.lockerBody{
+  display:grid;
+  grid-template-columns: 1.3fr .7fr;
+  gap:14px;
+  padding-top:12px;
+}
+
+.invPanel{min-height:260px}
+.filterRow{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px}
+
+.invList{
+  display:grid;
+  grid-template-columns: 1fr;
+  gap:10px;
+  max-height:360px;
+  overflow:auto;
+  padding-right:6px;
+}
+
+.invItem{
+  border-radius:16px;
+  border:1px solid rgba(255,255,255,.10);
+  background:rgba(0,0,0,.16);
+  padding:12px;
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  cursor:pointer;
+}
+.invItem:hover{background:rgba(255,255,255,.04)}
+.invItem.selected{
+  border-color: rgba(46,245,255,.30);
+  box-shadow: 0 0 0 1px rgba(46,245,255,.15);
+}
+
+.invName{font-weight:900}
+.invMeta{margin-top:4px; font-size:12px; color:rgba(234,242,255,.70)}
+
+.detailPanel{display:grid; gap:12px}
+.detailCard{
+  border-radius:18px;
+  border:1px solid rgba(255,255,255,.10);
+  background:rgba(0,0,0,.16);
+  padding:14px;
+}
+.chemBox{
+  border-radius:18px;
+  border:1px solid rgba(255,255,255,.10);
+  background:rgba(0,0,0,.16);
+  padding:14px;
+}
+.chemRow{display:flex; justify-content:space-between; align-items:center}
+.bar{
+  height:10px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.10);
+  background:rgba(255,255,255,.04);
+  overflow:hidden;
+  margin:10px 0 8px;
+}
+.barFill{
+  height:100%;
+  width:0%;
+  background: linear-gradient(90deg, rgba(46,245,255,.25), rgba(168,255,46,.20));
+}
+
+.slot.armed{
+  border-color: rgba(168,255,46,.28);
+  background: rgba(168,255,46,.05);
+}
+.slot.equipped{
+  border-style: solid;
+  border-color: rgba(255,255,255,.14);
+}
+
+/* FIX (your screenshot issue): prevent the ? back-face showing through */
+.flipFace{ -webkit-backface-visibility:hidden; backface-visibility:hidden; }
+.flipInner{ -webkit-transform-style:preserve-3d; transform-style:preserve-3d; }
+.flipCard:not(.flipped) .flipFront{opacity:0}
+.flipCard.flipped .flipFront{opacity:1}
+
+/* Mobile locker */
+@media (max-width: 900px){
+  .lockerBody{grid-template-columns:1fr}
+}
