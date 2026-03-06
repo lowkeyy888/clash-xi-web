@@ -55,8 +55,8 @@
               <div class="microText">Signature Legends are scarce — craftable later</div>
             </div>
             <div class="micro cardMini">
-              <div class="microTitle">Player-driven market</div>
-              <div class="microText">Supply/demand changes prices</div>
+              <div class="microTitle">Market rules</div>
+              <div class="microText">Min price by rarity • listing limit</div>
             </div>
           </div>
         </div>
@@ -87,7 +87,7 @@
               </div>
             </div>
 
-            <div class="muted tiny">Step 6 adds listings, buy/sell, and the pulse line.</div>
+            <div class="muted tiny">Step 6.5 adds min price + listing limits + trades feed.</div>
           </div>
 
           <!-- ARENA -->
@@ -107,7 +107,6 @@
             </div>
 
             <button class="btn primary" id="btn-arena" style="width:100%; margin-top:10px">Play Match</button>
-
             <div class="arenaLog" id="arenaLog">Equip at least 3 players to enter Arena.</div>
           </div>
 
@@ -166,6 +165,8 @@
                 <div id="mk-selected" style="font-weight:900">None</div>
               </div>
 
+              <div class="muted tiny" id="mk-min">Min: —</div>
+
               <div class="priceRow">
                 <input id="mk-price" class="inp" type="number" min="1" step="1" placeholder="Price (coins)"/>
                 <button class="btn primary" id="btn-list">List</button>
@@ -174,7 +175,7 @@
               <div class="muted tiny" id="mk-status">Tip: listed cards can’t be equipped.</div>
             </div>
 
-            <div class="marketColTitle" style="margin-top:14px">My listings</div>
+            <div class="marketColTitle" style="margin-top:14px">My listings <span class="muted tiny" id="myCount"></span></div>
             <div class="myListings" id="myListings"></div>
           </div>
 
@@ -182,6 +183,10 @@
             <div class="marketColTitle">Open listings</div>
             <div class="muted tiny">Buy cards using coins. 5% fee on seller payout.</div>
             <div class="openListings" id="openListings"></div>
+
+            <div class="marketColTitle" style="margin-top:14px">Recent trades</div>
+            <div class="muted tiny">Latest sales (global)</div>
+            <div class="trades" id="tradeList"></div>
           </div>
         </div>
       </section>
