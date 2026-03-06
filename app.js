@@ -1,4 +1,4 @@
-// CLASH XI — Step 6 Market (list/buy/pulse) + Step 5 Arena/BP + Step 4 Locker/Squad + Step 3 Pack reveal
+// CLASH XI — Step 6.5 Market Integrity + Trades + Listed badge
 const API_BASE = "https://clash-xi-api.lowkeyy9191.workers.dev";
 
 const el = (id) => document.getElementById(id);
@@ -6,6 +6,12 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 const SLOT_KEYS = ["GK","LB","CB1","CB2","RB","CM1","CM2","CAM","LW","ST","RW"];
 const slotLabel = (k) => k.replace("1","").replace("2","");
+
+const DEFAULT_RULES = {
+  maxOpenListings: 5,
+  feeBps: 500,
+  minPrice: { COMMON: 10, RARE: 25, EPIC: 60, LEGENDARY: 150 }
+};
 
 const state = {
   token: localStorage.getItem("cx_token") || null,
@@ -26,7 +32,10 @@ const state = {
   market: {
     listings: [],
     mine: [],
-    pulse: { last: null, chg24h: null, points: [] }
+    trades: [],
+    pulse: { last: null, chg24h: null, points: [] },
+    rules: DEFAULT_RULES,
+    listedSet: new Set()
   }
 };
 
@@ -36,6 +45,11 @@ function setCoins(coins){ const n=el("pill-coins"); if(n) n.textContent = `Coins
 
 function rarityClass(r){
   return r === "LEGENDARY" ? "rLegend" : r === "EPIC" ? "rEpic" : r === "RARE" ? "rRare" : "rCommon";
+}
+
+function minPriceFor(r){
+  const rules = state.market.rules || DEFAULT_RULES;
+  return (rules.minPrice?.[String(r||"COMMON").toUpperCase()] ?? 10);
 }
 
 async function api(path, opts={}){
@@ -63,6 +77,11 @@ async function ensureSession(){
   setUserLabel();
 }
 
+function canEquipSelected(){
+  if(!state.selectedCardId) return false;
+  return !state.market.listedSet.has(state.selectedCardId);
+}
+
 /* =========================
    XI / SQUAD
    ========================= */
@@ -82,9 +101,10 @@ function seedXI(){
 
 function refreshSlotStates(){
   const grid=el("xi"); if(!grid) return;
+  const armed = canEquipSelected();
   [...grid.querySelectorAll(".slot")].forEach(node=>{
     const k=node.dataset.slot;
-    node.classList.toggle("armed", !!state.selectedCardId);
+    node.classList.toggle("armed", armed);
     node.classList.toggle("equipped", !!state.squad[k]);
   });
 }
@@ -116,11 +136,18 @@ function renderSquad(){
 }
 
 async function onSlotClick(slotKey){
+  const status=el("mk-status");
+
   if(!state.selectedCardId){
     if(!state.squad[slotKey]) return;
     await api("/v1/squad/unequip",{method:"POST", body: JSON.stringify({slot: slotKey})});
     delete state.squad[slotKey];
     renderSquad();
+    return;
+  }
+
+  if(state.market.listedSet.has(state.selectedCardId)){
+    if(status) status.textContent = "This card is LISTED. Cancel listing before equipping.";
     return;
   }
 
@@ -154,6 +181,8 @@ function renderInventory(){
   }
 
   items.forEach(c=>{
+    const isListed = state.market.listedSet.has(c.id);
+
     const row=document.createElement("div");
     row.className="invItem";
     if(state.selectedCardId===c.id) row.classList.add("selected");
@@ -171,7 +200,10 @@ function renderInventory(){
         <div class="invName">${c.display_name}</div>
         <div class="invMeta">${c.position} • ${c.role}</div>
       </div>
-      <div class="rarity ${rarityClass(c.rarity)}">${c.rarity}</div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+        <div class="rarity ${rarityClass(c.rarity)}">${c.rarity}</div>
+        ${isListed ? `<div class="badgeSm">LISTED</div>` : ``}
+      </div>
     `;
     list.appendChild(row);
   });
@@ -190,11 +222,13 @@ function renderSelectedCard(){
     return;
   }
 
+  const isListed = state.market.listedSet.has(c.id);
+
   box.innerHTML=`
     <div class="muted tiny">Selected</div>
     <div style="font-weight:900;margin-top:6px">${c.display_name}</div>
     <div class="muted tiny" style="margin-top:6px">${c.position} • ${c.role}</div>
-    <div class="muted tiny" style="margin-top:6px">Tap a slot to equip.</div>
+    <div class="muted tiny" style="margin-top:6px">${isListed ? "LISTED — cancel before equipping." : "Tap a slot to equip."}</div>
     <div style="margin-top:10px" class="rarity ${rarityClass(c.rarity)}">${c.rarity}</div>
   `;
 }
@@ -230,7 +264,7 @@ function updateSynergy(){
 }
 
 /* =========================
-   STEP 5 — ME / BP / ARENA
+   ME / BP / ARENA
    ========================= */
 function updateBattlePassUI(bp){
   const bpLevel=el("bp-level"), bpFill=el("bpFill"), bpText=el("bpText");
@@ -263,13 +297,31 @@ async function playArena(){
 }
 
 /* =========================
-   STEP 6 — MARKET
+   MARKET
    ========================= */
 function renderMarketSelected(){
   const n=el("mk-selected");
-  if(!n) return;
+  const min=el("mk-min");
+  const btn=el("btn-list");
+  const status=el("mk-status");
+
   const c = state.selectedCardId ? getCardById(state.selectedCardId) : null;
-  n.textContent = c ? `${c.display_name} (${c.rarity})` : "None";
+
+  if(!c){
+    if(n) n.textContent="None";
+    if(min) min.textContent="Min: —";
+    if(btn) btn.disabled=false;
+    return;
+  }
+
+  const isListed = state.market.listedSet.has(c.id);
+  const minP = minPriceFor(c.rarity);
+
+  if(n) n.textContent=`${c.display_name} (${c.rarity})`;
+  if(min) min.textContent=`Min: ${minP} coins`;
+
+  if(btn) btn.disabled = isListed;
+  if(isListed && status) status.textContent = "Selected card is LISTED. Cancel listing to use it.";
 }
 
 function listingHTML(x, isMine=false){
@@ -295,36 +347,78 @@ function listingHTML(x, isMine=false){
   `;
 }
 
+function formatAgo(ts){
+  const s = Math.max(1, Math.floor((Date.now()-ts)/1000));
+  if(s < 60) return `${s}s ago`;
+  const m = Math.floor(s/60);
+  if(m < 60) return `${m}m ago`;
+  const h = Math.floor(m/60);
+  return `${h}h ago`;
+}
+
+function renderTrades(){
+  const wrap=el("tradeList"); if(!wrap) return;
+  const t=state.market.trades || [];
+  wrap.innerHTML = t.length ? t.map(x=>`
+    <div class="tradeRow">
+      <div>
+        <div style="font-weight:900">${x.display_name}</div>
+        <div class="tradeMeta">${x.position} • ${x.role} • ${x.rarity} • ${formatAgo(x.created_at)}</div>
+      </div>
+      <div class="priceTag">${x.price}c</div>
+    </div>
+  `).join("") : `<div class="muted tiny">No trades yet.</div>`;
+}
+
 async function loadMarket(){
-  const [pulse, open, mine] = await Promise.all([
+  const [rules, pulse, open, mine, trades] = await Promise.all([
+    api("/v1/market/rules",{method:"GET"}).catch(()=>DEFAULT_RULES),
     api("/v1/market/pulse?limit=60",{method:"GET"}),
     api("/v1/market/listings?limit=60",{method:"GET"}),
-    api("/v1/market/my",{method:"GET"})
+    api("/v1/market/my",{method:"GET"}),
+    api("/v1/market/trades?limit=20",{method:"GET"}).catch(()=>({trades:[]}))
   ]);
 
+  state.market.rules = rules || DEFAULT_RULES;
   state.market.pulse = pulse;
+  state.market.trades = trades.trades || [];
 
-  // ✅ hide my own listings from Open listings (avoids useless Buy button on self)
+  // hide my own listings from Open
   const allOpen = open.listings || [];
   state.market.listings = allOpen.filter(x => x.seller_user_id !== state.userId);
 
   state.market.mine = mine.listings || [];
 
+  // build listed set from OPEN only
+  const openMine = state.market.mine.filter(x=>x.status==="OPEN");
+  state.market.listedSet = new Set(openMine.map(x=>x.card_id));
+
+  const myCount=el("myCount");
+  if(myCount) myCount.textContent = `(${openMine.length}/${state.market.rules.maxOpenListings})`;
+
   renderPulse();
   renderListings();
+  renderTrades();
+  renderInventory();
+  renderSelectedCard();
+  refreshSlotStates();
+  renderMarketSelected();
 }
 
 function renderListings(){
   const openWrap=el("openListings");
   const myWrap=el("myListings");
+
   if(openWrap){
     openWrap.innerHTML = state.market.listings.length
       ? state.market.listings.map(x=>listingHTML(x,false)).join("")
       : `<div class="muted tiny">No listings yet.</div>`;
   }
+
+  const openMine = state.market.mine.filter(x=>x.status==="OPEN");
   if(myWrap){
-    myWrap.innerHTML = state.market.mine.length
-      ? state.market.mine.map(x=>listingHTML(x,true)).join("")
+    myWrap.innerHTML = openMine.length
+      ? openMine.map(x=>listingHTML(x,true)).join("")
       : `<div class="muted tiny">No listings yet.</div>`;
   }
 
@@ -369,7 +463,11 @@ async function listSelected(){
   const status=el("mk-status");
   const price = Number(el("mk-price")?.value || 0);
   if(!state.selectedCardId) return (status.textContent="Select a card first.");
-  if(!Number.isFinite(price) || price<1) return (status.textContent="Enter a valid price (>=1).");
+
+  const c = getCardById(state.selectedCardId);
+  const minP = minPriceFor(c?.rarity);
+
+  if(!Number.isFinite(price) || price<minP) return (status.textContent=`Min price for ${c?.rarity} is ${minP}.`);
 
   const btn=el("btn-list");
   btn.disabled=true;
@@ -385,7 +483,7 @@ async function listSelected(){
   }
 }
 
-/* ✅ FIXED Market Pulse rendering (works with 1 point) */
+/* Pulse line (supports 1 point) */
 function renderPulse(){
   const last=state.market.pulse.last;
   const chg=state.market.pulse.chg24h;
@@ -399,7 +497,6 @@ function renderPulse(){
 
   const w=300, h=64;
 
-  // 0 points => placeholder line
   if(!pts.length){
     svg.innerHTML = `<path d="M0 ${h-8} L${w} ${h-8}" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="2"/>`;
     return;
@@ -409,10 +506,8 @@ function renderPulse(){
   const min = Math.min(...prices);
   const max = Math.max(...prices);
   const span = Math.max(1, max-min);
-
   const yOf = (price) => (h-10) - ((price-min)/span)*(h-18);
 
-  // 1 point => flat line + dot (so it doesn't look empty)
   if(pts.length === 1){
     const y = yOf(pts[0].price);
     svg.innerHTML = `
@@ -423,7 +518,6 @@ function renderPulse(){
     return;
   }
 
-  // 2+ points => normal path
   const step = w / (pts.length - 1);
   const d = pts.map((p,i)=>{
     const x = i*step;
@@ -438,7 +532,7 @@ function renderPulse(){
 }
 
 /* =========================
-   PACK REVEAL (Step 3)
+   PACK REVEAL (same)
    ========================= */
 function renderPackResults(cards){
   const wrap=el("cards"); if(!wrap) return;
@@ -456,7 +550,6 @@ function renderPackResults(cards){
     wrap.appendChild(row);
   });
 }
-
 function showOverlay(){ const o=el("revealOverlay"); if(o){o.classList.remove("hidden"); o.setAttribute("aria-hidden","false");} }
 function hideOverlay(){ const o=el("revealOverlay"); if(o){o.classList.add("hidden"); o.setAttribute("aria-hidden","true");} }
 function setOverlaySub(t){ const n=el("overlaySub"); if(n) n.textContent=t; }
@@ -488,7 +581,6 @@ function resetRevealUI(){
     list.appendChild(card);
   }
 }
-
 function injectRevealData(cards){
   const list=el("revealCards"); if(!list) return;
   const nodes=[...list.querySelectorAll(".flipCard")];
@@ -504,12 +596,10 @@ function injectRevealData(cards){
     if(meta) meta.textContent=`${c.position} • ${c.role}`;
   });
 }
-
 function legendaryBurst(){
   const inner=el("overlayInner"); if(!inner) return;
   inner.classList.remove("legendaryBurst"); void inner.offsetWidth; inner.classList.add("legendaryBurst");
 }
-
 async function flipNext(){
   if(state.revealing) return;
   if(state.revealIndex>=state.revealCards.length) return;
@@ -536,7 +626,6 @@ async function flipNext(){
     const hint=el("revealHint"); if(hint) hint.textContent="Done";
   }
 }
-
 async function openPack(){
   const btn=el("btn-pack");
   if(btn){btn.disabled=true; btn.textContent="Opening…";}
@@ -554,9 +643,7 @@ async function openPack(){
   }
 }
 
-/* =========================
-   Load base app data
-   ========================= */
+/* Load base app data */
 async function loadInventory(){
   const data=await api("/v1/inventory",{method:"GET"});
   state.inventory=data.cards||[];
@@ -565,18 +652,14 @@ async function loadInventory(){
   renderSquad();
   renderMarketSelected();
 }
-
 async function loadSquad(){
   const data=await api("/v1/squad",{method:"GET"});
   state.squad=data.slots||{};
   renderSquad();
 }
 
-/* =========================
-   UI init
-   ========================= */
+/* UI init */
 function initChips(){
-  // Filter
   document.querySelectorAll("[data-filter]").forEach(b=>{
     b.addEventListener("click", ()=>{
       state.filter=b.dataset.filter;
@@ -586,7 +669,6 @@ function initChips(){
     });
   });
 
-  // Style
   document.querySelectorAll("[data-style]").forEach(b=>{
     if(b.dataset.style===state.style) b.classList.add("active");
     b.addEventListener("click", ()=>{
@@ -598,7 +680,6 @@ function initChips(){
     });
   });
 
-  // Arena
   document.querySelectorAll("[data-arena]").forEach(b=>{
     if(b.dataset.arena===state.arenaMode) b.classList.add("active");
     b.addEventListener("click", ()=>{
@@ -610,9 +691,7 @@ function initChips(){
   });
 }
 
-/* =========================
-   Boot
-   ========================= */
+/* Boot */
 (async function boot(){
   seedXI();
   setUserLabel();
@@ -645,7 +724,6 @@ function initChips(){
 
   el("btn-list")?.addEventListener("click", listSelected);
 
-  // Overlay controls
   el("btn-close")?.addEventListener("click", ()=> hideOverlay());
   el("btn-claim")?.addEventListener("click", async ()=>{
     hideOverlay();
