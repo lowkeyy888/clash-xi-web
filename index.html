@@ -55,8 +55,8 @@
               <div class="microText">Signature Legends are scarce — craftable later</div>
             </div>
             <div class="micro cardMini">
-              <div class="microTitle">No pay-to-win</div>
-              <div class="microText">Cosmetics + PRO comfort, not instant god squads</div>
+              <div class="microTitle">Player-driven market</div>
+              <div class="microText">Supply/demand changes prices</div>
             </div>
           </div>
         </div>
@@ -76,17 +76,21 @@
               </div>
               <div class="tag">v1</div>
             </div>
+
             <div class="sparkWrap">
-              <div class="sparkLine" id="spark"></div>
+              <div class="sparkLine" id="spark">
+                <svg id="sparkSvg" viewBox="0 0 300 64" preserveAspectRatio="none"></svg>
+              </div>
               <div class="sparkMeta">
                 <div><span class="muted tiny">Last:</span> <span id="m-last">—</span></div>
                 <div><span class="muted tiny">24h:</span> <span id="m-chg">—</span></div>
               </div>
             </div>
-            <div class="muted tiny">Step 5 adds Arena + Battle Pass.</div>
+
+            <div class="muted tiny">Step 6 adds listings, buy/sell, and the pulse line.</div>
           </div>
 
-          <!-- STEP 5.3A: ARENA -->
+          <!-- ARENA -->
           <div class="card arenaCard">
             <div class="row">
               <div>
@@ -107,7 +111,7 @@
             <div class="arenaLog" id="arenaLog">Equip at least 3 players to enter Arena.</div>
           </div>
 
-          <!-- STEP 5.3A: BATTLE PASS -->
+          <!-- BATTLE PASS -->
           <div class="card passCard">
             <div class="row">
               <div>
@@ -139,7 +143,50 @@
         </div>
       </section>
 
-      <!-- LOCKER (Step 4) -->
+      <!-- MARKET -->
+      <section class="marketShell card">
+        <div class="marketHeader">
+          <div>
+            <div class="sectionTitle">Market</div>
+            <div class="muted tiny">List a card for coins. Others buy it. Trades move the pulse.</div>
+          </div>
+          <div class="marketActions">
+            <button class="btn ghost" id="btn-refresh-market">Refresh</button>
+          </div>
+        </div>
+
+        <div class="marketBody">
+          <div class="marketCol">
+            <div class="marketColTitle">List selected card</div>
+            <div class="muted tiny">Select a card in Locker. Set price. List it.</div>
+
+            <div class="listBox">
+              <div class="listRow">
+                <div class="muted tiny">Selected:</div>
+                <div id="mk-selected" style="font-weight:900">None</div>
+              </div>
+
+              <div class="priceRow">
+                <input id="mk-price" class="inp" type="number" min="1" step="1" placeholder="Price (coins)"/>
+                <button class="btn primary" id="btn-list">List</button>
+              </div>
+
+              <div class="muted tiny" id="mk-status">Tip: listed cards can’t be equipped.</div>
+            </div>
+
+            <div class="marketColTitle" style="margin-top:14px">My listings</div>
+            <div class="myListings" id="myListings"></div>
+          </div>
+
+          <div class="marketCol">
+            <div class="marketColTitle">Open listings</div>
+            <div class="muted tiny">Buy cards using coins. 5% fee on seller payout.</div>
+            <div class="openListings" id="openListings"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- LOCKER -->
       <section class="locker card">
         <div class="lockerHeader">
           <div>
@@ -169,11 +216,7 @@
           </div>
 
           <div class="detailPanel">
-            <div class="detailCard" id="selectedCard">
-              <div class="muted tiny">Selected</div>
-              <div style="font-weight:900; margin-top:6px">None</div>
-              <div class="muted tiny" style="margin-top:6px">Pick a card to arm slots.</div>
-            </div>
+            <div class="detailCard" id="selectedCard"></div>
 
             <div class="chemBox">
               <div class="chemRow">
