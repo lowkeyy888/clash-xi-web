@@ -87,10 +87,9 @@
               </div>
             </div>
 
-            <div class="muted tiny">Step 6.5 adds min price + listing limits + trades feed.</div>
+            <div class="muted tiny">Step 6.6 adds daily challenges, daily chest, cosmetics, and PRO scaffold.</div>
           </div>
 
-          <!-- ARENA -->
           <div class="card arenaCard">
             <div class="row">
               <div>
@@ -110,7 +109,6 @@
             <div class="arenaLog" id="arenaLog">Equip at least 3 players to enter Arena.</div>
           </div>
 
-          <!-- BATTLE PASS -->
           <div class="card passCard">
             <div class="row">
               <div>
@@ -124,6 +122,37 @@
               <div class="barFill" id="bpFill"></div>
             </div>
             <div class="muted tiny" id="bpText">0 / 100 XP</div>
+          </div>
+
+          <!-- STEP 6.6C1: DAILY CHALLENGES -->
+          <div class="card dailyCard">
+            <div class="row">
+              <div>
+                <div class="sectionTitle">Daily Challenges</div>
+                <div class="muted tiny">Auto-generated • Claim rewards</div>
+              </div>
+              <div class="tag" id="daily-date">—</div>
+            </div>
+
+            <div class="dailyList" id="dailyList"></div>
+
+            <div class="dailyBottom">
+              <button class="btn primary" id="btn-chest" disabled>Open Daily Chest</button>
+              <div class="muted tiny" id="chestStatus">Complete + claim all 3 to unlock.</div>
+            </div>
+          </div>
+
+          <!-- STEP 6.6C1: COSMETICS -->
+          <div class="card cosCard">
+            <div class="row">
+              <div>
+                <div class="sectionTitle">Cosmetics</div>
+                <div class="muted tiny">Themes (free) • PRO later</div>
+              </div>
+              <div class="tag" id="proTag">FREE</div>
+            </div>
+
+            <div class="cosList" id="cosList"></div>
           </div>
         </div>
       </section>
@@ -142,7 +171,6 @@
         </div>
       </section>
 
-      <!-- MARKET -->
       <section class="marketShell card">
         <div class="marketHeader">
           <div>
@@ -191,7 +219,6 @@
         </div>
       </section>
 
-      <!-- LOCKER -->
       <section class="locker card">
         <div class="lockerHeader">
           <div>
@@ -241,7 +268,6 @@
     </footer>
   </div>
 
-  <!-- PACK REVEAL OVERLAY -->
   <div class="overlay hidden" id="revealOverlay" aria-hidden="true">
     <div class="overlayInner card" id="overlayInner">
       <div class="overlayHeader">
