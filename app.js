@@ -136,6 +136,7 @@ async function onSlotClick(slotKey){
   renderSelectedCard();
   renderInventory();
   renderSquad();
+  renderMarketSelected();
 }
 
 /* =========================
@@ -302,7 +303,11 @@ async function loadMarket(){
   ]);
 
   state.market.pulse = pulse;
-  state.market.listings = open.listings || [];
+
+  // ✅ hide my own listings from Open listings (avoids useless Buy button on self)
+  const allOpen = open.listings || [];
+  state.market.listings = allOpen.filter(x => x.seller_user_id !== state.userId);
+
   state.market.mine = mine.listings || [];
 
   renderPulse();
@@ -325,6 +330,7 @@ function renderListings(){
 
   document.querySelectorAll("[data-buy]").forEach(btn=>{
     btn.addEventListener("click", async ()=>{
+      const status=el("mk-status");
       const id=btn.getAttribute("data-buy");
       btn.disabled=true;
       try{
@@ -332,9 +338,9 @@ function renderListings(){
         setCoins(res.coins);
         await loadInventory();
         await loadMarket();
-        el("mk-status").textContent = `Bought. Paid ${res.paid} coins. Fee ${res.fee}.`;
+        if(status) status.textContent = `Bought. Paid ${res.paid} coins. Fee ${res.fee}.`;
       }catch(e){
-        el("mk-status").textContent = e.message;
+        if(status) status.textContent = e.message;
       }finally{
         btn.disabled=false;
       }
@@ -343,14 +349,15 @@ function renderListings(){
 
   document.querySelectorAll("[data-cancel]").forEach(btn=>{
     btn.addEventListener("click", async ()=>{
+      const status=el("mk-status");
       const id=btn.getAttribute("data-cancel");
       btn.disabled=true;
       try{
         await api("/v1/market/cancel",{method:"POST", body: JSON.stringify({listingId:id})});
         await loadMarket();
-        el("mk-status").textContent = "Listing cancelled.";
+        if(status) status.textContent = "Listing cancelled.";
       }catch(e){
-        el("mk-status").textContent = e.message;
+        if(status) status.textContent = e.message;
       }finally{
         btn.disabled=false;
       }
@@ -378,6 +385,7 @@ async function listSelected(){
   }
 }
 
+/* ✅ FIXED Market Pulse rendering (works with 1 point) */
 function renderPulse(){
   const last=state.market.pulse.last;
   const chg=state.market.pulse.chg24h;
@@ -390,6 +398,8 @@ function renderPulse(){
   if(!svg) return;
 
   const w=300, h=64;
+
+  // 0 points => placeholder line
   if(!pts.length){
     svg.innerHTML = `<path d="M0 ${h-8} L${w} ${h-8}" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="2"/>`;
     return;
@@ -400,10 +410,24 @@ function renderPulse(){
   const max = Math.max(...prices);
   const span = Math.max(1, max-min);
 
-  const step = w / Math.max(1, pts.length-1);
+  const yOf = (price) => (h-10) - ((price-min)/span)*(h-18);
+
+  // 1 point => flat line + dot (so it doesn't look empty)
+  if(pts.length === 1){
+    const y = yOf(pts[0].price);
+    svg.innerHTML = `
+      <path d="M0 ${y.toFixed(2)} L${w} ${y.toFixed(2)}" fill="none" stroke="rgba(46,245,255,.65)" stroke-width="2.2" />
+      <path d="M0 ${y.toFixed(2)} L${w} ${y.toFixed(2)} L${w} ${h} L0 ${h} Z" fill="rgba(46,245,255,.10)" />
+      <circle cx="${w-8}" cy="${y.toFixed(2)}" r="3.4" fill="rgba(168,255,46,.85)" />
+    `;
+    return;
+  }
+
+  // 2+ points => normal path
+  const step = w / (pts.length - 1);
   const d = pts.map((p,i)=>{
     const x = i*step;
-    const y = (h-10) - ((p.price-min)/span)*(h-18);
+    const y = yOf(p.price);
     return `${i===0?"M":"L"}${x.toFixed(2)} ${y.toFixed(2)}`;
   }).join(" ");
 
@@ -541,6 +565,7 @@ async function loadInventory(){
   renderSquad();
   renderMarketSelected();
 }
+
 async function loadSquad(){
   const data=await api("/v1/squad",{method:"GET"});
   state.squad=data.slots||{};
@@ -612,9 +637,10 @@ function initChips(){
   el("btn-arena")?.addEventListener("click", playArena);
 
   el("btn-refresh-market")?.addEventListener("click", async ()=>{
-    el("mk-status").textContent="Refreshing…";
+    const status=el("mk-status");
+    if(status) status.textContent="Refreshing…";
     await loadMarket();
-    el("mk-status").textContent="Refreshed.";
+    if(status) status.textContent="Refreshed.";
   });
 
   el("btn-list")?.addEventListener("click", listSelected);
