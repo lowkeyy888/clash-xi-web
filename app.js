@@ -24,6 +24,16 @@ const TACTICAL_ROLES = {
   STRIKER: "STRIKER"
 };
 
+function loadBenchState() {
+  try {
+    const raw = JSON.parse(localStorage.getItem("kf_bench") || "[]");
+    if (!Array.isArray(raw)) return Array(7).fill(null);
+    return raw.slice(0, 7).concat(Array(Math.max(0, 7 - raw.length)).fill(null));
+  } catch {
+    return Array(7).fill(null);
+  }
+}
+
 const FORMATION_ROLE_MAP = {
   "433": {
     GK:  { role: TACTICAL_ROLES.GOALKEEPER, allowed: ["GK"] },
@@ -231,7 +241,9 @@ const state = {
   revealCards: [],
   revealing: false,
   inventory: [],
+  inventoryLoaded: false,
   squad: {},
+  bench: loadBenchState(),
   selectedCardId: null,
   filter: "ALL",
   style: localStorage.getItem("cx_style") || "PRESS",
@@ -256,7 +268,8 @@ const state = {
   tacticsLocked: false,
   activeMatchday: 4,
   leagueRegistered: false,
-  teamValidation: null
+  teamValidation: null,
+  dragPayload: null
 };
 
 function normalizeCard(raw) {
@@ -277,6 +290,61 @@ function normalizePosition(pos) {
 
 function getFormationRoleMap(formation) {
   return FORMATION_ROLE_MAP[formation] || FORMATION_ROLE_MAP["433"];
+}
+
+function ensureBenchState() {
+  if (!Array.isArray(state.bench)) state.bench = Array(7).fill(null);
+  state.bench = state.bench.slice(0, 7).concat(Array(Math.max(0, 7 - state.bench.length)).fill(null));
+}
+
+function saveBenchState() {
+  ensureBenchState();
+  localStorage.setItem("kf_bench", JSON.stringify(state.bench));
+}
+
+function getCardById(id) {
+  return state.inventory.find((c) => c.id === id) || null;
+}
+
+function getSquadSlotOfCard(cardId) {
+  for (const [slotKey, id] of Object.entries(state.squad)) {
+    if (id === cardId) return slotKey;
+  }
+  return null;
+}
+
+function findBenchIndexByCardId(cardId) {
+  ensureBenchState();
+  return state.bench.findIndex((id) => id === cardId);
+}
+
+function removeCardFromBench(cardId, exceptIndex = null) {
+  ensureBenchState();
+  state.bench = state.bench.map((id, idx) => (id === cardId && idx !== exceptIndex ? null : id));
+}
+
+function firstEmptyBenchIndex() {
+  ensureBenchState();
+  return state.bench.findIndex((id) => !id);
+}
+
+function reconcileBenchWithState() {
+  ensureBenchState();
+
+  const squadIds = new Set(Object.values(state.squad).filter(Boolean));
+  const inventoryIds = state.inventoryLoaded ? new Set(state.inventory.map((c) => c.id)) : null;
+  const seen = new Set();
+
+  state.bench = state.bench.map((cardId) => {
+    if (!cardId) return null;
+    if (inventoryIds && !inventoryIds.has(cardId)) return null;
+    if (squadIds.has(cardId)) return null;
+    if (seen.has(cardId)) return null;
+    seen.add(cardId);
+    return cardId;
+  });
+
+  saveBenchState();
 }
 
 function buildTeamModel() {
@@ -385,6 +453,7 @@ function exportTeamForSimulation() {
     equippedCount: team.equippedCount,
     avgOvr: team.avgOvr,
     validation,
+    bench: [...state.bench],
     slots: team.slots.map((slot) => ({
       slotKey: slot.slotKey,
       tacticalRole: slot.tacticalRole,
@@ -592,6 +661,10 @@ function safeText(node, value) {
   if (node) node.textContent = value;
 }
 
+function setStatus(message) {
+  safeText(el("mk-status"), message || "");
+}
+
 function setConn(ok) {
   safeText(el("pill-conn"), ok ? "API: Connected" : "API: Offline");
 }
@@ -668,10 +741,6 @@ async function ensureSession() {
   localStorage.setItem("cx_token", state.token);
   localStorage.setItem("cx_user", state.userId);
   setUserLabel();
-}
-
-function getCardById(id) {
-  return state.inventory.find((c) => c.id === id) || null;
 }
 
 function canEquipSelected() {
@@ -762,9 +831,14 @@ function cardHTML(card, opts = {}) {
   const listed = !!opts.listed;
   const compact = !!opts.compact;
   const selectable = opts.selectable !== false;
+  const draggable = !!opts.draggable;
 
   return `
-    <div class="kfCard ${rarityFrame(c.rarity)} ${selected ? "is-selected" : ""} ${listed ? "is-listed" : ""} ${compact ? "is-compact" : ""}" ${selectable ? `data-card-id="${c.id}"` : ""}>
+    <div
+      class="kfCard ${rarityFrame(c.rarity)} ${selected ? "is-selected" : ""} ${listed ? "is-listed" : ""} ${compact ? "is-compact" : ""}"
+      ${selectable ? `data-card-id="${c.id}"` : ""}
+      ${draggable ? `draggable="true"` : ""}
+    >
       <div class="kfCard__shine"></div>
       <div class="kfCard__top">
         <div class="kfCard__ovr">${vm.ovr}</div>
@@ -792,6 +866,326 @@ function cardHTML(card, opts = {}) {
       </div>
     </div>
   `;
+}
+
+function clearDropNodeStyle(node) {
+  if (!node) return;
+  node.style.borderColor = "";
+  node.style.boxShadow = "";
+  node.style.background = "";
+}
+
+function paintDropNode(node, kind) {
+  if (!node) return;
+  if (kind === "ok") {
+    node.style.borderColor = "rgba(0,230,118,.9)";
+    node.style.boxShadow = "0 0 20px rgba(0,230,118,.25)";
+    node.style.background = "linear-gradient(180deg, rgba(0,230,118,.12), rgba(6,12,9,.82))";
+    return;
+  }
+  if (kind === "bad") {
+    node.style.borderColor = "rgba(255,61,90,.85)";
+    node.style.boxShadow = "0 0 14px rgba(255,61,90,.25)";
+    node.style.background = "linear-gradient(180deg, rgba(255,61,90,.10), rgba(6,12,9,.82))";
+    return;
+  }
+  clearDropNodeStyle(node);
+}
+
+function clearAllDropStates() {
+  document.querySelectorAll(".slot, .benchSlot").forEach((node) => clearDropNodeStyle(node));
+}
+
+function setDragPayload(payload) {
+  state.dragPayload = payload;
+}
+
+function clearDragPayload() {
+  state.dragPayload = null;
+  clearAllDropStates();
+}
+
+function resolveDragPayload(payload) {
+  if (!payload?.cardId) return null;
+
+  const squadSlot = getSquadSlotOfCard(payload.cardId);
+  if (squadSlot) return { source: "pitch", slotKey: squadSlot, cardId: payload.cardId };
+
+  const benchIndex = findBenchIndexByCardId(payload.cardId);
+  if (benchIndex !== -1) return { source: "bench", benchIndex, cardId: payload.cardId };
+
+  return { source: "inventory", cardId: payload.cardId };
+}
+
+function isCardCompatibleForSlot(card, slotKey) {
+  if (!card) return false;
+  const roleMap = getFormationRoleMap(state.formation);
+  const meta = roleMap[slotKey];
+  if (!meta) return false;
+  const allowed = (meta.allowed || []).map(normalizePosition);
+  return allowed.includes(normalizePosition(card.position));
+}
+
+function canDropOnBench(targetIndex, payload) {
+  if (state.tacticsLocked) return false;
+  const resolved = resolveDragPayload(payload);
+  if (!resolved?.cardId) return false;
+  const currentOccupant = state.bench[targetIndex] || null;
+
+  if (resolved.source === "bench" && resolved.benchIndex === targetIndex) return true;
+  if (currentOccupant) return false;
+  return true;
+}
+
+function canDropOnPitch(slotKey, payload) {
+  if (state.tacticsLocked) return false;
+
+  const resolved = resolveDragPayload(payload);
+  if (!resolved?.cardId) return false;
+
+  const incomingCard = getCardById(resolved.cardId);
+  if (!incomingCard) return false;
+  if (state.market.listedSet.has(incomingCard.id)) return false;
+  if (!isCardCompatibleForSlot(incomingCard, slotKey)) return false;
+
+  const targetCardId = state.squad[slotKey] || null;
+  if (!targetCardId || targetCardId === incomingCard.id) return true;
+
+  if (resolved.source === "pitch") {
+    const displaced = getCardById(targetCardId);
+    return !!displaced && isCardCompatibleForSlot(displaced, resolved.slotKey);
+  }
+
+  if (resolved.source === "bench") {
+    return true;
+  }
+
+  const emptyBench = firstEmptyBenchIndex();
+  return emptyBench !== -1;
+}
+
+async function moveCardToBench(cardId, targetBenchIndex, hintedPayload = null) {
+  ensureBenchState();
+  const resolved = resolveDragPayload(hintedPayload || { cardId });
+  if (!resolved) return false;
+
+  const targetOccupant = state.bench[targetBenchIndex] || null;
+  if (targetOccupant && !(resolved.source === "bench" && resolved.benchIndex === targetBenchIndex)) {
+    setStatus("That bench slot is already occupied.");
+    return false;
+  }
+
+  try {
+    if (resolved.source === "bench") {
+      if (resolved.benchIndex === targetBenchIndex) return true;
+      state.bench[targetBenchIndex] = cardId;
+      state.bench[resolved.benchIndex] = null;
+    } else if (resolved.source === "pitch") {
+      await api("/v1/squad/unequip", { method: "POST", body: JSON.stringify({ slot: resolved.slotKey }) });
+      delete state.squad[resolved.slotKey];
+      removeCardFromBench(cardId);
+      state.bench[targetBenchIndex] = cardId;
+    } else {
+      const slotKey = getSquadSlotOfCard(cardId);
+      if (slotKey) {
+        await api("/v1/squad/unequip", { method: "POST", body: JSON.stringify({ slot: slotKey }) });
+        delete state.squad[slotKey];
+      }
+      removeCardFromBench(cardId);
+      state.bench[targetBenchIndex] = cardId;
+    }
+
+    removeCardFromBench(cardId, targetBenchIndex);
+    reconcileBenchWithState();
+    state.selectedCardId = null;
+    renderBench();
+    renderSquad();
+    renderInventory();
+    renderSelectedCard();
+    renderMarketSelected();
+    renderTacticsShell();
+    setStatus("Bench updated.");
+    return true;
+  } catch (e) {
+    setStatus(e.message);
+    return false;
+  }
+}
+
+async function moveCardToPitch(cardId, targetSlotKey, hintedPayload = null) {
+  const resolved = resolveDragPayload(hintedPayload || { cardId });
+  if (!resolved) return false;
+
+  const incomingCard = getCardById(cardId);
+  if (!incomingCard) {
+    setStatus("Card not found.");
+    return false;
+  }
+  if (state.market.listedSet.has(cardId)) {
+    setStatus("This card is listed on the market. Cancel listing first.");
+    return false;
+  }
+  if (!isCardCompatibleForSlot(incomingCard, targetSlotKey)) {
+    setStatus("That player is not compatible with this position.");
+    return false;
+  }
+
+  const targetCardId = state.squad[targetSlotKey] || null;
+
+  try {
+    if (resolved.source === "pitch" && resolved.slotKey === targetSlotKey) return true;
+
+    if (resolved.source === "pitch") {
+      if (targetCardId && targetCardId !== cardId) {
+        const displaced = getCardById(targetCardId);
+        if (!displaced || !isCardCompatibleForSlot(displaced, resolved.slotKey)) {
+          setStatus("Swap blocked: displaced player is not compatible with the source slot.");
+          return false;
+        }
+
+        await api("/v1/squad/unequip", { method: "POST", body: JSON.stringify({ slot: targetSlotKey }) });
+        delete state.squad[targetSlotKey];
+
+        await api("/v1/squad/equip", { method: "POST", body: JSON.stringify({ slot: targetSlotKey, cardId }) });
+        state.squad[targetSlotKey] = cardId;
+
+        await api("/v1/squad/equip", { method: "POST", body: JSON.stringify({ slot: resolved.slotKey, cardId: targetCardId }) });
+        state.squad[resolved.slotKey] = targetCardId;
+      } else {
+        await api("/v1/squad/equip", { method: "POST", body: JSON.stringify({ slot: targetSlotKey, cardId }) });
+        delete state.squad[resolved.slotKey];
+        state.squad[targetSlotKey] = cardId;
+      }
+    } else if (resolved.source === "bench") {
+      if (targetCardId && targetCardId !== cardId) {
+        await api("/v1/squad/unequip", { method: "POST", body: JSON.stringify({ slot: targetSlotKey }) });
+        delete state.squad[targetSlotKey];
+
+        await api("/v1/squad/equip", { method: "POST", body: JSON.stringify({ slot: targetSlotKey, cardId }) });
+        state.squad[targetSlotKey] = cardId;
+
+        state.bench[resolved.benchIndex] = targetCardId;
+      } else {
+        await api("/v1/squad/equip", { method: "POST", body: JSON.stringify({ slot: targetSlotKey, cardId }) });
+        state.squad[targetSlotKey] = cardId;
+        state.bench[resolved.benchIndex] = null;
+      }
+    } else {
+      if (targetCardId && targetCardId !== cardId) {
+        const emptyBench = firstEmptyBenchIndex();
+        if (emptyBench === -1) {
+          setStatus("Bench is full. Free a bench slot before replacing a starter.");
+          return false;
+        }
+
+        await api("/v1/squad/unequip", { method: "POST", body: JSON.stringify({ slot: targetSlotKey }) });
+        delete state.squad[targetSlotKey];
+
+        await api("/v1/squad/equip", { method: "POST", body: JSON.stringify({ slot: targetSlotKey, cardId }) });
+        state.squad[targetSlotKey] = cardId;
+
+        removeCardFromBench(targetCardId);
+        state.bench[emptyBench] = targetCardId;
+      } else {
+        await api("/v1/squad/equip", { method: "POST", body: JSON.stringify({ slot: targetSlotKey, cardId }) });
+        state.squad[targetSlotKey] = cardId;
+      }
+    }
+
+    removeCardFromBench(cardId);
+    reconcileBenchWithState();
+    state.selectedCardId = null;
+    renderBench();
+    renderSquad();
+    renderInventory();
+    renderSelectedCard();
+    renderMarketSelected();
+    renderTacticsShell();
+    setStatus("Squad updated.");
+    return true;
+  } catch (e) {
+    setStatus(e.message);
+    return false;
+  }
+}
+
+function benchCardHTML(card, idx) {
+  const vm = cardVisualModel(card);
+  const listed = state.market.listedSet.has(card.id);
+
+  return `
+    <div style="display:grid;gap:4px;justify-items:center;width:100%">
+      <div style="font-family:var(--font-ui);font-size:10px;font-weight:900;letter-spacing:.05em;color:var(--gold-light);text-transform:uppercase">
+        ${shortName(card.display_name)}
+      </div>
+      <div style="font-family:var(--font-ui);font-size:10px;color:var(--text-secondary)">
+        ${card.position} • OVR ${vm.ovr}
+      </div>
+      <div style="font-family:var(--font-ui);font-size:9px;color:${listed ? "var(--alert-red)" : "var(--text-secondary)"};text-transform:uppercase">
+        ${listed ? "Listed" : `B${idx + 1}`}
+      </div>
+    </div>
+  `;
+}
+
+function renderBench() {
+  ensureBenchState();
+  const slots = [...document.querySelectorAll(".benchRow .benchSlot")];
+  if (!slots.length) return;
+
+  slots.forEach((node, idx) => {
+    const cardId = state.bench[idx] || null;
+    const card = getCardById(cardId);
+
+    node.dataset.benchIndex = String(idx);
+    node.onclick = () => onBenchClick(idx);
+
+    if (!card) {
+      node.innerHTML = `B${idx + 1}`;
+      node.draggable = false;
+      node.style.cursor = "pointer";
+    } else {
+      node.innerHTML = benchCardHTML(card, idx);
+      node.draggable = !state.tacticsLocked;
+      node.style.cursor = state.tacticsLocked ? "default" : "grab";
+
+      node.addEventListener("dragstart", (e) => {
+        if (state.tacticsLocked) {
+          e.preventDefault();
+          return;
+        }
+        setDragPayload({ source: "bench", benchIndex: idx, cardId: card.id });
+        e.dataTransfer.effectAllowed = "move";
+        e.dataTransfer.setData("text/plain", card.id);
+      });
+
+      node.addEventListener("dragend", () => {
+        clearDragPayload();
+      });
+    }
+
+    node.addEventListener("dragover", (e) => {
+      if (!state.dragPayload) return;
+      e.preventDefault();
+      const ok = canDropOnBench(idx, state.dragPayload);
+      paintDropNode(node, ok ? "ok" : "bad");
+      e.dataTransfer.dropEffect = ok ? "move" : "none";
+    });
+
+    node.addEventListener("dragleave", () => {
+      clearDropNodeStyle(node);
+    });
+
+    node.addEventListener("drop", async (e) => {
+      e.preventDefault();
+      clearAllDropStates();
+      const payload = state.dragPayload;
+      clearDragPayload();
+      if (!payload) return;
+      if (!canDropOnBench(idx, payload)) return;
+      await moveCardToBench(payload.cardId, idx, payload);
+    });
+  });
 }
 
 function seedXI() {
@@ -834,8 +1228,65 @@ function refreshSlotStates() {
 
   [...grid.querySelectorAll(".slot")].forEach((node) => {
     const k = node.dataset.slot;
+    const cardId = state.squad[k];
     node.classList.toggle("armed", armed);
-    node.classList.toggle("equipped", !!state.squad[k]);
+    node.classList.toggle("equipped", !!cardId);
+    node.draggable = !!cardId && !state.tacticsLocked;
+    node.style.cursor = !!cardId && !state.tacticsLocked ? "grab" : "pointer";
+  });
+}
+
+function attachPitchDragListeners() {
+  const grid = el("xi");
+  if (!grid) return;
+
+  [...grid.querySelectorAll(".slot")].forEach((node) => {
+    const slotKey = node.dataset.slot;
+    const cardId = state.squad[slotKey] || null;
+
+    node.ondragstart = null;
+    node.ondragend = null;
+    node.ondragover = null;
+    node.ondragleave = null;
+    node.ondrop = null;
+
+    if (cardId) {
+      node.addEventListener("dragstart", (e) => {
+        if (state.tacticsLocked) {
+          e.preventDefault();
+          return;
+        }
+        setDragPayload({ source: "pitch", slotKey, cardId });
+        e.dataTransfer.effectAllowed = "move";
+        e.dataTransfer.setData("text/plain", cardId);
+      });
+
+      node.addEventListener("dragend", () => {
+        clearDragPayload();
+      });
+    }
+
+    node.addEventListener("dragover", (e) => {
+      if (!state.dragPayload) return;
+      e.preventDefault();
+      const ok = canDropOnPitch(slotKey, state.dragPayload);
+      paintDropNode(node, ok ? "ok" : "bad");
+      e.dataTransfer.dropEffect = ok ? "move" : "none";
+    });
+
+    node.addEventListener("dragleave", () => {
+      clearDropNodeStyle(node);
+    });
+
+    node.addEventListener("drop", async (e) => {
+      e.preventDefault();
+      clearAllDropStates();
+      const payload = state.dragPayload;
+      clearDragPayload();
+      if (!payload) return;
+      if (!canDropOnPitch(slotKey, payload)) return;
+      await moveCardToPitch(payload.cardId, slotKey, payload);
+    });
   });
 }
 
@@ -848,9 +1299,14 @@ function renderSquad() {
   [...grid.querySelectorAll(".slot")].forEach((node) => {
     const k = node.dataset.slot;
     const cardId = state.squad[k];
+    const roleMap = getFormationRoleMap(state.formation);
+    const meta = roleMap[k];
 
     if (!cardId) {
-      node.innerHTML = `<div class="p">${slotLabel(k)}</div><div class="n muted">Empty</div>`;
+      node.innerHTML = `
+        <div class="p">${slotLabel(k)}</div>
+        <div class="n muted">${meta?.role ? meta.role.replaceAll("_", " ") : "Empty"}</div>
+      `;
       return;
     }
 
@@ -871,52 +1327,51 @@ function renderSquad() {
 
   state.teamValidation = validateTeamModel(buildTeamModel());
   refreshSlotStates();
+  attachPitchDragListeners();
   updateSynergy();
 }
 
 async function onSlotClick(slotKey) {
-  const status = el("mk-status");
-
   if (state.tacticsLocked) {
-    if (status) status.textContent = "Tactics are locked for the next fixture.";
+    setStatus("Tactics are locked for the next fixture.");
     return;
   }
 
-  if (!state.selectedCardId) {
-    if (!state.squad[slotKey]) return;
-    try {
-      await api("/v1/squad/unequip", { method: "POST", body: JSON.stringify({ slot: slotKey }) });
-      delete state.squad[slotKey];
-      renderSquad();
-      renderSelectedCard();
-    } catch (e) {
-      if (status) status.textContent = e.message;
-    }
+  const occupiedCardId = state.squad[slotKey] || null;
+
+  if (state.selectedCardId) {
+    await moveCardToPitch(state.selectedCardId, slotKey, { source: "inventory", cardId: state.selectedCardId });
     return;
   }
 
-  if (state.market.listedSet.has(state.selectedCardId)) {
-    if (status) status.textContent = "This card is listed on the market. Cancel listing first.";
-    return;
-  }
-
-  const cardId = state.selectedCardId;
-
-  try {
-    await api("/v1/squad/equip", { method: "POST", body: JSON.stringify({ slot: slotKey, cardId }) });
-
-    for (const k of Object.keys(state.squad)) {
-      if (state.squad[k] === cardId) delete state.squad[k];
-    }
-    state.squad[slotKey] = cardId;
-
-    state.selectedCardId = null;
+  if (occupiedCardId) {
+    state.selectedCardId = occupiedCardId;
     renderSelectedCard();
     renderInventory();
-    renderSquad();
     renderMarketSelected();
-  } catch (e) {
-    if (status) status.textContent = e.message;
+    pulseSelectedPanel();
+  }
+}
+
+async function onBenchClick(index) {
+  if (state.tacticsLocked && state.selectedCardId) {
+    setStatus("Tactics are locked for the next fixture.");
+    return;
+  }
+
+  const occupiedCardId = state.bench[index] || null;
+
+  if (state.selectedCardId && !occupiedCardId) {
+    await moveCardToBench(state.selectedCardId, index, { source: "inventory", cardId: state.selectedCardId });
+    return;
+  }
+
+  if (occupiedCardId) {
+    state.selectedCardId = occupiedCardId;
+    renderSelectedCard();
+    renderInventory();
+    renderMarketSelected();
+    pulseSelectedPanel();
   }
 }
 
@@ -937,15 +1392,17 @@ function renderInventory() {
         selected: state.selectedCardId === c.id,
         listed: state.market.listedSet.has(c.id),
         compact: false,
-        selectable: true
+        selectable: true,
+        draggable: !state.tacticsLocked
       })).join("")}
     </div>
   `;
 
   list.querySelectorAll("[data-card-id]").forEach((node) => {
+    const id = node.getAttribute("data-card-id");
+
     node.addEventListener("click", () => {
       if (state.tacticsLocked) return;
-      const id = node.getAttribute("data-card-id");
       state.selectedCardId = state.selectedCardId === id ? null : id;
       renderSelectedCard();
       renderInventory();
@@ -957,6 +1414,25 @@ function renderInventory() {
         pulseSelectedPanel();
         scrollToAppShell();
       }
+    });
+
+    node.addEventListener("dragstart", (e) => {
+      if (state.tacticsLocked) {
+        e.preventDefault();
+        return;
+      }
+      if (state.market.listedSet.has(id)) {
+        e.preventDefault();
+        setStatus("This card is listed on the market. Cancel listing first.");
+        return;
+      }
+      setDragPayload({ source: "inventory", cardId: id });
+      e.dataTransfer.effectAllowed = "move";
+      e.dataTransfer.setData("text/plain", id);
+    });
+
+    node.addEventListener("dragend", () => {
+      clearDragPayload();
     });
   });
 }
@@ -974,7 +1450,7 @@ function renderSelectedCard() {
       <div class="muted tiny" style="margin-top:6px">
         ${state.tacticsLocked
           ? "Tactics are locked. Wait for the next open window to edit your squad."
-          : "Choose a card in Collection. Then click a pitch slot to place that player."}
+          : "Drag a card to the pitch or bench, or click a card then choose a target slot."}
       </div>
     `;
     return;
@@ -982,7 +1458,8 @@ function renderSelectedCard() {
 
   const vm = cardVisualModel(c);
   const isListed = state.market.listedSet.has(c.id);
-  const inSquad = Object.values(state.squad).includes(c.id);
+  const squadSlot = getSquadSlotOfCard(c.id);
+  const benchIndex = findBenchIndexByCardId(c.id);
 
   box.innerHTML = `
     <div class="kfSelected">
@@ -1009,9 +1486,11 @@ function renderSelectedCard() {
             ? "TACTICS LOCKED — changes are blocked until the next fixture window opens."
             : isListed
               ? "LISTED — cancel the market listing before using this card in your squad."
-              : inSquad
-                ? "Already equipped in your XI. Click another slot to move this player."
-                : "Ready to equip — click any armed pitch slot now."}
+              : squadSlot
+                ? `In Starting XI — ${slotLabel(squadSlot)}. Drag to another pitch token or bench.`
+                : benchIndex !== -1
+                  ? `On Bench — B${benchIndex + 1}. Drag to pitch or another bench slot.`
+                  : "Ready to use — drag to pitch or empty bench slot."}
         </div>
       </div>
     </div>
@@ -1031,13 +1510,13 @@ function updateSynergy() {
   if (fill) fill.style.width = `${synergy.overall}%`;
 
   if (!team.equippedCount) {
-    safeText(note, "Equip players to build synergy.");
+    safeText(note, "Nation INACTIVE • Role INACTIVE • Rarity INACTIVE • Street Kings OFF");
     return;
   }
 
   const nationText = synergy.nation.available
     ? `Nation ${synergy.nation.status} ${synergy.nation.count}/${team.equippedCount}`
-    : "Nation INACTIVE data-missing";
+    : "Nation INACTIVE";
 
   const streetKingsText = synergy.streetKings.active ? "Street Kings ACTIVE" : "Street Kings OFF";
 
@@ -1142,8 +1621,18 @@ function renderTacticsShell() {
   const cards = document.querySelectorAll(".tacticsTopStrip .tacticsTopCard");
   safeText(cards[0]?.querySelector(".sectionTitle"), formatFormationLabel(state.formation));
   safeText(cards[1]?.querySelector(".sectionTitle"), savedTemplateLabel());
-  safeText(cards[2]?.querySelector(".sectionTitle"), state.tacticsLocked ? "Locked" : "Open");
-  safeText(cards[2]?.querySelector(".muted.tiny:last-child"), state.tacticsLocked ? "Current window locked until next daily cycle." : "Tactics lock 1 hour before kickoff.");
+
+  const validation = validateTeamModel(buildTeamModel());
+  const statusLabel = state.tacticsLocked ? "Locked" : validation.isReady ? "Ready" : validation.isComplete ? "Open" : "Incomplete";
+  safeText(cards[2]?.querySelector(".sectionTitle"), statusLabel);
+  safeText(
+    cards[2]?.querySelector(".muted.tiny:last-child"),
+    state.tacticsLocked
+      ? "Current window locked until next daily cycle."
+      : validation.isReady
+        ? "Squad is valid and ready for the next lock window."
+        : "Complete the XI and fix conflicts before the next fixture."
+  );
 
   const desc = tacticDescriptors(state.tacticMode);
   safeText(el("tactic-front-shape"), desc.front);
@@ -1156,7 +1645,7 @@ function renderTacticsShell() {
     btn.disabled = state.tacticsLocked;
   });
 
-  state.teamValidation = validateTeamModel(buildTeamModel());
+  state.teamValidation = validation;
   applyFormationLayout();
   refreshSlotStates();
   renderSelectedCard();
@@ -1615,7 +2104,6 @@ function renderMarketSelected() {
   const n = el("mk-selected");
   const min = el("mk-min");
   const btn = el("btn-list");
-  const status = el("mk-status");
 
   const c = state.selectedCardId ? getCardById(state.selectedCardId) : null;
 
@@ -1633,7 +2121,6 @@ function renderMarketSelected() {
   safeText(min, `Min: ${minP} coins`);
 
   if (btn) btn.disabled = isListed;
-  if (isListed && status) status.textContent = "Selected card is listed. Cancel the listing to use it.";
 }
 
 function listingHTML(x, isMine = false) {
@@ -1723,14 +2210,17 @@ async function loadMarket() {
 
   safeText(el("myCount"), `(${openMine.length}/${state.market.rules.maxOpenListings})`);
 
+  reconcileBenchWithState();
   renderPulse();
   renderListings();
   renderTrades();
   renderHomeMovers();
   renderInventory();
+  renderBench();
   renderSelectedCard();
   refreshSlotStates();
   renderMarketSelected();
+  renderTacticsShell();
 }
 
 function renderListings() {
@@ -1752,7 +2242,6 @@ function renderListings() {
 
   document.querySelectorAll("[data-buy]").forEach((btn) => {
     btn.addEventListener("click", async () => {
-      const status = el("mk-status");
       const id = btn.getAttribute("data-buy");
       btn.disabled = true;
       try {
@@ -1761,9 +2250,9 @@ function renderListings() {
         await loadInventory();
         await loadMarket();
         await loadDaily();
-        if (status) status.textContent = `Purchase complete. Paid ${res.paid} coins.`;
+        setStatus(`Purchase complete. Paid ${res.paid} coins.`);
       } catch (e) {
-        if (status) status.textContent = e.message;
+        setStatus(e.message);
       } finally {
         btn.disabled = false;
       }
@@ -1772,15 +2261,14 @@ function renderListings() {
 
   document.querySelectorAll("[data-cancel]").forEach((btn) => {
     btn.addEventListener("click", async () => {
-      const status = el("mk-status");
       const id = btn.getAttribute("data-cancel");
       btn.disabled = true;
       try {
         await api("/v1/market/cancel", { method: "POST", body: JSON.stringify({ listingId: id }) });
         await loadMarket();
-        if (status) status.textContent = "Listing cancelled.";
+        setStatus("Listing cancelled.");
       } catch (e) {
-        if (status) status.textContent = e.message;
+        setStatus(e.message);
       } finally {
         btn.disabled = false;
       }
@@ -1805,11 +2293,10 @@ function renderTrades() {
 }
 
 async function listSelected() {
-  const status = el("mk-status");
   const price = Number(el("mk-price")?.value || 0);
 
   if (!state.selectedCardId) {
-    if (status) status.textContent = "Select a card first.";
+    setStatus("Select a card first.");
     return;
   }
 
@@ -1817,7 +2304,7 @@ async function listSelected() {
   const minP = minPriceFor(c?.rarity);
 
   if (!Number.isFinite(price) || price < minP) {
-    if (status) status.textContent = `Min price for ${c?.rarity} is ${minP}.`;
+    setStatus(`Min price for ${c?.rarity} is ${minP}.`);
     return;
   }
 
@@ -1826,12 +2313,12 @@ async function listSelected() {
 
   try {
     await api("/v1/market/list", { method: "POST", body: JSON.stringify({ cardId: state.selectedCardId, price }) });
-    if (status) status.textContent = "Listed successfully.";
+    setStatus("Listed successfully.");
     if (el("mk-price")) el("mk-price").value = "";
     await loadMarket();
     await loadDaily();
   } catch (e) {
-    if (status) status.textContent = e.message;
+    setStatus(e.message);
   } finally {
     if (btn) btn.disabled = false;
   }
@@ -1890,7 +2377,10 @@ function renderPulse() {
 async function loadInventory() {
   const data = await api("/v1/inventory", { method: "GET" });
   state.inventory = (data.cards || []).map(normalizeCard).filter(Boolean);
+  state.inventoryLoaded = true;
+  reconcileBenchWithState();
   renderInventory();
+  renderBench();
   renderSelectedCard();
   renderSquad();
   renderMarketSelected();
@@ -1899,6 +2389,8 @@ async function loadInventory() {
 async function loadSquad() {
   const data = await api("/v1/squad", { method: "GET" });
   state.squad = data.slots || {};
+  reconcileBenchWithState();
+  renderBench();
   renderSquad();
 }
 
@@ -2011,6 +2503,7 @@ async function enterKickForge() {
       loadDaily(),
       loadCosmetics()
     ]);
+    renderBench();
     renderTacticsShell();
     renderLeagueShell();
     updateSynergy();
@@ -2023,7 +2516,9 @@ async function enterKickForge() {
 }
 
 (function boot() {
+  ensureBenchState();
   seedXI();
+  renderBench();
   setUserLabel();
   initChips();
   initViewTabs();
@@ -2057,13 +2552,12 @@ async function enterKickForge() {
   el("btn-list")?.addEventListener("click", listSelected);
 
   el("btn-refresh-market")?.addEventListener("click", async () => {
-    const status = el("mk-status");
-    if (status) status.textContent = "Refreshing market…";
+    setStatus("Refreshing market…");
     try {
       await loadMarket();
-      if (status) status.textContent = "Market refreshed.";
+      setStatus("Market refreshed.");
     } catch (e) {
-      if (status) status.textContent = e.message;
+      setStatus(e.message);
     }
   });
 
@@ -2079,6 +2573,7 @@ async function enterKickForge() {
         loadDaily(),
         loadCosmetics()
       ]);
+      renderBench();
       renderTacticsShell();
       renderLeagueShell();
     } catch (e) {
@@ -2098,6 +2593,7 @@ async function enterKickForge() {
     buildTeamModel,
     validateTeamModel,
     buildSynergyModel,
-    exportTeamForSimulation
+    exportTeamForSimulation,
+    renderBench
   };
 })();
