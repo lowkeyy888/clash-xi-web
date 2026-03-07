@@ -9,7 +9,7 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;500;600;700;800&family=Barlow+Condensed:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;500;600;700;800&family=Barlow+Condensed:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="./styles.css"/>
 </head>
@@ -26,9 +26,9 @@
 
       <nav class="kfNav">
         <a href="#overview">Overview</a>
+        <a href="#features">Features</a>
         <a href="#collection">Collection</a>
         <a href="#squad">Squad</a>
-        <a href="#league">League</a>
         <a href="#market">Market</a>
         <a href="#progress">Progress</a>
       </nav>
@@ -43,79 +43,211 @@
     <main class="shell">
       <!-- HERO -->
       <section class="hero card kfHero" id="overview">
-        <div class="heroLeft">
-          <div class="tag">KICKFORGE ALPHA</div>
-          <h1>Build your squad.<br/>Own the league.<br/>Rule the world.</h1>
-          <p class="muted">
-            KickForge is a football squad-building experience powered by fictional cards, pack openings,
-            tactical squad building, player-driven markets, daily progression, and PRO league competition.
-          </p>
+        <div class="heroBackdrop">
+          <div class="heroOrb"></div>
+          <div class="heroPitch"></div>
+          <div class="heroBall">⚽</div>
+        </div>
 
-          <div class="ctaRow">
-            <button class="btn primary" id="btn-play">Enter KickForge</button>
-            <button class="btn ghost" id="btn-pack" disabled>Open Pack</button>
+        <div class="heroGrid">
+          <div class="heroMain">
+            <div class="heroEyebrow">The Ultimate Football Card Game</div>
+            <h1 class="heroTitle">KickForge</h1>
+            <div class="heroTagline">Build Your Squad. Own the League. Rule the World.</div>
+
+            <p class="heroDesc">
+              Build your club with fictional football cards, shape your squad around tactics and synergy,
+              chase rare pulls, trade the market, climb through daily progression, and prepare for PRO league competition.
+            </p>
+
+            <div class="ctaRow heroCtas">
+              <button class="btn primary" id="btn-play">Play Free</button>
+              <button class="btn ghost" id="btn-pack" disabled>Open Pack</button>
+            </div>
+
+            <div class="heroStats">
+              <div class="heroStat">
+                <div class="heroStatNum">12K+</div>
+                <div class="heroStatLabel">Players Registered</div>
+              </div>
+              <div class="heroStat">
+                <div class="heroStatNum">480K+</div>
+                <div class="heroStatLabel">Cards Opened</div>
+              </div>
+              <div class="heroStat">
+                <div class="heroStatNum">35K+</div>
+                <div class="heroStatLabel">Market Trades</div>
+              </div>
+              <div class="heroStat">
+                <div class="heroStatNum">S1</div>
+                <div class="heroStatLabel">Active Season</div>
+              </div>
+            </div>
           </div>
 
-          <div class="microRow">
-            <div class="micro cardMini">
-              <div class="microTitle">Collection loop</div>
-              <div class="microText">Open packs → collect cards → build better squads</div>
+          <aside class="heroSide">
+            <div class="card heroPanel heroPanelPack">
+              <div class="row">
+                <div>
+                  <div class="sectionTitle">Starter Pack</div>
+                  <div class="muted tiny">3-card reveal • rarity chase • squad upgrades</div>
+                </div>
+                <div class="tag">Live</div>
+              </div>
+              <div class="heroPanelBody">
+                KickForge pack opening is connected to the live foundation.
+              </div>
             </div>
-            <div class="micro cardMini">
-              <div class="microTitle">Competitive path</div>
-              <div class="microText">Arena, standings, and future PRO league structure</div>
+
+            <div class="card heroPanel">
+              <div class="row">
+                <div>
+                  <div class="sectionTitle">Market Pulse</div>
+                  <div class="muted tiny">Trade-driven movement</div>
+                </div>
+                <div class="tag">v1</div>
+              </div>
+
+              <div class="sparkWrap">
+                <div class="sparkLine" id="spark">
+                  <svg id="sparkSvg" viewBox="0 0 300 64" preserveAspectRatio="none"></svg>
+                </div>
+                <div class="sparkMeta">
+                  <div><span class="muted tiny">Last:</span> <span id="m-last">—</span></div>
+                  <div><span class="muted tiny">24h:</span> <span id="m-chg">—</span></div>
+                </div>
+              </div>
+
+              <div class="muted tiny">
+                Foundation preserved while the full KickForge front-end rebuild continues.
+              </div>
             </div>
-            <div class="micro cardMini">
-              <div class="microTitle">Player economy</div>
-              <div class="microText">List cards, buy undervalued players, move the market</div>
+
+            <div class="heroMiniGrid">
+              <div class="card cardMini">
+                <div class="microTitle">Collection Loop</div>
+                <div class="microText">Open packs, grow your club, improve your squad.</div>
+              </div>
+              <div class="card cardMini">
+                <div class="microTitle">Competitive Path</div>
+                <div class="microText">Arena, progression, standings, and future PRO leagues.</div>
+              </div>
             </div>
+          </aside>
+        </div>
+
+        <div class="scrollCue">
+          <span>⌄</span>
+        </div>
+      </section>
+
+      <!-- FEATURE CARDS -->
+      <section class="featureBlock card" id="features">
+        <div class="sectionIntro">
+          <div class="heroEyebrow">Why KickForge</div>
+          <div class="sectionTitle sectionTitleWide">A Football Card Game Built For Competition</div>
+          <div class="muted tiny">
+            Every system is built around squad growth, market pressure, progression, and daily return loops.
           </div>
         </div>
 
-        <div class="heroRight">
-          <div class="card packBox">
-            <div class="row">
-              <div>
-                <div class="sectionTitle">Starter Pack</div>
-                <div class="muted tiny">3-card reveal • rarity chase • squad upgrades</div>
-              </div>
-              <div class="tag">LIVE</div>
-            </div>
-            <div class="packGlow"></div>
-            <div class="packHint">KickForge pack opening is connected to the live foundation.</div>
+        <div class="featureGrid">
+          <div class="featureCard">
+            <div class="featureIcon">🎴</div>
+            <div class="featureHead">Pack Opening</div>
+            <div class="featureText">Open packs, chase rarities, and turn every reveal into squad value.</div>
           </div>
 
-          <div class="card">
-            <div class="row">
-              <div>
-                <div class="sectionTitle">Market Pulse</div>
-                <div class="muted tiny">Trade-driven movement</div>
-              </div>
-              <div class="tag">v1</div>
-            </div>
-
-            <div class="sparkWrap">
-              <div class="sparkLine" id="spark">
-                <svg id="sparkSvg" viewBox="0 0 300 64" preserveAspectRatio="none"></svg>
-              </div>
-              <div class="sparkMeta">
-                <div><span class="muted tiny">Last:</span> <span id="m-last">—</span></div>
-                <div><span class="muted tiny">24h:</span> <span id="m-chg">—</span></div>
-              </div>
-            </div>
-
-            <div class="muted tiny">Foundation preserved while the full KickForge front-end rebuild begins.</div>
+          <div class="featureCard">
+            <div class="featureIcon">🧩</div>
+            <div class="featureHead">Squad Builder</div>
+            <div class="featureText">Select players, align roles, and raise your synergy through style fit.</div>
           </div>
 
-          <div class="grid2">
-            <div class="card cardMini">
-              <div class="microTitle">Collection</div>
-              <div class="microText">Rarity ladder, hidden value, future traits</div>
-            </div>
-            <div class="card cardMini">
-              <div class="microTitle">League</div>
-              <div class="microText">1 match/day • lock before kickoff • standings</div>
-            </div>
+          <div class="featureCard">
+            <div class="featureIcon">📈</div>
+            <div class="featureHead">Player Market</div>
+            <div class="featureText">List cards, buy undervalued assets, and react to real trade-driven movement.</div>
+          </div>
+
+          <div class="featureCard">
+            <div class="featureIcon">⚔️</div>
+            <div class="featureHead">Arena Matches</div>
+            <div class="featureText">Enter match simulations, win coins, and build momentum through results.</div>
+          </div>
+
+          <div class="featureCard">
+            <div class="featureIcon">🏆</div>
+            <div class="featureHead">League Future</div>
+            <div class="featureText">Prepare for daily fixtures, standings pressure, and roster lock strategy.</div>
+          </div>
+
+          <div class="featureCard">
+            <div class="featureIcon">🎯</div>
+            <div class="featureHead">Daily Progression</div>
+            <div class="featureText">Claim missions, level the pass, unlock cosmetics, and return every day.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- RARITY SHOWCASE -->
+      <section class="rarityShowcase card">
+        <div class="sectionIntro">
+          <div class="heroEyebrow">Rarity Ladder</div>
+          <div class="sectionTitle sectionTitleWide">Every Pull Feels Different</div>
+        </div>
+
+        <div class="rarityStrip">
+          <div class="rarityTile rarity-common">
+            <div class="rarityTileTop">Common</div>
+            <div class="rarityTileBody">Reliable squad filler and market volume base.</div>
+          </div>
+          <div class="rarityTile rarity-uncommon">
+            <div class="rarityTileTop">Uncommon</div>
+            <div class="rarityTileBody">Cleaner upside and better role efficiency.</div>
+          </div>
+          <div class="rarityTile rarity-rare">
+            <div class="rarityTileTop">Rare</div>
+            <div class="rarityTileBody">Higher-value cards with stronger progression impact.</div>
+          </div>
+          <div class="rarityTile rarity-epic">
+            <div class="rarityTileTop">Epic</div>
+            <div class="rarityTileBody">Premium club pieces with stronger market attraction.</div>
+          </div>
+          <div class="rarityTile rarity-legendary">
+            <div class="rarityTileTop">Legendary</div>
+            <div class="rarityTileBody">Headline pulls with gold energy and real status.</div>
+          </div>
+          <div class="rarityTile rarity-icon">
+            <div class="rarityTileTop">Icon</div>
+            <div class="rarityTileBody">Top-tier prestige moments designed to feel massive.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- MARKET TICKER / PRO / REGISTRATION -->
+      <section class="grid3" style="margin-top:18px">
+        <div class="card promoCard">
+          <div class="heroEyebrow">Live Market</div>
+          <div class="sectionTitle">Ticker</div>
+          <div class="muted tiny">
+            Follow movement, spot value, and react faster than the rest of the market.
+          </div>
+        </div>
+
+        <div class="card promoCard">
+          <div class="heroEyebrow">PRO Access</div>
+          <div class="sectionTitle">Leagues</div>
+          <div class="muted tiny">
+            Daily fixtures, standings pressure, and roster-lock strategy are built for premium competition.
+          </div>
+        </div>
+
+        <div class="card promoCard">
+          <div class="heroEyebrow">Register</div>
+          <div class="sectionTitle">Start Free</div>
+          <div class="muted tiny">
+            Enter the live foundation now, open your first pack, and begin building your club immediately.
           </div>
         </div>
       </section>
@@ -124,40 +256,44 @@
       <section class="grid2" style="margin-top:18px">
         <div class="card">
           <div class="sectionTitle">KickForge Overview</div>
-          <div class="muted tiny">This shell replaces the temporary Clash XI structure while keeping the live backend foundation.</div>
+          <div class="muted tiny">
+            This shell replaces the temporary Clash XI structure while keeping the live backend foundation active.
+          </div>
 
           <div class="microRow" style="margin-top:14px">
             <div class="micro cardMini">
               <div class="microTitle">Packs</div>
-              <div class="microText">Reveal, claim, and feed your collection</div>
+              <div class="microText">Reveal, claim, and feed your collection.</div>
             </div>
             <div class="micro cardMini">
               <div class="microTitle">Squad Builder</div>
-              <div class="microText">Choose cards, align style, improve synergy</div>
+              <div class="microText">Choose cards, align style, improve synergy.</div>
             </div>
             <div class="micro cardMini">
               <div class="microTitle">Progression</div>
-              <div class="microText">Daily challenges, pass XP, cosmetics</div>
+              <div class="microText">Daily challenges, pass XP, cosmetics.</div>
             </div>
           </div>
         </div>
 
         <div class="card">
-          <div class="sectionTitle">Road to Full Rebuild</div>
-          <div class="muted tiny">Current focus: rebrand + shell reset + preserved working engine.</div>
+          <div class="sectionTitle">Road To Full Rebuild</div>
+          <div class="muted tiny">
+            Current focus: landing compliance, collection visuals, stronger module structure.
+          </div>
 
           <div class="microRow" style="margin-top:14px">
             <div class="micro cardMini">
               <div class="microTitle">Now</div>
-              <div class="microText">KickForge shell, hero, module structure</div>
+              <div class="microText">Landing shell, nav reset, module previews.</div>
             </div>
             <div class="micro cardMini">
               <div class="microTitle">Next</div>
-              <div class="microText">Design tokens, angular UI, collection screens</div>
+              <div class="microText">Design accuracy, collection visuals, card polish.</div>
             </div>
             <div class="micro cardMini">
               <div class="microTitle">Later</div>
-              <div class="microText">Full tactics, live match viewer, PRO leagues</div>
+              <div class="microText">Tactics, live viewer, PRO league hub.</div>
             </div>
           </div>
         </div>
@@ -169,7 +305,7 @@
           <div class="lockerHeader">
             <div>
               <div class="sectionTitle">Collection</div>
-              <div class="muted tiny">Browse your owned cards. Filter by rarity. Select a card to use in the squad or market.</div>
+              <div class="muted tiny">Browse your cards. Filter by rarity. Select a player for squad or market use.</div>
             </div>
 
             <div class="filterRow">
@@ -242,15 +378,15 @@
           <div class="microRow" style="margin-top:14px">
             <div class="micro cardMini">
               <div class="microTitle">1 Match / Day</div>
-              <div class="microText">Scheduled kickoff cadence for premium competition</div>
+              <div class="microText">Scheduled kickoff cadence for premium competition.</div>
             </div>
             <div class="micro cardMini">
               <div class="microTitle">Roster Lock</div>
-              <div class="microText">Final squad snapshot before the daily fixture</div>
+              <div class="microText">Final squad snapshot before the daily fixture.</div>
             </div>
             <div class="micro cardMini">
               <div class="microTitle">Standings</div>
-              <div class="microText">Table ranking, points, GF, GA, GD</div>
+              <div class="microText">Table ranking, points, GF, GA, GD.</div>
             </div>
           </div>
 
@@ -382,10 +518,9 @@
           </div>
 
           <div class="card" style="margin-top:18px">
-            <div class="sectionTitle">KickForge Progression Vision</div>
+            <div class="sectionTitle">KickForge Progression</div>
             <div class="muted tiny" style="margin-top:8px">
-              This rebuild keeps the live progression systems while preparing the future premium dashboard,
-              battle pass page, profile wallet, and PRO league entry flow.
+              Daily return loops, pass progression, market ambition, and future premium league access.
             </div>
           </div>
         </div>
@@ -410,7 +545,7 @@
 
       <div class="revealStage">
         <div class="revealPack" id="revealPack" role="button" tabindex="0" aria-label="Reveal next card">
-          <div class="revealPackLabel">KICKFORGE PACK</div>
+          <div class="revealPackLabel">KickForge Pack</div>
           <div class="revealPackHint muted tiny" id="revealHint">Tap to reveal</div>
           <div class="revealPackGlow"></div>
         </div>
