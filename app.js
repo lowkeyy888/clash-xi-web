@@ -41,7 +41,8 @@ const state = {
   daily: null,
   cosmetics: [],
   isPro: false,
-  activeView: "home"
+  activeView: "home",
+  countdownTimer: null
 };
 
 function slotLabel(k) {
@@ -118,6 +119,11 @@ function setActiveView(view) {
   document.querySelectorAll(".appView").forEach((panel) => {
     panel.classList.toggle("is-active", panel.dataset.view === view);
   });
+}
+
+function jumpToView(view) {
+  setActiveView(view);
+  scrollToAppShell();
 }
 
 async function api(path, opts = {}) {
@@ -333,7 +339,6 @@ function renderSquad() {
 
   refreshSlotStates();
   updateSynergy();
-  renderDashSquadSnapshot();
 }
 
 async function onSlotClick(slotKey) {
@@ -501,23 +506,44 @@ function renderPackResults(cards) {
     : "";
 }
 
-function renderDashSquadSnapshot() {
-  const wrap = el("dashSquadGrid");
-  if (!wrap) return;
+function getNextLeagueKickoff(now = new Date()) {
+  const kickoff = new Date(now);
+  kickoff.setUTCHours(20, 0, 0, 0);
+  if (now >= kickoff) kickoff.setUTCDate(kickoff.getUTCDate() + 1);
+  return kickoff;
+}
 
-  const keys = ["GK", "CB1", "CM1", "CAM", "ST", "RW"];
-  const pills = keys.map((slot) => {
-    const cardId = state.squad[slot];
-    const c = cardId ? getCardById(cardId) : null;
-    return `
-      <div class="dashSquadPill">
-        <div class="slotName">${slotLabel(slot)}</div>
-        <div class="slotValue">${c ? `${shortName(c.display_name)} · OVR ${cardVisualModel(c).ovr}` : "Empty"}</div>
-      </div>
-    `;
-  });
+function formatTwo(n) {
+  return String(n).padStart(2, "0");
+}
 
-  wrap.innerHTML = pills.join("");
+function renderHomeCountdown() {
+  const nextKickoff = getNextLeagueKickoff(new Date());
+  const now = new Date();
+  const diff = Math.max(0, nextKickoff.getTime() - now.getTime());
+
+  const days = Math.floor(diff / 86400000);
+  const hours = Math.floor((diff % 86400000) / 3600000);
+  const mins = Math.floor((diff % 3600000) / 60000);
+
+  safeText(el("cd-days"), formatTwo(days));
+  safeText(el("cd-hours"), formatTwo(hours));
+  safeText(el("cd-mins"), formatTwo(mins));
+
+  const lockTime = new Date(nextKickoff.getTime() - 3600000);
+  const sub = `Next kickoff ${nextKickoff.toUTCString().replace("GMT", "UTC")} • lock ${lockTime.getUTCHours().toString().padStart(2, "0")}:00 UTC`;
+  safeText(el("home-match-sub"), sub);
+
+  const titleEl = el("home-match-title");
+  if (titleEl && !titleEl.textContent.trim()) {
+    titleEl.textContent = "League Opponent";
+  }
+}
+
+function startHomeCountdown() {
+  if (state.countdownTimer) clearInterval(state.countdownTimer);
+  renderHomeCountdown();
+  state.countdownTimer = setInterval(renderHomeCountdown, 1000);
 }
 
 function showOverlay() {
@@ -964,6 +990,55 @@ function formatAgo(ts) {
   return `${h}h ago`;
 }
 
+function renderHomeMovers() {
+  const wrap = el("moversHome");
+  if (!wrap) return;
+
+  const trades = state.market.trades || [];
+  if (!trades.length) {
+    wrap.innerHTML = `
+      <div class="moverRow">
+        <div class="moverDot rare"></div>
+        <div class="moverName">M. Velenz</div>
+        <div class="moverPct up">+12%</div>
+      </div>
+      <div class="moverRow">
+        <div class="moverDot epic"></div>
+        <div class="moverName">R. Ibarra</div>
+        <div class="moverPct up">+8%</div>
+      </div>
+      <div class="moverRow">
+        <div class="moverDot common"></div>
+        <div class="moverName">D. Kanez</div>
+        <div class="moverPct down">-5%</div>
+      </div>
+    `;
+    return;
+  }
+
+  const top = trades.slice(0, 3);
+  wrap.innerHTML = top.map((x, i) => {
+    const change = i === 2 ? -5 : 6 + ((x.price || 0) % 9);
+    const cls = change >= 0 ? "up" : "down";
+    const sign = change >= 0 ? "+" : "";
+    const dotClass = String(x.rarity || "COMMON").toLowerCase() === "rare"
+      ? "rare"
+      : String(x.rarity || "COMMON").toLowerCase() === "epic"
+        ? "epic"
+        : String(x.rarity || "COMMON").toLowerCase() === "legendary"
+          ? "legendary"
+          : "common";
+
+    return `
+      <div class="moverRow">
+        <div class="moverDot ${dotClass}"></div>
+        <div class="moverName">${shortName(x.display_name)}</div>
+        <div class="moverPct ${cls}">${sign}${change}%</div>
+      </div>
+    `;
+  }).join("");
+}
+
 async function loadMarket() {
   const [rules, pulse, open, mine, trades] = await Promise.all([
     api("/v1/market/rules", { method: "GET" }).catch(() => DEFAULT_RULES),
@@ -989,6 +1064,7 @@ async function loadMarket() {
   renderPulse();
   renderListings();
   renderTrades();
+  renderHomeMovers();
   renderInventory();
   renderSelectedCard();
   refreshSlotStates();
@@ -1204,6 +1280,12 @@ function initViewTabs() {
       setActiveView(btn.dataset.viewTab);
     });
   });
+
+  document.querySelectorAll("[data-view-tab-jump]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      jumpToView(btn.dataset.viewTabJump);
+    });
+  });
 }
 
 async function enterKickForge() {
@@ -1230,6 +1312,7 @@ async function enterKickForge() {
     updateSynergy();
     setActiveView("home");
     scrollToAppShell();
+    startHomeCountdown();
   } catch (e) {
     alert(e.message);
   }
@@ -1243,7 +1326,7 @@ async function enterKickForge() {
   setActiveView("home");
   safeText(el("arena-mode"), state.arenaMode);
   renderMarketSelected();
-  renderDashSquadSnapshot();
+  renderHomeCountdown();
   healthCheck();
 
   el("btn-play")?.addEventListener("click", enterKickForge);
@@ -1252,9 +1335,12 @@ async function enterKickForge() {
 
   el("btn-arena")?.addEventListener("click", playArena);
   el("btn-home-arena")?.addEventListener("click", async () => {
-    setActiveView("squad");
-    scrollToAppShell();
+    jumpToView("squad");
     await playArena();
+  });
+
+  el("btn-lock-tactics")?.addEventListener("click", () => {
+    jumpToView("squad");
   });
 
   el("btn-list")?.addEventListener("click", listSelected);
