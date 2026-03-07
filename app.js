@@ -48,6 +48,20 @@ function rarityClass(r) {
   return r === "LEGENDARY" ? "rLegend" : r === "EPIC" ? "rEpic" : r === "RARE" ? "rRare" : "rCommon";
 }
 
+function rarityFrame(r) {
+  if (r === "LEGENDARY") return "kfCard--legendary";
+  if (r === "EPIC") return "kfCard--epic";
+  if (r === "RARE") return "kfCard--rare";
+  return "kfCard--common";
+}
+
+function rarityShort(r) {
+  if (r === "LEGENDARY") return "LEG";
+  if (r === "EPIC") return "EPIC";
+  if (r === "RARE") return "RARE";
+  return "COM";
+}
+
 function minPriceFor(r) {
   const rules = state.market.rules || DEFAULT_RULES;
   return rules.minPrice?.[String(r || "COMMON").toUpperCase()] ?? 10;
@@ -79,9 +93,7 @@ async function api(path, opts = {}) {
   let json = null;
   try { json = JSON.parse(txt); } catch {}
 
-  if (!res.ok) {
-    throw new Error(json?.error || txt || "API error");
-  }
+  if (!res.ok) throw new Error(json?.error || txt || "API error");
   return json;
 }
 
@@ -112,6 +124,109 @@ function getCardById(id) {
 
 function canEquipSelected() {
   return !!state.selectedCardId && !state.market.listedSet.has(state.selectedCardId);
+}
+
+function hashString(str) {
+  let h = 2166136261;
+  for (let i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
+function mulberry32(a) {
+  return function () {
+    let t = a += 0x6D2B79F5;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function cardVisualModel(card) {
+  const seed = hashString(`${card.id}|${card.display_name}|${card.position}|${card.role}|${card.rarity}`);
+  const rnd = mulberry32(seed);
+
+  const rarityBase = {
+    COMMON: 62,
+    RARE: 72,
+    EPIC: 82,
+    LEGENDARY: 91
+  }[card.rarity] ?? 62;
+
+  const posBoost = {
+    GK: { pace: -10, pass: 0, attack: -18, defense: 18 },
+    CB: { pace: -4, pass: 1, attack: -10, defense: 15 },
+    LB: { pace: 6, pass: 4, attack: -2, defense: 8 },
+    RB: { pace: 6, pass: 4, attack: -2, defense: 8 },
+    CDM: { pace: 0, pass: 8, attack: -5, defense: 12 },
+    CM: { pace: 1, pass: 10, attack: 3, defense: 5 },
+    CAM: { pace: 3, pass: 12, attack: 10, defense: -6 },
+    LW: { pace: 12, pass: 4, attack: 12, defense: -10 },
+    RW: { pace: 12, pass: 4, attack: 12, defense: -10 },
+    ST: { pace: 10, pass: 0, attack: 16, defense: -14 }
+  }[card.position] || { pace: 0, pass: 0, attack: 0, defense: 0 };
+
+  const roleBoost = roleStyle(card.role);
+  const mods = { pace: 0, pass: 0, attack: 0, defense: 0 };
+  if (roleBoost === "PRESS") { mods.pace += 3; mods.defense += 4; }
+  if (roleBoost === "POSSESSION") { mods.pass += 5; mods.attack += 2; }
+  if (roleBoost === "COUNTER") { mods.pace += 5; mods.attack += 5; }
+
+  const pace = clampStat(rarityBase + posBoost.pace + mods.pace + randIntSeed(rnd, -4, 6));
+  const pass = clampStat(rarityBase + posBoost.pass + mods.pass + randIntSeed(rnd, -4, 6));
+  const attack = clampStat(rarityBase + posBoost.attack + mods.attack + randIntSeed(rnd, -4, 6));
+  const defense = clampStat(rarityBase + posBoost.defense + mods.defense + randIntSeed(rnd, -4, 6));
+
+  const ovr = clampStat(Math.round((pace + pass + attack + defense) / 4));
+  return { ovr, pace, pass, attack, defense };
+}
+
+function randIntSeed(rnd, min, max) {
+  return Math.floor(rnd() * (max - min + 1)) + min;
+}
+
+function clampStat(n) {
+  return Math.max(35, Math.min(99, n));
+}
+
+function cardHTML(card, opts = {}) {
+  const vm = cardVisualModel(card);
+  const selected = !!opts.selected;
+  const listed = !!opts.listed;
+  const compact = !!opts.compact;
+  const selectable = opts.selectable !== false;
+
+  return `
+    <div class="kfCard ${rarityFrame(card.rarity)} ${selected ? "is-selected" : ""} ${listed ? "is-listed" : ""} ${compact ? "is-compact" : ""}" ${selectable ? `data-card-id="${card.id}"` : ""}>
+      <div class="kfCard__shine"></div>
+      <div class="kfCard__top">
+        <div class="kfCard__ovr">${vm.ovr}</div>
+        <div class="kfCard__metaRight">
+          <div class="kfCard__pos">${card.position}</div>
+          <div class="kfCard__rarity">${rarityShort(card.rarity)}</div>
+        </div>
+      </div>
+
+      <div class="kfCard__body">
+        <div class="kfCard__name">${card.display_name}</div>
+        <div class="kfCard__role">${card.role}</div>
+      </div>
+
+      <div class="kfCard__stats">
+        <div class="kfStat"><span>PAC</span><strong>${vm.pace}</strong></div>
+        <div class="kfStat"><span>PAS</span><strong>${vm.pass}</strong></div>
+        <div class="kfStat"><span>ATT</span><strong>${vm.attack}</strong></div>
+        <div class="kfStat"><span>DEF</span><strong>${vm.defense}</strong></div>
+      </div>
+
+      <div class="kfCard__footer">
+        <div class="kfCard__badge ${rarityFrame(card.rarity)}">${card.rarity}</div>
+        ${listed ? `<div class="kfCard__listed">LISTED</div>` : ``}
+      </div>
+    </div>
+  `;
 }
 
 function seedXI() {
@@ -162,10 +277,12 @@ function renderSquad() {
       return;
     }
 
+    const vm = cardVisualModel(c);
     node.innerHTML = `
       <div class="p">${slotLabel(k)}</div>
       <div class="n">${c.display_name}</div>
-      <div class="muted tiny">${c.position} • ${c.role} • ${c.rarity}</div>
+      <div class="muted tiny">${c.position} • ${c.role}</div>
+      <div class="muted tiny">OVR ${vm.ovr} • ${c.rarity}</div>
     `;
   });
 
@@ -225,33 +342,26 @@ function renderInventory() {
     return;
   }
 
-  items.forEach((c) => {
-    const isListed = state.market.listedSet.has(c.id);
+  list.innerHTML = `
+    <div class="kfCollectionGrid">
+      ${items.map((c) => cardHTML(c, {
+        selected: state.selectedCardId === c.id,
+        listed: state.market.listedSet.has(c.id),
+        compact: false,
+        selectable: true
+      })).join("")}
+    </div>
+  `;
 
-    const row = document.createElement("div");
-    row.className = "invItem";
-    if (state.selectedCardId === c.id) row.classList.add("selected");
-
-    row.addEventListener("click", () => {
-      state.selectedCardId = state.selectedCardId === c.id ? null : c.id;
+  list.querySelectorAll("[data-card-id]").forEach((node) => {
+    node.addEventListener("click", () => {
+      const id = node.getAttribute("data-card-id");
+      state.selectedCardId = state.selectedCardId === id ? null : id;
       renderSelectedCard();
       renderInventory();
       refreshSlotStates();
       renderMarketSelected();
     });
-
-    row.innerHTML = `
-      <div>
-        <div class="invName">${c.display_name}</div>
-        <div class="invMeta">${c.position} • ${c.role}</div>
-      </div>
-      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
-        <div class="rarity ${rarityClass(c.rarity)}">${c.rarity}</div>
-        ${isListed ? `<div class="badgeSm">LISTED</div>` : ``}
-      </div>
-    `;
-
-    list.appendChild(row);
   });
 }
 
@@ -270,14 +380,39 @@ function renderSelectedCard() {
     return;
   }
 
+  const vm = cardVisualModel(c);
   const isListed = state.market.listedSet.has(c.id);
+  const inSquad = Object.values(state.squad).includes(c.id);
 
   box.innerHTML = `
-    <div class="muted tiny">Selected</div>
-    <div style="font-weight:900;margin-top:6px">${c.display_name}</div>
-    <div class="muted tiny" style="margin-top:6px">${c.position} • ${c.role}</div>
-    <div class="muted tiny" style="margin-top:6px">${isListed ? "LISTED — cancel listing before using it in the squad." : "Click a squad slot to equip this player."}</div>
-    <div style="margin-top:10px" class="rarity ${rarityClass(c.rarity)}">${c.rarity}</div>
+    <div class="kfSelected">
+      <div class="kfSelected__cardWrap">
+        ${cardHTML(c, { selected: true, listed: isListed, compact: true, selectable: false })}
+      </div>
+
+      <div class="kfSelected__panel">
+        <div class="muted tiny">Selected Player</div>
+        <div class="kfSelected__name">${c.display_name}</div>
+        <div class="kfSelected__meta">${c.position} • ${c.role} • ${c.rarity}</div>
+
+        <div class="kfSelected__ovr">OVR ${vm.ovr}</div>
+
+        <div class="kfSelected__stats">
+          <div><span>Pace</span><strong>${vm.pace}</strong></div>
+          <div><span>Pass</span><strong>${vm.pass}</strong></div>
+          <div><span>Attack</span><strong>${vm.attack}</strong></div>
+          <div><span>Defense</span><strong>${vm.defense}</strong></div>
+        </div>
+
+        <div class="muted tiny" style="margin-top:10px">
+          ${isListed
+            ? "LISTED — cancel the market listing before using this card in your squad."
+            : inSquad
+              ? "Already equipped in your squad. Click another slot to move it."
+              : "Click any squad slot to equip this player."}
+        </div>
+      </div>
+    </div>
   `;
 }
 
@@ -306,29 +441,20 @@ function updateSynergy() {
 
   const matches = equipped.filter((c) => roleStyle(c.role) === state.style).length;
   const p = Math.round((matches / equipped.length) * 100);
+  const avgOvr = Math.round(equipped.reduce((a, c) => a + cardVisualModel(c).ovr, 0) / equipped.length);
 
   safeText(pct, `${p}%`);
   if (fill) fill.style.width = `${p}%`;
-  safeText(note, `Style: ${state.style} • matching roles: ${matches}/${equipped.length}`);
+  safeText(note, `Style: ${state.style} • matching roles: ${matches}/${equipped.length} • avg OVR ${avgOvr}`);
 }
 
 function renderPackResults(cards) {
   const wrap = el("cards");
   if (!wrap) return;
 
-  wrap.innerHTML = "";
-  cards.forEach((c) => {
-    const row = document.createElement("div");
-    row.className = "cardRow";
-    row.innerHTML = `
-      <div>
-        <div style="font-weight:900">${c.displayName}</div>
-        <div class="muted tiny">${c.position} • ${c.role}</div>
-      </div>
-      <div class="rarity ${rarityClass(c.rarity)}">${c.rarity}</div>
-    `;
-    wrap.appendChild(row);
-  });
+  wrap.innerHTML = cards.length
+    ? `<div class="kfPackGrid">${cards.map((c) => cardHTML(c, { compact: true, selectable: false })).join("")}</div>`
+    : "";
 }
 
 function showOverlay() {
@@ -378,11 +504,23 @@ function resetRevealUI() {
     card.dataset.i = String(i);
     card.innerHTML = `
       <div class="flipInner">
-        <div class="flipFace flipBack"><div class="q">?</div><div class="t">Reveal</div></div>
+        <div class="flipFace flipBack">
+          <div class="q">?</div>
+          <div class="t">Reveal</div>
+        </div>
         <div class="flipFace flipFront">
           <div class="cardTop">
-            <div><div class="cardName">Unknown</div><div class="cardMeta">— • —</div></div>
+            <div>
+              <div class="cardName">Unknown</div>
+              <div class="cardMeta">— • —</div>
+            </div>
             <div class="badge">—</div>
+          </div>
+          <div class="kfRevealStats">
+            <div class="kfStat"><span>PAC</span><strong>--</strong></div>
+            <div class="kfStat"><span>PAS</span><strong>--</strong></div>
+            <div class="kfStat"><span>ATT</span><strong>--</strong></div>
+            <div class="kfStat"><span>DEF</span><strong>--</strong></div>
           </div>
           <div class="cardFooter"><span class="muted">KICKFORGE</span><span class="muted">v1</span></div>
         </div>
@@ -400,16 +538,26 @@ function injectRevealData(cards) {
     const c = cards[i];
     if (!c) return;
 
-    node.classList.remove("rCommon", "rRare", "rEpic", "rLegend");
-    node.classList.add(rarityClass(c.rarity));
-
+    const vm = cardVisualModel(c);
     const badge = node.querySelector(".badge");
     const name = node.querySelector(".cardName");
     const meta = node.querySelector(".cardMeta");
+    const statsWrap = node.querySelector(".kfRevealStats");
+
+    node.classList.remove("rCommon", "rRare", "rEpic", "rLegend");
+    node.classList.add(rarityClass(c.rarity));
 
     if (badge) badge.textContent = c.rarity;
     if (name) name.textContent = c.displayName;
     if (meta) meta.textContent = `${c.position} • ${c.role}`;
+    if (statsWrap) {
+      statsWrap.innerHTML = `
+        <div class="kfStat"><span>PAC</span><strong>${vm.pace}</strong></div>
+        <div class="kfStat"><span>PAS</span><strong>${vm.pass}</strong></div>
+        <div class="kfStat"><span>ATT</span><strong>${vm.attack}</strong></div>
+        <div class="kfStat"><span>DEF</span><strong>${vm.defense}</strong></div>
+      `;
+    }
   });
 }
 
@@ -587,9 +735,7 @@ function renderDaily(d) {
     });
   });
 
-  if (chestBtn) {
-    chestBtn.disabled = !(d.chest?.available) || d.chest?.opened;
-  }
+  if (chestBtn) chestBtn.disabled = !(d.chest?.available) || d.chest?.opened;
 
   if (chestStatus) {
     if (d.chest?.opened) {
@@ -718,22 +864,6 @@ function formatAgo(ts) {
   return `${h}h ago`;
 }
 
-function renderTrades() {
-  const wrap = el("tradeList");
-  if (!wrap) return;
-
-  const t = state.market.trades || [];
-  wrap.innerHTML = t.length ? t.map((x) => `
-    <div class="tradeRow">
-      <div>
-        <div style="font-weight:900">${x.display_name}</div>
-        <div class="tradeMeta">${x.position} • ${x.role} • ${x.rarity} • ${formatAgo(x.created_at)}</div>
-      </div>
-      <div class="priceTag">${x.price}c</div>
-    </div>
-  `).join("") : `<div class="muted tiny">No trades yet.</div>`;
-}
-
 async function loadMarket() {
   const [rules, pulse, open, mine, trades] = await Promise.all([
     api("/v1/market/rules", { method: "GET" }).catch(() => DEFAULT_RULES),
@@ -818,6 +948,22 @@ function renderListings() {
       }
     });
   });
+}
+
+function renderTrades() {
+  const wrap = el("tradeList");
+  if (!wrap) return;
+
+  const t = state.market.trades || [];
+  wrap.innerHTML = t.length ? t.map((x) => `
+    <div class="tradeRow">
+      <div>
+        <div style="font-weight:900">${x.display_name}</div>
+        <div class="tradeMeta">${x.position} • ${x.role} • ${x.rarity} • ${formatAgo(x.created_at)}</div>
+      </div>
+      <div class="priceTag">${x.price}c</div>
+    </div>
+  `).join("") : `<div class="muted tiny">No trades yet.</div>`;
 }
 
 async function listSelected() {
