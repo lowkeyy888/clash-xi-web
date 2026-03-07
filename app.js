@@ -24,6 +24,38 @@ const TACTICAL_ROLES = {
   STRIKER: "STRIKER"
 };
 
+const ROLE_OPTIONS = {
+  [TACTICAL_ROLES.GOALKEEPER]: ["Shot Stopper", "Sweeper Keeper", "Distributor"],
+  [TACTICAL_ROLES.CENTER_BACK]: ["Stopper", "Ball Player", "Cover"],
+  [TACTICAL_ROLES.FULLBACK_WINGBACK]: ["Fullback", "Wingback", "Inverted Fullback"],
+  [TACTICAL_ROLES.DEFENSIVE_MID]: ["Anchor", "Ball Winner", "Deep Pivot"],
+  [TACTICAL_ROLES.CENTRAL_MID]: ["Box to Box", "Tempo Controller", "Deep Lying Playmaker"],
+  [TACTICAL_ROLES.ATTACKING_MID]: ["Creator", "Shadow Striker", "Playmaker"],
+  [TACTICAL_ROLES.WIDE_FORWARD]: ["Winger", "Inside Forward", "Wide Threat"],
+  [TACTICAL_ROLES.STRIKER]: ["Target Man", "Poacher", "False 9", "Advanced Forward"]
+};
+
+const TRAIT_LIBRARY = [
+  { key: "Tireless Engine", desc: "Maintains output deeper into the match.", tags: ["CM", "CDM", "LB", "RB", "LW", "RW"], minRarity: "COMMON" },
+  { key: "Clinical Finisher", desc: "Improves final-third shot quality.", tags: ["ST", "CAM", "LW", "RW"], minRarity: "RARE" },
+  { key: "Aerial Threat", desc: "Dangerous in crosses and set pieces.", tags: ["ST", "CB"], minRarity: "COMMON" },
+  { key: "Press Leader", desc: "Improves aggressive ball recovery patterns.", tags: ["CM", "CDM", "CAM", "ST", "LW", "RW"], minRarity: "COMMON" },
+  { key: "Visionary Pass", desc: "Unlocks cleaner progressive passing lanes.", tags: ["CM", "CAM", "CDM"], minRarity: "RARE" },
+  { key: "Last Man Wall", desc: "Strong emergency defending and recovery.", tags: ["CB", "LB", "RB", "GK"], minRarity: "COMMON" },
+  { key: "Rapid Burst", desc: "Explosive acceleration in transition moments.", tags: ["LW", "RW", "ST", "LB", "RB"], minRarity: "RARE" },
+  { key: "Set Piece Specialist", desc: "Extra value from dead-ball situations.", tags: ["CAM", "CM", "ST"], minRarity: "EPIC" },
+  { key: "Tempo Dictator", desc: "Stabilizes possession and match rhythm.", tags: ["CM", "CDM", "CAM"], minRarity: "RARE" },
+  { key: "League Legend", desc: "Signature top-tier trait with elite impact moments.", tags: ["ST", "CAM", "CM", "CB"], minRarity: "LEGENDARY" }
+];
+
+const RARITY_RANK = {
+  COMMON: 1,
+  RARE: 2,
+  EPIC: 3,
+  LEGENDARY: 4,
+  ICON: 5
+};
+
 function loadBenchState() {
   try {
     const raw = JSON.parse(localStorage.getItem("kf_bench") || "[]");
@@ -32,6 +64,19 @@ function loadBenchState() {
   } catch {
     return Array(7).fill(null);
   }
+}
+
+function loadRoleOverrides() {
+  try {
+    const raw = JSON.parse(localStorage.getItem("kf_role_overrides") || "{}");
+    return raw && typeof raw === "object" ? raw : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveRoleOverrides() {
+  localStorage.setItem("kf_role_overrides", JSON.stringify(state.roleOverrides || {}));
 }
 
 const FORMATION_ROLE_MAP = {
@@ -244,6 +289,8 @@ const state = {
   inventoryLoaded: false,
   squad: {},
   bench: loadBenchState(),
+  roleOverrides: loadRoleOverrides(),
+  compareBench: false,
   selectedCardId: null,
   filter: "ALL",
   style: localStorage.getItem("cx_style") || "PRESS",
@@ -290,6 +337,39 @@ function normalizePosition(pos) {
 
 function getFormationRoleMap(formation) {
   return FORMATION_ROLE_MAP[formation] || FORMATION_ROLE_MAP["433"];
+}
+
+function getFriendlyTacticalRole(role) {
+  if (!role) return "Role";
+  return String(role).replaceAll("_", " ");
+}
+
+function getSlotMeta(slotKey) {
+  const roleMap = getFormationRoleMap(state.formation);
+  return roleMap[slotKey] || null;
+}
+
+function getSlotRoleOverride(slotKey) {
+  return state.roleOverrides?.[slotKey] || "";
+}
+
+function setSlotRoleOverride(slotKey, roleName) {
+  if (!slotKey) return;
+  if (!roleName) {
+    delete state.roleOverrides[slotKey];
+  } else {
+    state.roleOverrides[slotKey] = roleName;
+  }
+  saveRoleOverrides();
+}
+
+function getSlotRoleDisplay(slotKey) {
+  return getSlotRoleOverride(slotKey) || getFriendlyTacticalRole(getSlotMeta(slotKey)?.role);
+}
+
+function getShortRoleDisplay(slotKey) {
+  const label = getSlotRoleDisplay(slotKey);
+  return label.length > 14 ? `${label.slice(0, 12)}…` : label;
 }
 
 function ensureBenchState() {
@@ -359,6 +439,7 @@ function buildTeamModel() {
     return {
       slotKey,
       tacticalRole: meta?.role || null,
+      roleOverride: getSlotRoleOverride(slotKey),
       allowedPositions,
       cardId: card?.id || null,
       card,
@@ -457,10 +538,12 @@ function exportTeamForSimulation() {
     slots: team.slots.map((slot) => ({
       slotKey: slot.slotKey,
       tacticalRole: slot.tacticalRole,
+      roleOverride: slot.roleOverride,
       allowedPositions: slot.allowedPositions,
       cardId: slot.cardId,
       cardPosition: slot.cardPosition,
-      isNaturalFit: slot.isNaturalFit
+      isNaturalFit: slot.isNaturalFit,
+      traits: slot.card ? generateCardTraits(slot.card).map((t) => t.key) : []
     }))
   };
 }
@@ -789,7 +872,8 @@ function cardVisualModel(card) {
     COMMON: 62,
     RARE: 72,
     EPIC: 82,
-    LEGENDARY: 91
+    LEGENDARY: 91,
+    ICON: 95
   }[card.rarity] ?? 62;
 
   const posBoost = {
@@ -822,6 +906,61 @@ function cardVisualModel(card) {
 
   const ovr = clampStat(Math.round((pace + pass + attack + defense) / 4));
   return { ovr, pace, pass, attack, defense };
+}
+
+function getDetailedStats(card) {
+  const vm = cardVisualModel(card);
+  const seed = hashString(`${card.id}|detail|${card.rarity}|${card.position}`);
+  const rnd = mulberry32(seed);
+
+  const drb = clampStat(Math.round((vm.pace * 0.35) + (vm.attack * 0.35) + (vm.pass * 0.30)) + randIntSeed(rnd, -3, 3));
+  const stm = clampStat(Math.round((vm.pace * 0.30) + (vm.defense * 0.30) + (vm.pass * 0.20) + (vm.attack * 0.20)) + randIntSeed(rnd, -3, 3));
+
+  return [
+    { key: "PAC", label: "Pace", value: vm.pace },
+    { key: "SHT", label: "Shot", value: vm.attack },
+    { key: "PAS", label: "Pass", value: vm.pass },
+    { key: "DEF", label: "Defense", value: vm.defense },
+    { key: "DRB", label: "Dribble", value: drb },
+    { key: "STM", label: "Stamina", value: stm }
+  ];
+}
+
+function generateCardTraits(card) {
+  const rarity = String(card?.rarity || "COMMON").toUpperCase();
+  const count = rarity === "LEGENDARY" || rarity === "ICON" ? 3 : rarity === "EPIC" ? 3 : rarity === "RARE" ? 2 : 1;
+  const position = normalizePosition(card?.position);
+  const seed = hashString(`${card?.id}|traits|${rarity}|${position}|${card?.role || ""}`);
+  const rnd = mulberry32(seed);
+
+  const filtered = TRAIT_LIBRARY.filter((t) => {
+    const req = RARITY_RANK[t.minRarity] || 1;
+    const have = RARITY_RANK[rarity] || 1;
+    return have >= req && t.tags.includes(position);
+  });
+
+  const fallback = TRAIT_LIBRARY.filter((t) => (RARITY_RANK[rarity] || 1) >= (RARITY_RANK[t.minRarity] || 1));
+
+  const pool = filtered.length ? filtered.slice() : fallback.slice();
+  const picked = [];
+
+  while (pool.length && picked.length < count) {
+    const idx = Math.floor(rnd() * pool.length);
+    picked.push(pool.splice(idx, 1)[0]);
+  }
+
+  return picked;
+}
+
+function getSerialText(card) {
+  const base = Math.abs(hashString(`${card.id}|serial`)) % 99999;
+  const serial = String(base + 1).padStart(5, "0");
+  if (String(card.rarity).toUpperCase() === "ICON") {
+    const cap = "5,000";
+    const current = String((base % 5000) + 1).padStart(2, "0");
+    return `#${current} / ${cap}`;
+  }
+  return `#${serial}`;
 }
 
 function cardHTML(card, opts = {}) {
@@ -876,10 +1015,10 @@ function syncSquadPdfCopy() {
   if (chipRow) chipRow.style.display = "none";
 
   const benchTiny = document.querySelector(".benchShell .row .muted.tiny");
-  if (benchTiny) benchTiny.textContent = "Drag from bench to pitch and back. Click a collection or latest-pack card, then choose a target.";
+  if (benchTiny) benchTiny.textContent = "Drag between bench and pitch. Collection and Latest Pack cards can be selected first, then placed.";
 
   const pitchFooter = document.querySelector(".pitchFooter .muted.tiny");
-  if (pitchFooter) pitchFooter.textContent = "Drag compatible players between bench and pitch. Collection cards can be selected first, then placed.";
+  if (pitchFooter) pitchFooter.textContent = "Drag compatible players between bench and pitch. Clicking a pitch token opens the detailed player panel.";
 }
 
 function clearDropNodeStyle(node) {
@@ -982,6 +1121,25 @@ function findFirstCompatibleEmptySlot(cardId) {
   const card = getCardById(cardId);
   if (!card) return null;
   return SLOT_KEYS.find((slotKey) => !state.squad[slotKey] && isCardCompatibleForSlot(card, slotKey)) || null;
+}
+
+function getCompatibleBenchCandidatesForSlot(slotKey, excludeCardId = null) {
+  ensureBenchState();
+  return state.bench
+    .map((cardId, idx) => ({ cardId, idx, card: getCardById(cardId) }))
+    .filter((x) => x.card && x.card.id !== excludeCardId && isCardCompatibleForSlot(x.card, slotKey))
+    .sort((a, b) => cardVisualModel(b.card).ovr - cardVisualModel(a.card).ovr);
+}
+
+function getBestBenchComparison(slotKey, excludeCardId = null) {
+  const items = getCompatibleBenchCandidatesForSlot(slotKey, excludeCardId);
+  return items.length ? items[0] : null;
+}
+
+function getQuickSellValue(card) {
+  const vm = cardVisualModel(card);
+  const rarityBase = { COMMON: 24, RARE: 70, EPIC: 160, LEGENDARY: 420, ICON: 1200 }[card.rarity] || 20;
+  return Math.round(rarityBase + vm.ovr * 2.2);
 }
 
 async function moveCardToBench(cardId, targetBenchIndex, hintedPayload = null) {
@@ -1290,6 +1448,9 @@ function applyFormationLayout() {
     node.style.top = `${pos.y}%`;
     node.style.right = "auto";
     node.style.transform = "translateX(-50%)";
+
+    const cardId = state.squad[slot];
+    node.classList.toggle("slot-selected", cardId && cardId === state.selectedCardId);
   });
 }
 
@@ -1371,13 +1532,13 @@ function renderSquad() {
   [...grid.querySelectorAll(".slot")].forEach((node) => {
     const k = node.dataset.slot;
     const cardId = state.squad[k];
-    const roleMap = getFormationRoleMap(state.formation);
-    const meta = roleMap[k];
+    const meta = getSlotMeta(k);
+    const roleLine = getShortRoleDisplay(k);
 
     if (!cardId) {
       node.innerHTML = `
         <div class="p">${slotLabel(k)}</div>
-        <div class="n muted">${meta?.role ? meta.role.replaceAll("_", " ") : "Empty"}</div>
+        <div class="n muted">${getFriendlyTacticalRole(meta?.role)}</div>
       `;
       return;
     }
@@ -1392,8 +1553,8 @@ function renderSquad() {
     node.innerHTML = `
       <div class="p">${slotLabel(k)}</div>
       <div class="n">${shortName(c.display_name)}</div>
-      <div class="muted tiny">${c.position} • ${c.rarity}</div>
-      <div class="muted tiny">OVR ${vm.ovr}</div>
+      <div class="muted tiny">${c.position} • OVR ${vm.ovr}</div>
+      <div class="muted tiny">${roleLine}</div>
     `;
   });
 
@@ -1418,6 +1579,7 @@ async function onSlotClick(slotKey) {
 
   if (occupiedCardId) {
     state.selectedCardId = occupiedCardId;
+    state.compareBench = false;
     renderSelectedCard();
     renderInventory();
     renderPackResults(state.revealCards);
@@ -1441,6 +1603,7 @@ async function onBenchClick(index) {
 
   if (occupiedCardId) {
     state.selectedCardId = occupiedCardId;
+    state.compareBench = false;
     renderSelectedCard();
     renderInventory();
     renderPackResults(state.revealCards);
@@ -1475,6 +1638,29 @@ function renderInventory() {
   bindSourceCardInteractions("#invList", { jumpOnSelect: true });
 }
 
+function buildStatsRowsHTML(stats, prefix) {
+  return stats.map((s) => `
+    <div style="display:grid;grid-template-columns:44px 1fr 38px;gap:8px;align-items:center;margin-top:8px">
+      <div style="font-family:var(--font-ui);font-size:12px;font-weight:800;letter-spacing:.05em;color:var(--text-secondary);text-transform:uppercase">${s.key}</div>
+      <div style="height:8px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);overflow:hidden;clip-path:polygon(8px 0,100% 0,100% 100%,0 100%,0 8px)">
+        <div data-stat-fill="${prefix}-${s.key}" data-fill-to="${s.value}" style="height:100%;width:0%;background:linear-gradient(90deg,var(--emerald),var(--gold));transition:width .6s ease-out"></div>
+      </div>
+      <div style="font-family:var(--font-display);font-size:18px;line-height:1;color:#fff;text-align:right">${s.value}</div>
+    </div>
+  `).join("");
+}
+
+function animateStatBars() {
+  const fills = [...document.querySelectorAll("[data-stat-fill]")];
+  fills.forEach((fill, idx) => {
+    fill.style.width = "0%";
+    const to = Number(fill.getAttribute("data-fill-to") || 0);
+    setTimeout(() => {
+      fill.style.width = `${Math.max(0, Math.min(100, to))}%`;
+    }, 30 + idx * 45);
+  });
+}
+
 function renderSelectedCard() {
   const box = el("selectedCard");
   if (!box) return;
@@ -1495,52 +1681,135 @@ function renderSelectedCard() {
   }
 
   const vm = cardVisualModel(c);
+  const detailStats = getDetailedStats(c);
+  const traits = generateCardTraits(c);
   const isListed = state.market.listedSet.has(c.id);
   const squadSlot = getSquadSlotOfCard(c.id);
   const benchIndex = findBenchIndexByCardId(c.id);
   const firstFit = findFirstCompatibleEmptySlot(c.id);
+  const nation = getCardNation(c) || "—";
+  const serial = getSerialText(c);
+  const roleMeta = squadSlot ? getSlotMeta(squadSlot) : null;
+  const roleOptions = roleMeta ? (ROLE_OPTIONS[roleMeta.role] || []) : [];
+  const roleOverride = squadSlot ? getSlotRoleOverride(squadSlot) : "";
+  const bestBench = squadSlot ? getBestBenchComparison(squadSlot, c.id) : null;
+  const showCompare = !!(state.compareBench && bestBench && squadSlot);
+  const compareStats = showCompare ? getDetailedStats(bestBench.card) : [];
+  const benchLabel = bestBench ? `Best Bench: ${bestBench.card.display_name} (B${bestBench.idx + 1})` : "No compatible bench comparison";
 
   box.innerHTML = `
-    <div class="kfSelected">
-      <div class="kfSelected__cardWrap">
-        ${cardHTML(c, { selected: true, listed: isListed, compact: true, selectable: false })}
+    <div style="display:grid;gap:14px">
+      <div class="muted tiny">Selected Player</div>
+
+      <div style="display:grid;grid-template-columns:210px 1fr;gap:14px;align-items:start">
+        <div style="display:flex;justify-content:center">
+          ${cardHTML(c, { selected: true, listed: isListed, compact: true, selectable: false })}
+        </div>
+
+        <div style="padding:12px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.02);clip-path:polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px)">
+          <div style="font-family:var(--font-display);font-size:38px;line-height:.88;color:var(--gold-light);letter-spacing:.03em;text-transform:uppercase">${c.display_name}</div>
+          <div style="margin-top:8px;color:var(--text-secondary);font-size:14px;letter-spacing:.02em">${c.position} • ${nation} • ${c.rarity} • ${serial}</div>
+
+          <div style="display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:end;margin-top:10px">
+            <div style="font-family:var(--font-display);font-size:54px;line-height:.85;color:#fff">OVR ${vm.ovr}</div>
+            <div style="font-family:var(--font-ui);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-secondary)">
+              ${squadSlot ? `Pitch Slot: ${slotLabel(squadSlot)}` : benchIndex !== -1 ? `Bench Slot: B${benchIndex + 1}` : "Collection / Latest Pack"}
+            </div>
+          </div>
+
+          <div style="margin-top:12px">
+            ${buildStatsRowsHTML(detailStats, "main")}
+          </div>
+
+          <div style="margin-top:14px">
+            <div style="font-family:var(--font-ui);font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--text-secondary)">Traits</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+              ${traits.length
+                ? traits.map((t) => `
+                  <div
+                    title="${t.desc}"
+                    style="padding:6px 8px;border:1px solid rgba(232,184,75,.28);background:rgba(232,184,75,.10);color:var(--gold-light);font-family:var(--font-ui);font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px)"
+                  >
+                    ${t.key}
+                  </div>
+                `).join("")
+                : `<div class="muted tiny">No traits.</div>`}
+            </div>
+          </div>
+
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
+            <button class="smallBtn primary" id="btn-selected-auto" ${state.tacticsLocked || isListed || !firstFit ? "disabled" : ""}>Auto Place</button>
+            <button class="smallBtn ghost" id="btn-selected-bench" ${state.tacticsLocked || isListed ? "disabled" : ""}>Send Bench</button>
+            <button class="smallBtn ghost" id="btn-selected-market" ${isListed ? "disabled" : ""}>List on Market</button>
+          </div>
+        </div>
       </div>
 
-      <div class="kfSelected__panel">
-        <div class="muted tiny">Selected Player</div>
-        <div class="kfSelected__name">${c.display_name}</div>
-        <div class="kfSelected__meta">${c.position} • ${c.role} • ${c.rarity}</div>
+      <div style="padding:12px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.02);clip-path:polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px)">
+        <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap">
+          <div>
+            <div style="font-family:var(--font-ui);font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--text-secondary)">Role Selector</div>
+            <div class="muted tiny" style="margin-top:4px">
+              ${squadSlot ? "Changes the role label saved for this pitch token." : "Place the player in the XI to enable role override."}
+            </div>
+          </div>
+          <div>
+            <select id="selected-role-select" ${!squadSlot || state.tacticsLocked ? "disabled" : ""} style="min-height:40px;padding:8px 12px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.03);color:var(--text-primary);clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px)">
+              <option value="">${roleMeta ? getFriendlyTacticalRole(roleMeta.role) : "No Slot"}</option>
+              ${roleOptions.map((r) => `<option value="${r}" ${roleOverride === r ? "selected" : ""}>${r}</option>`).join("")}
+            </select>
+          </div>
+        </div>
+      </div>
 
-        <div class="kfSelected__ovr">OVR ${vm.ovr}</div>
-
-        <div class="kfSelected__stats">
-          <div><span>Pace</span><strong>${vm.pace}</strong></div>
-          <div><span>Pass</span><strong>${vm.pass}</strong></div>
-          <div><span>Attack</span><strong>${vm.attack}</strong></div>
-          <div><span>Defense</span><strong>${vm.defense}</strong></div>
+      <div style="padding:12px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.02);clip-path:polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px)">
+        <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap">
+          <div>
+            <div style="font-family:var(--font-ui);font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--text-secondary)">Compare With Bench</div>
+            <div class="muted tiny" style="margin-top:4px">${benchLabel}</div>
+          </div>
+          <button class="smallBtn ${showCompare ? "primary" : "ghost"}" id="btn-toggle-compare" ${!bestBench ? "disabled" : ""}>
+            ${showCompare ? "Comparison On" : "Comparison Off"}
+          </button>
         </div>
 
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
-          <button class="smallBtn primary" id="btn-selected-bench" ${state.tacticsLocked || isListed ? "disabled" : ""}>Send Bench</button>
-          <button class="smallBtn ghost" id="btn-selected-auto" ${state.tacticsLocked || isListed || !firstFit ? "disabled" : ""}>Auto Place</button>
-        </div>
+        ${showCompare ? `
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
+            <div style="padding:10px;border:1px solid rgba(255,255,255,.08);background:rgba(0,0,0,.14);clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px)">
+              <div style="font-family:var(--font-ui);font-size:13px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;color:var(--gold-light)">${shortName(c.display_name)}</div>
+              <div class="muted tiny" style="margin-top:4px">${c.position} • OVR ${vm.ovr}</div>
+              <div style="margin-top:8px">${buildStatsRowsHTML(detailStats, "cmp-a")}</div>
+            </div>
 
-        <div class="muted tiny" style="margin-top:10px">
-          ${state.tacticsLocked
-            ? "TACTICS LOCKED — changes are blocked until the next fixture window opens."
-            : isListed
-              ? "LISTED — cancel the market listing before using this card in your squad."
-              : squadSlot
-                ? `In Starting XI — ${slotLabel(squadSlot)}. Drag to another pitch token or bench.`
-                : benchIndex !== -1
-                  ? `On Bench — B${benchIndex + 1}. Drag to pitch or another bench slot.`
-                  : "Ready to use — click a pitch slot / empty bench slot, or use the quick actions above."}
-        </div>
+            <div style="padding:10px;border:1px solid rgba(255,255,255,.08);background:rgba(0,0,0,.14);clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px)">
+              <div style="font-family:var(--font-ui);font-size:13px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;color:var(--gold-light)">${shortName(bestBench.card.display_name)}</div>
+              <div class="muted tiny" style="margin-top:4px">B${bestBench.idx + 1} • ${bestBench.card.position} • OVR ${cardVisualModel(bestBench.card).ovr}</div>
+              <div style="margin-top:8px">${buildStatsRowsHTML(compareStats, "cmp-b")}</div>
+            </div>
+          </div>
+        ` : ""}
+      </div>
+
+      <div class="muted tiny">
+        ${state.tacticsLocked
+          ? "TACTICS LOCKED — changes are blocked until the next fixture window opens."
+          : isListed
+            ? "LISTED — cancel the market listing before using this card in your squad."
+            : squadSlot
+              ? `In Starting XI — ${slotLabel(squadSlot)}. Role saved as: ${getSlotRoleDisplay(squadSlot)}.`
+              : benchIndex !== -1
+                ? `On Bench — B${benchIndex + 1}.`
+                : `Quick sell reference: ${getQuickSellValue(c)} FC.`}
       </div>
     </div>
   `;
 
   el("btn-selected-bench")?.addEventListener("click", async () => {
+    const currentBench = findBenchIndexByCardId(c.id);
+    if (currentBench !== -1) {
+      setStatus("Player is already on the bench.");
+      return;
+    }
     const emptyIdx = firstEmptyBenchIndex();
     if (emptyIdx === -1) {
       setStatus("Bench is full.");
@@ -1556,6 +1825,27 @@ function renderSelectedCard() {
     }
     await moveCardToPitch(c.id, firstFit, { source: "inventory", cardId: c.id });
   });
+
+  el("btn-selected-market")?.addEventListener("click", () => {
+    jumpToView("market");
+    renderMarketSelected();
+    setStatus("Set a price and list the selected card.");
+  });
+
+  el("btn-toggle-compare")?.addEventListener("click", () => {
+    state.compareBench = !state.compareBench;
+    renderSelectedCard();
+  });
+
+  el("selected-role-select")?.addEventListener("change", (e) => {
+    if (!squadSlot) return;
+    setSlotRoleOverride(squadSlot, e.target.value);
+    renderSquad();
+    renderSelectedCard();
+    setStatus(e.target.value ? `Role override saved: ${e.target.value}` : "Role override cleared.");
+  });
+
+  setTimeout(() => animateStatBars(), 25);
 }
 
 function updateSynergy() {
@@ -1613,6 +1903,17 @@ function renderPackResults(cards) {
     : "";
 
   bindSourceCardInteractions("#cards", { jumpOnSelect: false });
+}
+
+function animateStatBars() {
+  const fills = [...document.querySelectorAll("[data-stat-fill]")];
+  fills.forEach((fill, idx) => {
+    fill.style.width = "0%";
+    const to = Number(fill.getAttribute("data-fill-to") || 0);
+    setTimeout(() => {
+      fill.style.width = `${Math.max(0, Math.min(100, to))}%`;
+    }, 20 + idx * 45);
+  });
 }
 
 function getNextLeagueKickoff(now = new Date()) {
@@ -2666,6 +2967,7 @@ async function enterKickForge() {
     validateTeamModel,
     buildSynergyModel,
     exportTeamForSimulation,
-    renderBench
+    renderBench,
+    generateCardTraits
   };
 })();
