@@ -396,6 +396,117 @@ function exportTeamForSimulation() {
   };
 }
 
+function getCardNation(card) {
+  const raw = card?.nation || card?.country || card?.nationality || card?.nation_code || null;
+  return raw ? String(raw).trim().toUpperCase() : null;
+}
+
+function getTopGroup(values = []) {
+  const counts = new Map();
+  let topValue = null;
+  let topCount = 0;
+
+  values.filter(Boolean).forEach((value) => {
+    const key = String(value).trim().toUpperCase();
+    const next = (counts.get(key) || 0) + 1;
+    counts.set(key, next);
+    if (next > topCount) {
+      topCount = next;
+      topValue = key;
+    }
+  });
+
+  return { value: topValue, count: topCount };
+}
+
+function getBandStatus(kind, pct, available = true) {
+  if (!available) return "INACTIVE";
+
+  if (kind === "role") {
+    if (pct >= 100) return "ACTIVE";
+    if (pct >= 70) return "PARTIAL";
+    return "INACTIVE";
+  }
+
+  if (kind === "rarity") {
+    if (pct >= 55) return "ACTIVE";
+    if (pct >= 35) return "PARTIAL";
+    return "INACTIVE";
+  }
+
+  if (kind === "nation") {
+    if (pct >= 55) return "ACTIVE";
+    if (pct >= 35) return "PARTIAL";
+    return "INACTIVE";
+  }
+
+  return "INACTIVE";
+}
+
+function buildSynergyModel(team = buildTeamModel()) {
+  const equippedSlots = team.slots.filter((slot) => slot.card);
+  const equippedCount = equippedSlots.length;
+
+  if (!equippedCount) {
+    return {
+      overall: 0,
+      role: { status: "INACTIVE", count: 0, pct: 0 },
+      rarity: { status: "INACTIVE", count: 0, pct: 0, value: null },
+      nation: { status: "INACTIVE", count: 0, pct: 0, value: null, available: false },
+      streetKings: { active: false }
+    };
+  }
+
+  const roleFitCount = equippedSlots.filter((slot) => slot.isNaturalFit).length;
+  const rolePct = Math.round((roleFitCount / equippedCount) * 100);
+
+  const rarityTop = getTopGroup(equippedSlots.map((slot) => slot.card?.rarity));
+  const rarityPct = Math.round((rarityTop.count / equippedCount) * 100);
+
+  const nations = equippedSlots.map((slot) => getCardNation(slot.card)).filter(Boolean);
+  const hasNationData = nations.length > 0;
+  const nationTop = getTopGroup(nations);
+  const nationPct = hasNationData ? Math.round((nationTop.count / equippedCount) * 100) : 0;
+
+  const streetKingsActive =
+    equippedCount === 11 &&
+    equippedSlots.every((slot) => String(slot.card?.rarity || "").toUpperCase() === "COMMON");
+
+  let overall = Math.round(
+    (rolePct * 0.55) +
+    (rarityPct * 0.25) +
+    (hasNationData ? nationPct * 0.20 : 0)
+  );
+
+  if (streetKingsActive) overall = Math.max(overall, 85);
+  overall = Math.max(0, Math.min(100, overall));
+
+  return {
+    overall,
+    role: {
+      status: getBandStatus("role", rolePct, true),
+      count: roleFitCount,
+      pct: rolePct
+    },
+    rarity: {
+      status: getBandStatus("rarity", rarityPct, true),
+      count: rarityTop.count,
+      pct: rarityPct,
+      value: rarityTop.value
+    },
+    nation: {
+      status: getBandStatus("nation", nationPct, hasNationData),
+      count: nationTop.count,
+      pct: nationPct,
+      value: nationTop.value,
+      available: hasNationData
+    },
+    streetKings: {
+      active: streetKingsActive
+    }
+  };
+}
+
 function slotLabel(k) {
   return String(k).replace("1", "").replace("2", "");
 }
@@ -912,25 +1023,38 @@ function updateSynergy() {
   const fill = el("chemFill");
   const note = el("chemNote");
 
-  const equippedIds = Object.values(state.squad).filter(Boolean);
-  const equipped = equippedIds.map(getCardById).filter(Boolean);
+  const team = buildTeamModel();
+  const validation = validateTeamModel(team);
+  const synergy = buildSynergyModel(team);
 
-  if (!equipped.length) {
-    safeText(pct, "0%");
-    if (fill) fill.style.width = "0%";
+  safeText(pct, `${synergy.overall}%`);
+  if (fill) fill.style.width = `${synergy.overall}%`;
+
+  if (!team.equippedCount) {
     safeText(note, "Equip players to build synergy.");
     return;
   }
 
-  const styleMatches = equipped.filter((c) => roleStyle(c.role) === state.style).length;
-  const modeBonus = state.tacticMode === "highpress" || state.tacticMode === "counter" ? 6 : state.tacticMode === "control" ? 4 : 3;
-  const raw = Math.round((styleMatches / equipped.length) * 100);
-  const p = Math.min(100, raw + modeBonus);
-  const avgOvr = Math.round(equipped.reduce((a, c) => a + cardVisualModel(c).ovr, 0) / equipped.length);
+  const nationText = synergy.nation.available
+    ? `Nation ${synergy.nation.status} ${synergy.nation.count}/${team.equippedCount}`
+    : "Nation INACTIVE data-missing";
 
-  safeText(pct, `${p}%`);
-  if (fill) fill.style.width = `${p}%`;
-  safeText(note, `Style: ${state.style} • mode: ${tacticModeLabel(state.tacticMode)} • fit ${styleMatches}/${equipped.length} • avg OVR ${avgOvr}`);
+  const streetKingsText = synergy.streetKings.active ? "Street Kings ACTIVE" : "Street Kings OFF";
+
+  const missingText = validation.missingSlots.length
+    ? ` • Missing: ${validation.missingSlots.length}`
+    : "";
+
+  const offRoleText = validation.offPositionAssignments.length
+    ? ` • Off-role: ${validation.offPositionAssignments.length}`
+    : "";
+
+  safeText(
+    note,
+    `Role ${synergy.role.status} ${synergy.role.count}/${team.equippedCount} • ` +
+    `Rarity ${synergy.rarity.status} ${synergy.rarity.count}/${team.equippedCount} • ` +
+    `${nationText} • ${streetKingsText}${missingText}${offRoleText}`
+  );
 }
 
 function renderPackResults(cards) {
@@ -1973,6 +2097,7 @@ async function enterKickForge() {
   window.KickForgeDebug = {
     buildTeamModel,
     validateTeamModel,
+    buildSynergyModel,
     exportTeamForSimulation
   };
 })();
