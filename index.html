@@ -196,7 +196,7 @@
             <div class="heroEyebrow">KickForge App</div>
             <div class="sectionTitle sectionTitleWide">Internal Hub</div>
             <div class="muted tiny">
-              Home, Collection, Squad, Market, and Progress are now separated into dedicated internal views.
+              Home, Collection, Squad, League, Market, and Progress are now separated into dedicated internal views.
             </div>
           </div>
 
@@ -204,13 +204,14 @@
             <button class="appTab is-active" data-view-tab="home">Home</button>
             <button class="appTab" data-view-tab="collection">Collection</button>
             <button class="appTab" data-view-tab="squad">Squad</button>
+            <button class="appTab" data-view-tab="league">League</button>
             <button class="appTab" data-view-tab="market">Market</button>
             <button class="appTab" data-view-tab="progress">Progress</button>
           </div>
         </div>
 
         <div class="appViews">
-          <!-- HOME / DASHBOARD -->
+          <!-- HOME -->
           <section class="appView is-active" id="view-home" data-view="home">
             <div class="homeDashboard">
               <div class="homeCard matchCard">
@@ -396,6 +397,10 @@
                   <span class="quickActionTop">Manage</span>
                   <strong>Squad</strong>
                 </button>
+                <button class="quickActionCard" data-view-tab-jump="league">
+                  <span class="quickActionTop">Check</span>
+                  <strong>League</strong>
+                </button>
                 <button class="quickActionCard" data-view-tab-jump="market">
                   <span class="quickActionTop">Trade</span>
                   <strong>Market</strong>
@@ -568,15 +573,15 @@
                     <div class="roleFocusList">
                       <div class="roleFocusItem">
                         <span>Front Shape</span>
-                        <strong>Wide Forwards</strong>
+                        <strong id="tactic-front-shape">Wide Forwards</strong>
                       </div>
                       <div class="roleFocusItem">
                         <span>Midfield Core</span>
-                        <strong>Progressive Build</strong>
+                        <strong id="tactic-mid-core">Progressive Build</strong>
                       </div>
                       <div class="roleFocusItem">
                         <span>Defensive Line</span>
-                        <strong>Medium Block</strong>
+                        <strong id="tactic-def-line">Medium Block</strong>
                       </div>
                     </div>
 
@@ -620,6 +625,215 @@
                     <div class="cards" id="cards" style="margin-top:12px"></div>
                   </div>
                 </aside>
+              </div>
+            </section>
+          </section>
+
+          <!-- LEAGUE -->
+          <section class="appView" id="view-league" data-view="league">
+            <section class="leagueShell" id="league-view">
+              <div class="leagueHeader">
+                <div>
+                  <div class="heroEyebrow">League Hub</div>
+                  <div class="sectionTitle sectionTitleWide">Season Control</div>
+                  <div class="muted tiny">
+                    One match per day. Standings pressure. Lock before kickoff. Promotion at the top, danger at the bottom.
+                  </div>
+                </div>
+
+                <div class="leagueHeaderTags">
+                  <div class="tag" id="league-tier-badge">OPEN</div>
+                  <div class="tag" id="league-status-badge">SEASON LIVE</div>
+                </div>
+              </div>
+
+              <div class="leagueTopGrid">
+                <div class="leagueTopCard">
+                  <div class="muted tiny">Next Fixture</div>
+                  <div class="sectionTitle" id="league-next-opponent">Your Club vs North XI</div>
+                  <div class="muted tiny" id="league-next-kickoff">Kickoff at 20:00 UTC</div>
+
+                  <div class="countdownStrip leagueCountdown">
+                    <div class="countUnit">
+                      <div class="countNum" id="league-cd-days">00</div>
+                      <div class="countLbl">Days</div>
+                    </div>
+                    <div class="countUnit">
+                      <div class="countNum" id="league-cd-hours">00</div>
+                      <div class="countLbl">Hours</div>
+                    </div>
+                    <div class="countUnit">
+                      <div class="countNum" id="league-cd-mins">00</div>
+                      <div class="countLbl">Mins</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="leagueTopCard">
+                  <div class="muted tiny">Lock Window</div>
+                  <div class="sectionTitle" id="league-lock-status">Open</div>
+                  <div class="muted tiny" id="league-lock-clock">Tactics lock 1 hour before kickoff.</div>
+                  <button class="btn primary" id="btn-league-lock">Open Tactics Room</button>
+                </div>
+
+                <div class="leagueTopCard">
+                  <div class="muted tiny">Tier Context</div>
+                  <div class="sectionTitle" id="league-tier-name">Open Division</div>
+                  <div class="muted tiny" id="league-tier-copy">Free access ladder • top progress leads toward Pro and Elite competition.</div>
+                </div>
+              </div>
+
+              <div class="leagueMainGrid">
+                <div class="leaguePanel leagueStandingsPanel">
+                  <div class="row">
+                    <div>
+                      <div class="sectionTitle">Standings</div>
+                      <div class="muted tiny">Condensed league table with qualification and danger zones.</div>
+                    </div>
+                    <div class="tag">TABLE</div>
+                  </div>
+
+                  <div class="leagueTable" id="leagueTable">
+                    <div class="leagueTableHead">
+                      <div>#</div>
+                      <div>Club</div>
+                      <div>P</div>
+                      <div>GD</div>
+                      <div>Pts</div>
+                    </div>
+
+                    <div class="leagueTableRow cup-zone">
+                      <div class="leaguePos top">1</div>
+                      <div class="leagueClub">Topside FC</div>
+                      <div>6</div>
+                      <div>+8</div>
+                      <div>16</div>
+                    </div>
+
+                    <div class="leagueTableRow cup-zone">
+                      <div class="leaguePos top">2</div>
+                      <div class="leagueClub">North XI <span class="botTag">BOT</span></div>
+                      <div>6</div>
+                      <div>+5</div>
+                      <div>14</div>
+                    </div>
+
+                    <div class="leagueTableRow your-row">
+                      <div class="leaguePos">3</div>
+                      <div class="leagueClub">Your Club</div>
+                      <div>6</div>
+                      <div>+2</div>
+                      <div>12</div>
+                    </div>
+
+                    <div class="leagueTableRow">
+                      <div class="leaguePos">4</div>
+                      <div class="leagueClub">Iron Eleven</div>
+                      <div>6</div>
+                      <div>0</div>
+                      <div>10</div>
+                    </div>
+
+                    <div class="leagueTableRow relegation-zone">
+                      <div class="leaguePos">9</div>
+                      <div class="leagueClub">Dockside SC</div>
+                      <div>6</div>
+                      <div>-6</div>
+                      <div>4</div>
+                    </div>
+
+                    <div class="leagueTableRow relegation-zone">
+                      <div class="leaguePos">10</div>
+                      <div class="leagueClub">East Borough <span class="botTag">BOT</span></div>
+                      <div>6</div>
+                      <div>-9</div>
+                      <div>2</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="leaguePanel leagueFixturesPanel">
+                  <div class="row">
+                    <div>
+                      <div class="sectionTitle">Fixtures</div>
+                      <div class="muted tiny">Matchday tabs with current and upcoming results.</div>
+                    </div>
+                    <div class="tag">MD</div>
+                  </div>
+
+                  <div class="fixtureTabs" id="leagueMatchdays">
+                    <button class="fixtureTab is-active" data-md="1">MD1</button>
+                    <button class="fixtureTab" data-md="2">MD2</button>
+                    <button class="fixtureTab" data-md="3">MD3</button>
+                    <button class="fixtureTab" data-md="4">MD4</button>
+                    <button class="fixtureTab" data-md="5">MD5</button>
+                    <button class="fixtureTab" data-md="6">MD6</button>
+                  </div>
+
+                  <div class="fixtureList" id="leagueFixtures">
+                    <div class="fixtureRow result-win">
+                      <div class="fixtureDate">12 MAR</div>
+                      <div class="fixtureTeams">Your Club vs Dockside SC</div>
+                      <div class="fixtureScore">2 - 0</div>
+                    </div>
+
+                    <div class="fixtureRow result-draw">
+                      <div class="fixtureDate">13 MAR</div>
+                      <div class="fixtureTeams">North XI vs Your Club</div>
+                      <div class="fixtureScore">1 - 1</div>
+                    </div>
+
+                    <div class="fixtureRow result-loss">
+                      <div class="fixtureDate">14 MAR</div>
+                      <div class="fixtureTeams">Topside FC vs Your Club</div>
+                      <div class="fixtureScore">3 - 1</div>
+                    </div>
+
+                    <div class="fixtureRow result-live">
+                      <div class="fixtureDate">TODAY</div>
+                      <div class="fixtureTeams">Your Club vs Iron Eleven</div>
+                      <div class="fixtureScore">20:00</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="leagueBottomGrid">
+                <div class="leaguePanel leagueRegistrationPanel" id="leagueRegisterEmpty">
+                  <div class="muted tiny">League Registration</div>
+                  <div class="sectionTitle">Season 4 Starts In 3 Days</div>
+                  <div class="muted tiny">Register now to secure your place before the fixture calendar opens.</div>
+                  <button class="btn primary" id="btn-register-league">Register Now</button>
+                </div>
+
+                <div class="leaguePanel leagueRulesPanel">
+                  <div class="row">
+                    <div>
+                      <div class="sectionTitle">League Rules</div>
+                      <div class="muted tiny">Core season structure</div>
+                    </div>
+                    <div class="tag">INFO</div>
+                  </div>
+
+                  <div class="leagueRulesList">
+                    <div class="leagueRuleItem">
+                      <span>Tier Stack</span>
+                      <strong>Open → Pro → Elite → Champions Cup</strong>
+                    </div>
+                    <div class="leagueRuleItem">
+                      <span>Cadence</span>
+                      <strong>1 Match / Day • 20:00 UTC</strong>
+                    </div>
+                    <div class="leagueRuleItem">
+                      <span>Lock Rule</span>
+                      <strong>1 Hour Before Kickoff</strong>
+                    </div>
+                    <div class="leagueRuleItem">
+                      <span>Top Zone</span>
+                      <strong>Top 2 push toward Cup path</strong>
+                    </div>
+                  </div>
+                </div>
               </div>
             </section>
           </section>
@@ -737,7 +951,6 @@
         </div>
       </section>
 
-      <!-- ARENA / LEAGUE STRIP -->
       <section class="grid2" style="margin-top:18px">
         <div class="card" id="league">
           <div class="row">
@@ -798,7 +1011,6 @@
     </footer>
   </div>
 
-  <!-- PACK REVEAL OVERLAY -->
   <div class="overlay hidden" id="revealOverlay" aria-hidden="true">
     <div class="overlayInner card" id="overlayInner">
       <div class="overlayHeader">
