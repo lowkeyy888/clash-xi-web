@@ -868,6 +868,20 @@ function cardHTML(card, opts = {}) {
   `;
 }
 
+function syncSquadPdfCopy() {
+  const synergyRowText = document.querySelector(".synergyPanel .row .muted.tiny");
+  if (synergyRowText) synergyRowText.textContent = "Nation / Role / Rarity synergies.";
+
+  const chipRow = document.querySelector(".squadChipRow");
+  if (chipRow) chipRow.style.display = "none";
+
+  const benchTiny = document.querySelector(".benchShell .row .muted.tiny");
+  if (benchTiny) benchTiny.textContent = "Drag from bench to pitch and back. Click a collection or latest-pack card, then choose a target.";
+
+  const pitchFooter = document.querySelector(".pitchFooter .muted.tiny");
+  if (pitchFooter) pitchFooter.textContent = "Drag compatible players between bench and pitch. Collection cards can be selected first, then placed.";
+}
+
 function clearDropNodeStyle(node) {
   if (!node) return;
   node.style.borderColor = "";
@@ -964,6 +978,12 @@ function canDropOnPitch(slotKey, payload) {
   return emptyBench !== -1;
 }
 
+function findFirstCompatibleEmptySlot(cardId) {
+  const card = getCardById(cardId);
+  if (!card) return null;
+  return SLOT_KEYS.find((slotKey) => !state.squad[slotKey] && isCardCompatibleForSlot(card, slotKey)) || null;
+}
+
 async function moveCardToBench(cardId, targetBenchIndex, hintedPayload = null) {
   ensureBenchState();
   const resolved = resolveDragPayload(hintedPayload || { cardId });
@@ -1001,6 +1021,7 @@ async function moveCardToBench(cardId, targetBenchIndex, hintedPayload = null) {
     renderBench();
     renderSquad();
     renderInventory();
+    renderPackResults(state.revealCards);
     renderSelectedCard();
     renderMarketSelected();
     renderTacticsShell();
@@ -1098,6 +1119,7 @@ async function moveCardToPitch(cardId, targetSlotKey, hintedPayload = null) {
     renderBench();
     renderSquad();
     renderInventory();
+    renderPackResults(state.revealCards);
     renderSelectedCard();
     renderMarketSelected();
     renderTacticsShell();
@@ -1107,6 +1129,56 @@ async function moveCardToPitch(cardId, targetSlotKey, hintedPayload = null) {
     setStatus(e.message);
     return false;
   }
+}
+
+function bindSourceCardInteractions(rootSelector, opts = {}) {
+  const jumpOnSelect = !!opts.jumpOnSelect;
+
+  document.querySelectorAll(`${rootSelector} [data-card-id]`).forEach((node) => {
+    const id = node.getAttribute("data-card-id");
+
+    node.onclick = () => {
+      if (state.tacticsLocked) return;
+      if (state.market.listedSet.has(id)) {
+        setStatus("This card is listed on the market. Cancel listing first.");
+        return;
+      }
+
+      state.selectedCardId = state.selectedCardId === id ? null : id;
+      renderSelectedCard();
+      renderInventory();
+      renderPackResults(state.revealCards);
+      renderMarketSelected();
+      refreshSlotStates();
+
+      if (state.selectedCardId) {
+        if (jumpOnSelect) {
+          setActiveView("squad");
+          scrollToAppShell();
+        }
+        pulseSelectedPanel();
+      }
+    };
+
+    node.ondragstart = (e) => {
+      if (state.tacticsLocked) {
+        e.preventDefault();
+        return;
+      }
+      if (state.market.listedSet.has(id)) {
+        e.preventDefault();
+        setStatus("This card is listed on the market. Cancel listing first.");
+        return;
+      }
+      setDragPayload({ source: "inventory", cardId: id });
+      e.dataTransfer.effectAllowed = "move";
+      e.dataTransfer.setData("text/plain", id);
+    };
+
+    node.ondragend = () => {
+      clearDragPayload();
+    };
+  });
 }
 
 function benchCardHTML(card, idx) {
@@ -1348,6 +1420,7 @@ async function onSlotClick(slotKey) {
     state.selectedCardId = occupiedCardId;
     renderSelectedCard();
     renderInventory();
+    renderPackResults(state.revealCards);
     renderMarketSelected();
     pulseSelectedPanel();
   }
@@ -1370,6 +1443,7 @@ async function onBenchClick(index) {
     state.selectedCardId = occupiedCardId;
     renderSelectedCard();
     renderInventory();
+    renderPackResults(state.revealCards);
     renderMarketSelected();
     pulseSelectedPanel();
   }
@@ -1398,43 +1472,7 @@ function renderInventory() {
     </div>
   `;
 
-  list.querySelectorAll("[data-card-id]").forEach((node) => {
-    const id = node.getAttribute("data-card-id");
-
-    node.addEventListener("click", () => {
-      if (state.tacticsLocked) return;
-      state.selectedCardId = state.selectedCardId === id ? null : id;
-      renderSelectedCard();
-      renderInventory();
-      refreshSlotStates();
-      renderMarketSelected();
-
-      if (state.selectedCardId) {
-        setActiveView("squad");
-        pulseSelectedPanel();
-        scrollToAppShell();
-      }
-    });
-
-    node.addEventListener("dragstart", (e) => {
-      if (state.tacticsLocked) {
-        e.preventDefault();
-        return;
-      }
-      if (state.market.listedSet.has(id)) {
-        e.preventDefault();
-        setStatus("This card is listed on the market. Cancel listing first.");
-        return;
-      }
-      setDragPayload({ source: "inventory", cardId: id });
-      e.dataTransfer.effectAllowed = "move";
-      e.dataTransfer.setData("text/plain", id);
-    });
-
-    node.addEventListener("dragend", () => {
-      clearDragPayload();
-    });
-  });
+  bindSourceCardInteractions("#invList", { jumpOnSelect: true });
 }
 
 function renderSelectedCard() {
@@ -1450,7 +1488,7 @@ function renderSelectedCard() {
       <div class="muted tiny" style="margin-top:6px">
         ${state.tacticsLocked
           ? "Tactics are locked. Wait for the next open window to edit your squad."
-          : "Drag a card to the pitch or bench, or click a card then choose a target slot."}
+          : "Use Collection or Latest Pack. Click a card, then click a pitch slot or empty bench slot. You can also drag bench ↔ pitch."}
       </div>
     `;
     return;
@@ -1460,6 +1498,7 @@ function renderSelectedCard() {
   const isListed = state.market.listedSet.has(c.id);
   const squadSlot = getSquadSlotOfCard(c.id);
   const benchIndex = findBenchIndexByCardId(c.id);
+  const firstFit = findFirstCompatibleEmptySlot(c.id);
 
   box.innerHTML = `
     <div class="kfSelected">
@@ -1481,6 +1520,11 @@ function renderSelectedCard() {
           <div><span>Defense</span><strong>${vm.defense}</strong></div>
         </div>
 
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+          <button class="smallBtn primary" id="btn-selected-bench" ${state.tacticsLocked || isListed ? "disabled" : ""}>Send Bench</button>
+          <button class="smallBtn ghost" id="btn-selected-auto" ${state.tacticsLocked || isListed || !firstFit ? "disabled" : ""}>Auto Place</button>
+        </div>
+
         <div class="muted tiny" style="margin-top:10px">
           ${state.tacticsLocked
             ? "TACTICS LOCKED — changes are blocked until the next fixture window opens."
@@ -1490,11 +1534,28 @@ function renderSelectedCard() {
                 ? `In Starting XI — ${slotLabel(squadSlot)}. Drag to another pitch token or bench.`
                 : benchIndex !== -1
                   ? `On Bench — B${benchIndex + 1}. Drag to pitch or another bench slot.`
-                  : "Ready to use — drag to pitch or empty bench slot."}
+                  : "Ready to use — click a pitch slot / empty bench slot, or use the quick actions above."}
         </div>
       </div>
     </div>
   `;
+
+  el("btn-selected-bench")?.addEventListener("click", async () => {
+    const emptyIdx = firstEmptyBenchIndex();
+    if (emptyIdx === -1) {
+      setStatus("Bench is full.");
+      return;
+    }
+    await moveCardToBench(c.id, emptyIdx, { source: "inventory", cardId: c.id });
+  });
+
+  el("btn-selected-auto")?.addEventListener("click", async () => {
+    if (!firstFit) {
+      setStatus("No compatible empty slot found.");
+      return;
+    }
+    await moveCardToPitch(c.id, firstFit, { source: "inventory", cardId: c.id });
+  });
 }
 
 function updateSynergy() {
@@ -1540,9 +1601,18 @@ function renderPackResults(cards) {
   const wrap = el("cards");
   if (!wrap) return;
   const normalized = (cards || []).map(normalizeCard).filter(Boolean);
+
   wrap.innerHTML = normalized.length
-    ? `<div class="kfPackGrid">${normalized.map((c) => cardHTML(c, { compact: true, selectable: false })).join("")}</div>`
+    ? `<div class="kfPackGrid">${normalized.map((c) => cardHTML(c, {
+        compact: true,
+        selectable: true,
+        draggable: !state.tacticsLocked,
+        selected: state.selectedCardId === c.id,
+        listed: state.market.listedSet.has(c.id)
+      })).join("")}</div>`
     : "";
+
+  bindSourceCardInteractions("#cards", { jumpOnSelect: false });
 }
 
 function getNextLeagueKickoff(now = new Date()) {
@@ -1646,6 +1716,7 @@ function renderTacticsShell() {
   });
 
   state.teamValidation = validation;
+  syncSquadPdfCopy();
   applyFormationLayout();
   refreshSlotStates();
   renderSelectedCard();
@@ -1878,6 +1949,7 @@ async function openPack() {
     injectRevealData(state.revealCards);
     renderPackResults(state.revealCards);
     await loadDaily();
+    jumpToView("squad");
   } catch (e) {
     hideOverlay();
     alert(e.message);
