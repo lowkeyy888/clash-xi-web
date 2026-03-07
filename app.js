@@ -13,6 +13,103 @@ const DEFAULT_RULES = {
 const FORMATIONS = ["343", "433", "442", "451", "4231", "352"];
 const TACTIC_MODES = ["balanced", "highpress", "counter", "control"];
 
+const TACTICAL_ROLES = {
+  GOALKEEPER: "GOALKEEPER",
+  CENTER_BACK: "CENTER_BACK",
+  FULLBACK_WINGBACK: "FULLBACK_WINGBACK",
+  DEFENSIVE_MID: "DEFENSIVE_MID",
+  CENTRAL_MID: "CENTRAL_MID",
+  ATTACKING_MID: "ATTACKING_MID",
+  WIDE_FORWARD: "WIDE_FORWARD",
+  STRIKER: "STRIKER"
+};
+
+const FORMATION_ROLE_MAP = {
+  "433": {
+    GK:  { role: TACTICAL_ROLES.GOALKEEPER, allowed: ["GK"] },
+    LB:  { role: TACTICAL_ROLES.FULLBACK_WINGBACK, allowed: ["LB"] },
+    CB1: { role: TACTICAL_ROLES.CENTER_BACK, allowed: ["CB"] },
+    CB2: { role: TACTICAL_ROLES.CENTER_BACK, allowed: ["CB"] },
+    RB:  { role: TACTICAL_ROLES.FULLBACK_WINGBACK, allowed: ["RB"] },
+    CM1: { role: TACTICAL_ROLES.CENTRAL_MID, allowed: ["CM", "CDM"] },
+    CM2: { role: TACTICAL_ROLES.CENTRAL_MID, allowed: ["CM", "CDM"] },
+    CAM: { role: TACTICAL_ROLES.ATTACKING_MID, allowed: ["CAM", "CM"] },
+    LW:  { role: TACTICAL_ROLES.WIDE_FORWARD, allowed: ["LW"] },
+    ST:  { role: TACTICAL_ROLES.STRIKER, allowed: ["ST"] },
+    RW:  { role: TACTICAL_ROLES.WIDE_FORWARD, allowed: ["RW"] }
+  },
+
+  "442": {
+    GK:  { role: TACTICAL_ROLES.GOALKEEPER, allowed: ["GK"] },
+    LB:  { role: TACTICAL_ROLES.FULLBACK_WINGBACK, allowed: ["LB"] },
+    CB1: { role: TACTICAL_ROLES.CENTER_BACK, allowed: ["CB"] },
+    CB2: { role: TACTICAL_ROLES.CENTER_BACK, allowed: ["CB"] },
+    RB:  { role: TACTICAL_ROLES.FULLBACK_WINGBACK, allowed: ["RB"] },
+    LW:  { role: TACTICAL_ROLES.WIDE_FORWARD, allowed: ["LW", "LM"] },
+    CM1: { role: TACTICAL_ROLES.CENTRAL_MID, allowed: ["CM", "CDM"] },
+    CM2: { role: TACTICAL_ROLES.CENTRAL_MID, allowed: ["CM", "CDM"] },
+    RW:  { role: TACTICAL_ROLES.WIDE_FORWARD, allowed: ["RW", "RM"] },
+    CAM: { role: TACTICAL_ROLES.STRIKER, allowed: ["ST", "CF"] },
+    ST:  { role: TACTICAL_ROLES.STRIKER, allowed: ["ST", "CF"] }
+  },
+
+  "451": {
+    GK:  { role: TACTICAL_ROLES.GOALKEEPER, allowed: ["GK"] },
+    LB:  { role: TACTICAL_ROLES.FULLBACK_WINGBACK, allowed: ["LB"] },
+    CB1: { role: TACTICAL_ROLES.CENTER_BACK, allowed: ["CB"] },
+    CB2: { role: TACTICAL_ROLES.CENTER_BACK, allowed: ["CB"] },
+    RB:  { role: TACTICAL_ROLES.FULLBACK_WINGBACK, allowed: ["RB"] },
+    LW:  { role: TACTICAL_ROLES.WIDE_FORWARD, allowed: ["LW", "LM"] },
+    CM1: { role: TACTICAL_ROLES.CENTRAL_MID, allowed: ["CM", "CDM"] },
+    CAM: { role: TACTICAL_ROLES.ATTACKING_MID, allowed: ["CAM", "CM"] },
+    CM2: { role: TACTICAL_ROLES.CENTRAL_MID, allowed: ["CM", "CDM"] },
+    RW:  { role: TACTICAL_ROLES.WIDE_FORWARD, allowed: ["RW", "RM"] },
+    ST:  { role: TACTICAL_ROLES.STRIKER, allowed: ["ST"] }
+  },
+
+  "4231": {
+    GK:  { role: TACTICAL_ROLES.GOALKEEPER, allowed: ["GK"] },
+    LB:  { role: TACTICAL_ROLES.FULLBACK_WINGBACK, allowed: ["LB"] },
+    CB1: { role: TACTICAL_ROLES.CENTER_BACK, allowed: ["CB"] },
+    CB2: { role: TACTICAL_ROLES.CENTER_BACK, allowed: ["CB"] },
+    RB:  { role: TACTICAL_ROLES.FULLBACK_WINGBACK, allowed: ["RB"] },
+    CM1: { role: TACTICAL_ROLES.DEFENSIVE_MID, allowed: ["CDM", "CM"] },
+    CM2: { role: TACTICAL_ROLES.DEFENSIVE_MID, allowed: ["CDM", "CM"] },
+    LW:  { role: TACTICAL_ROLES.WIDE_FORWARD, allowed: ["LW", "LM"] },
+    CAM: { role: TACTICAL_ROLES.ATTACKING_MID, allowed: ["CAM"] },
+    RW:  { role: TACTICAL_ROLES.WIDE_FORWARD, allowed: ["RW", "RM"] },
+    ST:  { role: TACTICAL_ROLES.STRIKER, allowed: ["ST"] }
+  },
+
+  "343": {
+    GK:  { role: TACTICAL_ROLES.GOALKEEPER, allowed: ["GK"] },
+    CB1: { role: TACTICAL_ROLES.CENTER_BACK, allowed: ["CB"] },
+    CB2: { role: TACTICAL_ROLES.CENTER_BACK, allowed: ["CB"] },
+    RB:  { role: TACTICAL_ROLES.CENTER_BACK, allowed: ["CB", "RB"] },
+    LB:  { role: TACTICAL_ROLES.FULLBACK_WINGBACK, allowed: ["LB", "LM"] },
+    CM1: { role: TACTICAL_ROLES.CENTRAL_MID, allowed: ["CM", "CDM"] },
+    CM2: { role: TACTICAL_ROLES.CENTRAL_MID, allowed: ["CM", "CDM"] },
+    CAM: { role: TACTICAL_ROLES.FULLBACK_WINGBACK, allowed: ["RM", "RW", "RB"] },
+    LW:  { role: TACTICAL_ROLES.WIDE_FORWARD, allowed: ["LW"] },
+    ST:  { role: TACTICAL_ROLES.STRIKER, allowed: ["ST"] },
+    RW:  { role: TACTICAL_ROLES.WIDE_FORWARD, allowed: ["RW"] }
+  },
+
+  "352": {
+    GK:  { role: TACTICAL_ROLES.GOALKEEPER, allowed: ["GK"] },
+    CB1: { role: TACTICAL_ROLES.CENTER_BACK, allowed: ["CB"] },
+    CB2: { role: TACTICAL_ROLES.CENTER_BACK, allowed: ["CB"] },
+    RB:  { role: TACTICAL_ROLES.CENTER_BACK, allowed: ["CB", "RB"] },
+    LB:  { role: TACTICAL_ROLES.FULLBACK_WINGBACK, allowed: ["LB", "LM"] },
+    CM1: { role: TACTICAL_ROLES.CENTRAL_MID, allowed: ["CM", "CDM"] },
+    CAM: { role: TACTICAL_ROLES.ATTACKING_MID, allowed: ["CAM", "CM"] },
+    CM2: { role: TACTICAL_ROLES.CENTRAL_MID, allowed: ["CM", "CDM"] },
+    RW:  { role: TACTICAL_ROLES.FULLBACK_WINGBACK, allowed: ["RM", "RW", "RB"] },
+    LW:  { role: TACTICAL_ROLES.STRIKER, allowed: ["ST", "CF"] },
+    ST:  { role: TACTICAL_ROLES.STRIKER, allowed: ["ST", "CF"] }
+  }
+};
+
 const FORMATION_LAYOUTS = {
   "433": {
     GK: { x: 50, y: 85 },
@@ -158,7 +255,8 @@ const state = {
   tacticMode: localStorage.getItem("kf_tactic_mode") || "balanced",
   tacticsLocked: false,
   activeMatchday: 4,
-  leagueRegistered: false
+  leagueRegistered: false,
+  teamValidation: null
 };
 
 function normalizeCard(raw) {
@@ -170,6 +268,131 @@ function normalizeCard(raw) {
     role: raw.role || raw.playerRole || raw.archetype || "Utility Role",
     position: raw.position || raw.pos || "CM",
     rarity: String(raw.rarity || "COMMON").toUpperCase()
+  };
+}
+
+function normalizePosition(pos) {
+  return String(pos || "").trim().toUpperCase();
+}
+
+function getFormationRoleMap(formation) {
+  return FORMATION_ROLE_MAP[formation] || FORMATION_ROLE_MAP["433"];
+}
+
+function buildTeamModel() {
+  const roleMap = getFormationRoleMap(state.formation);
+  const slots = SLOT_KEYS.map((slotKey) => {
+    const card = getCardById(state.squad[slotKey]);
+    const meta = roleMap[slotKey] || null;
+    const allowedPositions = (meta?.allowed || []).map(normalizePosition);
+    const cardPosition = normalizePosition(card?.position);
+    const isNaturalFit = !!card && allowedPositions.includes(cardPosition);
+
+    return {
+      slotKey,
+      tacticalRole: meta?.role || null,
+      allowedPositions,
+      cardId: card?.id || null,
+      card,
+      cardPosition,
+      isNaturalFit
+    };
+  });
+
+  const equippedCards = slots.filter((s) => s.card).map((s) => s.card);
+  const avgOvr = equippedCards.length
+    ? Math.round(equippedCards.reduce((sum, c) => sum + cardVisualModel(c).ovr, 0) / equippedCards.length)
+    : 0;
+
+  return {
+    formation: state.formation,
+    tacticMode: state.tacticMode,
+    style: state.style,
+    locked: state.tacticsLocked,
+    slots,
+    equippedCount: equippedCards.length,
+    avgOvr
+  };
+}
+
+function validateTeamModel(team = buildTeamModel()) {
+  const missingSlots = [];
+  const duplicateCards = [];
+  const listedConflicts = [];
+  const offPositionAssignments = [];
+  const warnings = [];
+
+  const seenCardIds = new Set();
+  const rolelessSlots = [];
+
+  team.slots.forEach((slot) => {
+    if (!slot.tacticalRole) rolelessSlots.push(slot.slotKey);
+    if (!slot.cardId) {
+      missingSlots.push(slot.slotKey);
+      return;
+    }
+
+    if (seenCardIds.has(slot.cardId)) {
+      duplicateCards.push(slot.cardId);
+    } else {
+      seenCardIds.add(slot.cardId);
+    }
+
+    if (state.market.listedSet.has(slot.cardId)) {
+      listedConflicts.push(slot.slotKey);
+    }
+
+    if (!slot.isNaturalFit) {
+      offPositionAssignments.push(slot.slotKey);
+    }
+  });
+
+  if (rolelessSlots.length) {
+    warnings.push(`Missing tactical role mapping for: ${rolelessSlots.join(", ")}`);
+  }
+
+  if (offPositionAssignments.length) {
+    warnings.push(`Off-position assignments: ${offPositionAssignments.join(", ")}`);
+  }
+
+  const isComplete = missingSlots.length === 0;
+  const isReady =
+    isComplete &&
+    duplicateCards.length === 0 &&
+    listedConflicts.length === 0 &&
+    rolelessSlots.length === 0;
+
+  return {
+    isComplete,
+    isReady,
+    missingSlots,
+    duplicateCards,
+    listedConflicts,
+    offPositionAssignments,
+    warnings
+  };
+}
+
+function exportTeamForSimulation() {
+  const team = buildTeamModel();
+  const validation = validateTeamModel(team);
+
+  return {
+    formation: team.formation,
+    tacticMode: team.tacticMode,
+    style: team.style,
+    locked: team.locked,
+    equippedCount: team.equippedCount,
+    avgOvr: team.avgOvr,
+    validation,
+    slots: team.slots.map((slot) => ({
+      slotKey: slot.slotKey,
+      tacticalRole: slot.tacticalRole,
+      allowedPositions: slot.allowedPositions,
+      cardId: slot.cardId,
+      cardPosition: slot.cardPosition,
+      isNaturalFit: slot.isNaturalFit
+    }))
   };
 }
 
@@ -535,6 +758,7 @@ function renderSquad() {
     `;
   });
 
+  state.teamValidation = validateTeamModel(buildTeamModel());
   refreshSlotStates();
   updateSynergy();
 }
@@ -808,6 +1032,7 @@ function renderTacticsShell() {
     btn.disabled = state.tacticsLocked;
   });
 
+  state.teamValidation = validateTeamModel(buildTeamModel());
   applyFormationLayout();
   refreshSlotStates();
   renderSelectedCard();
@@ -1744,4 +1969,10 @@ async function enterKickForge() {
 
   el("revealPack")?.addEventListener("click", revealAction);
   el("revealCards")?.addEventListener("click", revealAction);
+
+  window.KickForgeDebug = {
+    buildTeamModel,
+    validateTeamModel,
+    exportTeamForSimulation
+  };
 })();
