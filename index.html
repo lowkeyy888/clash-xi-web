@@ -213,7 +213,6 @@
           <!-- HOME / DASHBOARD -->
           <section class="appView is-active" id="view-home" data-view="home">
             <div class="homeDashboard">
-              <!-- ROW 1 -->
               <div class="homeCard matchCard">
                 <div class="row">
                   <div>
@@ -338,7 +337,6 @@
                 <div class="muted tiny standingNote">Your row should be highlighted in emerald when real standings connect.</div>
               </div>
 
-              <!-- ROW 2 -->
               <div class="homeCard dailyWideCard">
                 <div class="row">
                   <div>
@@ -389,7 +387,6 @@
                 </div>
               </div>
 
-              <!-- ROW 3 -->
               <div class="homeQuickActions">
                 <button class="quickActionCard" data-view-tab-jump="collection">
                   <span class="quickActionTop">Open</span>
@@ -442,55 +439,150 @@
             <section class="squadBuilder" id="squad">
               <div class="row squadHeader">
                 <div>
-                  <div class="heroEyebrow">Squad Builder</div>
-                  <div class="sectionTitle sectionTitleWide">Pitch View</div>
-                  <div class="muted tiny">Select a player from Collection → click a pitch slot to equip. Click a filled slot with no selected card to unequip.</div>
+                  <div class="heroEyebrow">Squad Builder & Tactics</div>
+                  <div class="sectionTitle sectionTitleWide">Tactics Room</div>
+                  <div class="muted tiny">Choose formation, define the approach, then lock your tactics before the daily fixture.</div>
                 </div>
 
                 <div class="squadHeaderTags">
-                  <div class="tag">Base XI</div>
-                  <div class="tag">Live Foundation</div>
+                  <div class="tag">Live XI</div>
+                  <div class="tag">Tactics Lock</div>
                 </div>
               </div>
 
-              <div class="squadLayout">
-                <div class="pitchPanel">
-                  <div class="pitchPanelTop">
-                    <div>
-                      <div class="muted tiny">Formation View</div>
-                      <div class="sectionTitle">Starting XI</div>
+              <div class="tacticsTopStrip">
+                <div class="tacticsTopCard">
+                  <div class="muted tiny">Active Formation</div>
+                  <div class="sectionTitle">4-3-3</div>
+                  <div class="muted tiny">Current live base while advanced formation logic is being connected.</div>
+                </div>
+
+                <div class="tacticsTopCard">
+                  <div class="muted tiny">Saved Template</div>
+                  <div class="sectionTitle">Balanced Press</div>
+                  <div class="muted tiny">Your last-used setup will be auto-restored later.</div>
+                </div>
+
+                <div class="tacticsTopCard">
+                  <div class="muted tiny">Lock Status</div>
+                  <div class="sectionTitle">Open</div>
+                  <div class="muted tiny">Tactics lock 1 hour before kickoff.</div>
+                </div>
+              </div>
+
+              <div class="formationShell">
+                <div class="row">
+                  <div>
+                    <div class="sectionTitle">Formations</div>
+                    <div class="muted tiny">KickForge v3 target pool starts here.</div>
+                  </div>
+                  <div class="tag">6 Slots</div>
+                </div>
+
+                <div class="formationRow">
+                  <button class="formationChip is-active" data-formation="343">3-4-3</button>
+                  <button class="formationChip" data-formation="433">4-3-3</button>
+                  <button class="formationChip" data-formation="442">4-4-2</button>
+                  <button class="formationChip" data-formation="451">4-5-1</button>
+                  <button class="formationChip" data-formation="4231">4-2-3-1</button>
+                  <button class="formationChip" data-formation="352">3-5-2</button>
+                </div>
+              </div>
+
+              <div class="squadLayout squadLayout--advanced">
+                <div class="pitchCluster">
+                  <div class="pitchPanel">
+                    <div class="pitchPanelTop">
+                      <div>
+                        <div class="muted tiny">Formation View</div>
+                        <div class="sectionTitle">Starting XI</div>
+                      </div>
+
+                      <div class="pitchMode">
+                        <span class="badgeSm">Pitch Active</span>
+                      </div>
                     </div>
 
-                    <div class="pitchMode">
-                      <span class="badgeSm">Pitch Active</span>
+                    <div class="pitchStage">
+                      <div class="pitchSurface">
+                        <div class="pitchMarkings">
+                          <div class="pitchHalf"></div>
+                          <div class="pitchCircle"></div>
+                          <div class="pitchBox pitchBox--top"></div>
+                          <div class="pitchBox pitchBox--bottom"></div>
+                          <div class="pitchGoal pitchGoal--top"></div>
+                          <div class="pitchGoal pitchGoal--bottom"></div>
+                        </div>
+
+                        <div class="pitchXIWrap">
+                          <div class="xi xi--pitch" id="xi"></div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="pitchFooter">
+                      <div class="muted tiny">
+                        Drag-and-drop, bench swapping, and formation remap come next. This step upgrades the tactics room structure first.
+                      </div>
                     </div>
                   </div>
 
-                  <div class="pitchStage">
-                    <div class="pitchSurface">
-                      <div class="pitchMarkings">
-                        <div class="pitchHalf"></div>
-                        <div class="pitchCircle"></div>
-                        <div class="pitchBox pitchBox--top"></div>
-                        <div class="pitchBox pitchBox--bottom"></div>
-                        <div class="pitchGoal pitchGoal--top"></div>
-                        <div class="pitchGoal pitchGoal--bottom"></div>
+                  <div class="benchShell">
+                    <div class="row">
+                      <div>
+                        <div class="sectionTitle">Bench</div>
+                        <div class="muted tiny">Reserve row scaffold for later swap logic.</div>
                       </div>
-
-                      <div class="pitchXIWrap">
-                        <div class="xi xi--pitch" id="xi"></div>
-                      </div>
+                      <div class="tag">7 Slots</div>
                     </div>
-                  </div>
 
-                  <div class="pitchFooter">
-                    <div class="muted tiny">
-                      Drag-and-drop and formation switching come later. This pass keeps the live squad flow inside the separated app shell.
+                    <div class="benchRow">
+                      <div class="benchSlot">B1</div>
+                      <div class="benchSlot">B2</div>
+                      <div class="benchSlot">B3</div>
+                      <div class="benchSlot">B4</div>
+                      <div class="benchSlot">B5</div>
+                      <div class="benchSlot">B6</div>
+                      <div class="benchSlot">B7</div>
                     </div>
                   </div>
                 </div>
 
                 <aside class="squadSide">
+                  <div class="sideCard tacticsPanel">
+                    <div class="row">
+                      <div>
+                        <div class="sectionTitle">Tactics</div>
+                        <div class="muted tiny">Match approach and behavior shell.</div>
+                      </div>
+                      <div class="tag">Core</div>
+                    </div>
+
+                    <div class="tacticModeGrid">
+                      <button class="tacticMode is-active" data-tactic-mode="balanced">Balanced</button>
+                      <button class="tacticMode" data-tactic-mode="highpress">High Press</button>
+                      <button class="tacticMode" data-tactic-mode="counter">Counter</button>
+                      <button class="tacticMode" data-tactic-mode="control">Control</button>
+                    </div>
+
+                    <div class="roleFocusList">
+                      <div class="roleFocusItem">
+                        <span>Front Shape</span>
+                        <strong>Wide Forwards</strong>
+                      </div>
+                      <div class="roleFocusItem">
+                        <span>Midfield Core</span>
+                        <strong>Progressive Build</strong>
+                      </div>
+                      <div class="roleFocusItem">
+                        <span>Defensive Line</span>
+                        <strong>Medium Block</strong>
+                      </div>
+                    </div>
+
+                    <button class="btn primary" id="btn-lock-tactics-side">Lock Tactics</button>
+                  </div>
+
                   <div class="sideCard synergyPanel">
                     <div class="row">
                       <div>
