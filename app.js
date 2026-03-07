@@ -13,25 +13,134 @@ const DEFAULT_RULES = {
 const FORMATIONS = ["343", "433", "442", "451", "4231", "352"];
 const TACTIC_MODES = ["balanced", "highpress", "counter", "control"];
 
+const FORMATION_LAYOUTS = {
+  "433": {
+    GK: { x: 50, y: 85 },
+    LB: { x: 16, y: 70 },
+    CB1: { x: 38, y: 72 },
+    CB2: { x: 62, y: 72 },
+    RB: { x: 84, y: 70 },
+    CM1: { x: 28, y: 50 },
+    CM2: { x: 72, y: 50 },
+    CAM: { x: 50, y: 38 },
+    LW: { x: 18, y: 16 },
+    ST: { x: 50, y: 10 },
+    RW: { x: 82, y: 16 }
+  },
+  "442": {
+    GK: { x: 50, y: 85 },
+    LB: { x: 16, y: 70 },
+    CB1: { x: 38, y: 72 },
+    CB2: { x: 62, y: 72 },
+    RB: { x: 84, y: 70 },
+    LW: { x: 16, y: 48 },
+    CM1: { x: 38, y: 50 },
+    CM2: { x: 62, y: 50 },
+    RW: { x: 84, y: 48 },
+    CAM: { x: 40, y: 18 },
+    ST: { x: 60, y: 18 }
+  },
+  "451": {
+    GK: { x: 50, y: 85 },
+    LB: { x: 16, y: 70 },
+    CB1: { x: 38, y: 72 },
+    CB2: { x: 62, y: 72 },
+    RB: { x: 84, y: 70 },
+    LW: { x: 12, y: 46 },
+    CM1: { x: 32, y: 50 },
+    CAM: { x: 50, y: 46 },
+    CM2: { x: 68, y: 50 },
+    RW: { x: 88, y: 46 },
+    ST: { x: 50, y: 12 }
+  },
+  "4231": {
+    GK: { x: 50, y: 85 },
+    LB: { x: 16, y: 70 },
+    CB1: { x: 38, y: 72 },
+    CB2: { x: 62, y: 72 },
+    RB: { x: 84, y: 70 },
+    CM1: { x: 40, y: 56 },
+    CM2: { x: 60, y: 56 },
+    LW: { x: 18, y: 34 },
+    CAM: { x: 50, y: 34 },
+    RW: { x: 82, y: 34 },
+    ST: { x: 50, y: 12 }
+  },
+  "343": {
+    GK: { x: 50, y: 85 },
+    CB1: { x: 28, y: 70 },
+    CB2: { x: 50, y: 72 },
+    RB: { x: 72, y: 70 },
+    LB: { x: 18, y: 48 },
+    CM1: { x: 40, y: 50 },
+    CM2: { x: 60, y: 50 },
+    CAM: { x: 82, y: 48 },
+    LW: { x: 18, y: 16 },
+    ST: { x: 50, y: 10 },
+    RW: { x: 82, y: 16 }
+  },
+  "352": {
+    GK: { x: 50, y: 85 },
+    CB1: { x: 28, y: 70 },
+    CB2: { x: 50, y: 72 },
+    RB: { x: 72, y: 70 },
+    LB: { x: 16, y: 48 },
+    CM1: { x: 36, y: 50 },
+    CAM: { x: 50, y: 42 },
+    CM2: { x: 64, y: 50 },
+    RW: { x: 84, y: 48 },
+    LW: { x: 40, y: 16 },
+    ST: { x: 60, y: 16 }
+  }
+};
+
+const LEAGUE_FIXTURES = {
+  1: [
+    { date: "12 MAR", home: "Your Club", away: "Dockside SC", score: "2 - 0", cls: "result-win" },
+    { date: "12 MAR", home: "North XI", away: "East Borough", score: "1 - 1", cls: "result-draw" },
+    { date: "12 MAR", home: "Topside FC", away: "Iron Eleven", score: "3 - 1", cls: "result-win" }
+  ],
+  2: [
+    { date: "13 MAR", home: "North XI", away: "Your Club", score: "1 - 1", cls: "result-draw" },
+    { date: "13 MAR", home: "Iron Eleven", away: "Dockside SC", score: "2 - 0", cls: "result-win" },
+    { date: "13 MAR", home: "Topside FC", away: "East Borough", score: "4 - 0", cls: "result-win" }
+  ],
+  3: [
+    { date: "14 MAR", home: "Topside FC", away: "Your Club", score: "3 - 1", cls: "result-loss" },
+    { date: "14 MAR", home: "North XI", away: "Dockside SC", score: "2 - 0", cls: "result-win" },
+    { date: "14 MAR", home: "East Borough", away: "Iron Eleven", score: "0 - 2", cls: "result-loss" }
+  ],
+  4: [
+    { date: "15 MAR", home: "Your Club", away: "Iron Eleven", score: "20:00", cls: "result-live" },
+    { date: "15 MAR", home: "Topside FC", away: "Dockside SC", score: "20:00", cls: "result-live" },
+    { date: "15 MAR", home: "North XI", away: "East Borough", score: "20:00", cls: "result-live" }
+  ],
+  5: [
+    { date: "16 MAR", home: "Your Club", away: "East Borough", score: "20:00", cls: "result-live" },
+    { date: "16 MAR", home: "Dockside SC", away: "Iron Eleven", score: "20:00", cls: "result-live" },
+    { date: "16 MAR", home: "Topside FC", away: "North XI", score: "20:00", cls: "result-live" }
+  ],
+  6: [
+    { date: "17 MAR", home: "Dockside SC", away: "Your Club", score: "20:00", cls: "result-live" },
+    { date: "17 MAR", home: "North XI", away: "Iron Eleven", score: "20:00", cls: "result-live" },
+    { date: "17 MAR", home: "Topside FC", away: "East Borough", score: "20:00", cls: "result-live" }
+  ]
+};
+
 const state = {
   token: localStorage.getItem("cx_token") || null,
   userId: localStorage.getItem("cx_user") || null,
-
   revealIndex: 0,
   revealCards: [],
   revealing: false,
-
   inventory: [],
   squad: {},
   selectedCardId: null,
   filter: "ALL",
   style: localStorage.getItem("cx_style") || "PRESS",
-
   arenaMode: "BRONZE",
-
   walletCoins: null,
   battlepass: null,
-
   market: {
     listings: [],
     mine: [],
@@ -40,17 +149,29 @@ const state = {
     rules: DEFAULT_RULES,
     listedSet: new Set()
   },
-
   daily: null,
   cosmetics: [],
   isPro: false,
   activeView: "home",
   countdownTimer: null,
-
   formation: localStorage.getItem("kf_formation") || "433",
   tacticMode: localStorage.getItem("kf_tactic_mode") || "balanced",
-  tacticsLocked: false
+  tacticsLocked: false,
+  activeMatchday: 4,
+  leagueRegistered: false
 };
+
+function normalizeCard(raw) {
+  if (!raw) return null;
+  return {
+    ...raw,
+    id: raw.id || raw.cardId || raw.card_id || crypto.randomUUID(),
+    display_name: raw.display_name || raw.displayName || raw.name || "Unknown",
+    role: raw.role || raw.playerRole || raw.archetype || "Utility Role",
+    position: raw.position || raw.pos || "CM",
+    rarity: String(raw.rarity || "COMMON").toUpperCase()
+  };
+}
 
 function slotLabel(k) {
   return String(k).replace("1", "").replace("2", "");
@@ -63,12 +184,8 @@ function shortName(name) {
   return `${parts[0]} ${parts[parts.length - 1]}`;
 }
 
-function titleCase(s) {
-  return String(s || "")
-    .replace(/([A-Z])/g, " $1")
-    .replace(/[-_]/g, " ")
-    .trim()
-    .replace(/\b\w/g, (m) => m.toUpperCase());
+function formatFormationLabel(code) {
+  return String(code || "433").split("").join("-");
 }
 
 function tacticModeLabel(mode) {
@@ -83,6 +200,35 @@ function savedTemplateLabel() {
   if (state.tacticMode === "counter") return "Fast Break";
   if (state.tacticMode === "control") return "Possession Control";
   return "Balanced Press";
+}
+
+function tacticDescriptors(mode) {
+  if (mode === "highpress") {
+    return {
+      front: "Front Foot Press",
+      mid: "Ball Winning Core",
+      def: "High Line Trap"
+    };
+  }
+  if (mode === "counter") {
+    return {
+      front: "Direct Runs",
+      mid: "Vertical Outlet",
+      def: "Compact Block"
+    };
+  }
+  if (mode === "control") {
+    return {
+      front: "False Width",
+      mid: "Tempo Control",
+      def: "Patient Build"
+    };
+  }
+  return {
+    front: "Wide Forwards",
+    mid: "Progressive Build",
+    def: "Medium Block"
+  };
 }
 
 function rarityClass(r) {
@@ -258,7 +404,6 @@ function cardVisualModel(card) {
 
   const boost = roleStyle(card.role);
   const mods = { pace: 0, pass: 0, attack: 0, defense: 0 };
-
   if (boost === "PRESS") { mods.pace += 3; mods.defense += 4; }
   if (boost === "POSSESSION") { mods.pass += 5; mods.attack += 2; }
   if (boost === "COUNTER") { mods.pace += 5; mods.attack += 5; }
@@ -277,26 +422,27 @@ function cardVisualModel(card) {
 }
 
 function cardHTML(card, opts = {}) {
-  const vm = cardVisualModel(card);
+  const c = normalizeCard(card);
+  const vm = cardVisualModel(c);
   const selected = !!opts.selected;
   const listed = !!opts.listed;
   const compact = !!opts.compact;
   const selectable = opts.selectable !== false;
 
   return `
-    <div class="kfCard ${rarityFrame(card.rarity)} ${selected ? "is-selected" : ""} ${listed ? "is-listed" : ""} ${compact ? "is-compact" : ""}" ${selectable ? `data-card-id="${card.id}"` : ""}>
+    <div class="kfCard ${rarityFrame(c.rarity)} ${selected ? "is-selected" : ""} ${listed ? "is-listed" : ""} ${compact ? "is-compact" : ""}" ${selectable ? `data-card-id="${c.id}"` : ""}>
       <div class="kfCard__shine"></div>
       <div class="kfCard__top">
         <div class="kfCard__ovr">${vm.ovr}</div>
         <div class="kfCard__metaRight">
-          <div class="kfCard__pos">${card.position}</div>
-          <div class="kfCard__rarity">${rarityShort(card.rarity)}</div>
+          <div class="kfCard__pos">${c.position}</div>
+          <div class="kfCard__rarity">${rarityShort(c.rarity)}</div>
         </div>
       </div>
 
       <div class="kfCard__body">
-        <div class="kfCard__name">${card.display_name}</div>
-        <div class="kfCard__role">${card.role}</div>
+        <div class="kfCard__name">${c.display_name}</div>
+        <div class="kfCard__role">${c.role}</div>
       </div>
 
       <div class="kfCard__stats">
@@ -307,7 +453,7 @@ function cardHTML(card, opts = {}) {
       </div>
 
       <div class="kfCard__footer">
-        <div class="kfCard__badge ${rarityFrame(card.rarity)}">${card.rarity}</div>
+        <div class="kfCard__badge ${rarityFrame(c.rarity)}">${c.rarity}</div>
         ${listed ? `<div class="kfCard__listed">LISTED</div>` : ``}
       </div>
     </div>
@@ -328,7 +474,23 @@ function seedXI() {
     grid.appendChild(d);
   });
 
+  applyFormationLayout();
   refreshSlotStates();
+}
+
+function applyFormationLayout() {
+  const grid = el("xi");
+  if (!grid) return;
+  const layout = FORMATION_LAYOUTS[state.formation] || FORMATION_LAYOUTS["433"];
+
+  [...grid.querySelectorAll(".slot")].forEach((node) => {
+    const slot = node.dataset.slot;
+    const pos = layout[slot] || FORMATION_LAYOUTS["433"][slot] || { x: 50, y: 50 };
+    node.style.left = `${pos.x}%`;
+    node.style.top = `${pos.y}%`;
+    node.style.right = "auto";
+    node.style.transform = "translateX(-50%)";
+  });
 }
 
 function refreshSlotStates() {
@@ -346,6 +508,8 @@ function refreshSlotStates() {
 function renderSquad() {
   const grid = el("xi");
   if (!grid) return;
+
+  applyFormationLayout();
 
   [...grid.querySelectorAll(".slot")].forEach((node) => {
     const k = node.dataset.slot;
@@ -548,9 +712,9 @@ function updateSynergy() {
 function renderPackResults(cards) {
   const wrap = el("cards");
   if (!wrap) return;
-
-  wrap.innerHTML = cards.length
-    ? `<div class="kfPackGrid">${cards.map((c) => cardHTML(c, { compact: true, selectable: false })).join("")}</div>`
+  const normalized = (cards || []).map(normalizeCard).filter(Boolean);
+  wrap.innerHTML = normalized.length
+    ? `<div class="kfPackGrid">${normalized.map((c) => cardHTML(c, { compact: true, selectable: false })).join("")}</div>`
     : "";
 }
 
@@ -569,22 +733,39 @@ function formatTwo(n) {
   return String(n).padStart(2, "0");
 }
 
-function renderHomeCountdown() {
-  const nextKickoff = getNextLeagueKickoff(new Date());
+function syncCountdownSet(prefix, targetDate) {
   const now = new Date();
-  const diff = Math.max(0, nextKickoff.getTime() - now.getTime());
-
+  const diff = Math.max(0, targetDate.getTime() - now.getTime());
   const days = Math.floor(diff / 86400000);
   const hours = Math.floor((diff % 86400000) / 3600000);
   const mins = Math.floor((diff % 3600000) / 60000);
+  safeText(el(`${prefix}-days`), formatTwo(days));
+  safeText(el(`${prefix}-hours`), formatTwo(hours));
+  safeText(el(`${prefix}-mins`), formatTwo(mins));
+}
 
-  safeText(el("cd-days"), formatTwo(days));
-  safeText(el("cd-hours"), formatTwo(hours));
-  safeText(el("cd-mins"), formatTwo(mins));
+function currentLeagueContext() {
+  const fixtures = LEAGUE_FIXTURES[state.activeMatchday] || [];
+  const next = fixtures.find((f) => f.home === "Your Club" || f.away === "Your Club") || fixtures[0] || null;
+  return next;
+}
 
-  const lockTime = getNextLockTime(now);
+function renderHomeCountdown() {
+  const nextKickoff = getNextLeagueKickoff(new Date());
+  const lockTime = getNextLockTime(new Date());
+  syncCountdownSet("cd", nextKickoff);
+  syncCountdownSet("league-cd", nextKickoff);
+
   const sub = `Next kickoff ${nextKickoff.toUTCString().replace("GMT", "UTC")} • lock ${formatTwo(lockTime.getUTCHours())}:00 UTC`;
   safeText(el("home-match-sub"), sub);
+  safeText(el("league-next-kickoff"), sub);
+
+  const ctx = currentLeagueContext();
+  if (ctx) {
+    const opponent = ctx.home === "Your Club" ? ctx.away : ctx.home;
+    safeText(el("home-match-title"), opponent);
+    safeText(el("league-next-opponent"), `${ctx.home} vs ${ctx.away}`);
+  }
 }
 
 function startHomeCountdown() {
@@ -593,6 +774,7 @@ function startHomeCountdown() {
   state.countdownTimer = setInterval(() => {
     renderHomeCountdown();
     renderTacticsShell();
+    renderLeagueShell();
   }, 1000);
 }
 
@@ -610,26 +792,83 @@ function renderTacticsShell() {
   });
 
   const cards = document.querySelectorAll(".tacticsTopStrip .tacticsTopCard");
-  const formationTitle = cards[0]?.querySelector(".sectionTitle");
-  const templateTitle = cards[1]?.querySelector(".sectionTitle");
-  const lockTitle = cards[2]?.querySelector(".sectionTitle");
-  const lockSub = cards[2]?.querySelector(".muted.tiny:last-child");
+  safeText(cards[0]?.querySelector(".sectionTitle"), formatFormationLabel(state.formation));
+  safeText(cards[1]?.querySelector(".sectionTitle"), savedTemplateLabel());
+  safeText(cards[2]?.querySelector(".sectionTitle"), state.tacticsLocked ? "Locked" : "Open");
+  safeText(cards[2]?.querySelector(".muted.tiny:last-child"), state.tacticsLocked ? "Current window locked until next daily cycle." : "Tactics lock 1 hour before kickoff.");
 
-  safeText(formationTitle, state.formation.replace(/^(\d)(\d)(\d)(\d)?$/, (_, a, b, c, d) => d ? `${a}-${b}-${c}-${d}` : `${a}-${b}-${c}`));
-  safeText(templateTitle, savedTemplateLabel());
-  safeText(lockTitle, state.tacticsLocked ? "Locked" : "Open");
-  safeText(lockSub, state.tacticsLocked ? "Current window locked until next daily cycle." : "Tactics lock 1 hour before kickoff.");
+  const desc = tacticDescriptors(state.tacticMode);
+  safeText(el("tactic-front-shape"), desc.front);
+  safeText(el("tactic-mid-core"), desc.mid);
+  safeText(el("tactic-def-line"), desc.def);
 
-  const lockBtnHome = el("btn-lock-tactics");
-  const lockBtnSide = el("btn-lock-tactics-side");
-  [lockBtnHome, lockBtnSide].forEach((btn) => {
+  [el("btn-lock-tactics"), el("btn-lock-tactics-side")].forEach((btn) => {
     if (!btn) return;
     btn.textContent = state.tacticsLocked ? "Locked" : "Lock Tactics";
     btn.disabled = state.tacticsLocked;
   });
 
+  applyFormationLayout();
   refreshSlotStates();
   renderSelectedCard();
+  updateSynergy();
+}
+
+function renderLeagueFixtures() {
+  const wrap = el("leagueFixtures");
+  if (!wrap) return;
+  const rows = LEAGUE_FIXTURES[state.activeMatchday] || [];
+  wrap.innerHTML = rows.map((f) => `
+    <div class="fixtureRow ${f.cls}">
+      <div class="fixtureDate">${f.date}</div>
+      <div class="fixtureTeams">${f.home} vs ${f.away}</div>
+      <div class="fixtureScore">${f.score}</div>
+    </div>
+  `).join("");
+}
+
+function renderLeagueShell() {
+  const nextKickoff = getNextLeagueKickoff(new Date());
+  const lockTime = getNextLockTime(new Date());
+  const tier = state.isPro ? "PRO" : "OPEN";
+  const tierName = state.isPro ? "Pro Division" : "Open Division";
+  const tierCopy = state.isPro
+    ? "Battle Pass access active • compete for Elite qualification and Champions Cup path."
+    : "Free ladder access • top performance pushes toward Pro and Elite competition.";
+
+  safeText(el("league-tier-badge"), tier);
+  safeText(el("league-status-badge"), state.tacticsLocked ? "LOCK WINDOW" : "SEASON LIVE");
+  safeText(el("league-tier-name"), tierName);
+  safeText(el("league-tier-copy"), tierCopy);
+  safeText(el("league-lock-status"), state.tacticsLocked ? "Locked" : "Open");
+  safeText(el("league-lock-clock"), state.tacticsLocked ? `Locked until ${nextKickoff.toUTCString().replace("GMT", "UTC")}` : `Open now • lock at ${formatTwo(lockTime.getUTCHours())}:00 UTC`);
+
+  document.querySelectorAll("[data-md]").forEach((btn) => {
+    btn.classList.toggle("is-active", Number(btn.dataset.md) === state.activeMatchday);
+  });
+
+  const ctx = currentLeagueContext();
+  if (ctx) {
+    safeText(el("league-next-opponent"), `${ctx.home} vs ${ctx.away}`);
+  }
+
+  const registerPanel = el("leagueRegisterEmpty");
+  const registerBtn = el("btn-register-league");
+  if (registerPanel && registerBtn) {
+    if (state.leagueRegistered) {
+      registerPanel.querySelector(".muted.tiny")?.replaceChildren(document.createTextNode("League Registration"));
+      registerPanel.querySelector(".sectionTitle")?.replaceChildren(document.createTextNode("Registered For Season 4"));
+      const texts = registerPanel.querySelectorAll(".muted.tiny");
+      if (texts[1]) texts[1].textContent = "Your club is queued for the next season draw.";
+      registerBtn.textContent = "Registered";
+      registerBtn.disabled = true;
+    } else {
+      registerBtn.textContent = "Register Now";
+      registerBtn.disabled = false;
+    }
+  }
+
+  renderLeagueFixtures();
 }
 
 function showOverlay() {
@@ -710,7 +949,7 @@ function injectRevealData(cards) {
   if (!list) return;
 
   [...list.querySelectorAll(".flipCard")].forEach((node, i) => {
-    const c = cards[i];
+    const c = normalizeCard(cards[i]);
     if (!c) return;
 
     const vm = cardVisualModel(c);
@@ -723,7 +962,7 @@ function injectRevealData(cards) {
     node.classList.add(rarityClass(c.rarity));
 
     if (badge) badge.textContent = c.rarity;
-    if (name) name.textContent = c.displayName;
+    if (name) name.textContent = c.display_name;
     if (meta) meta.textContent = `${c.position} • ${c.role}`;
     if (statsWrap) {
       statsWrap.innerHTML = `
@@ -750,7 +989,7 @@ async function flipNext() {
   state.revealing = true;
 
   const i = state.revealIndex;
-  const card = state.revealCards[i];
+  const card = normalizeCard(state.revealCards[i]);
   const node = el("revealCards")?.querySelector(`.flipCard[data-i="${i}"]`);
   if (node) node.classList.add("flipped");
 
@@ -797,7 +1036,7 @@ async function openPack() {
   try {
     await ensureSession();
     const data = await api("/v1/packs/open", { method: "POST", body: JSON.stringify({ kind: "DAILY" }) });
-    state.revealCards = data.cards || [];
+    state.revealCards = (data.cards || []).map(normalizeCard).filter(Boolean);
     injectRevealData(state.revealCards);
     renderPackResults(state.revealCards);
     await loadDaily();
@@ -1301,7 +1540,7 @@ function renderPulse() {
 
 async function loadInventory() {
   const data = await api("/v1/inventory", { method: "GET" });
-  state.inventory = data.cards || [];
+  state.inventory = (data.cards || []).map(normalizeCard).filter(Boolean);
   renderInventory();
   renderSelectedCard();
   renderSquad();
@@ -1326,7 +1565,6 @@ function initChips() {
 
   document.querySelectorAll("[data-style]").forEach((b) => {
     if (b.dataset.style === state.style) b.classList.add("active");
-
     b.addEventListener("click", () => {
       state.style = b.dataset.style;
       localStorage.setItem("cx_style", state.style);
@@ -1338,7 +1576,6 @@ function initChips() {
 
   document.querySelectorAll("[data-arena]").forEach((b) => {
     if (b.dataset.arena === state.arenaMode) b.classList.add("active");
-
     b.addEventListener("click", () => {
       state.arenaMode = b.dataset.arena;
       document.querySelectorAll("[data-arena]").forEach((x) => x.classList.remove("active"));
@@ -1350,22 +1587,33 @@ function initChips() {
   document.querySelectorAll("[data-formation]").forEach((b) => {
     if (b.dataset.formation === state.formation) b.classList.add("is-active");
     b.addEventListener("click", () => {
+      if (state.tacticsLocked) return;
       if (!FORMATIONS.includes(b.dataset.formation)) return;
       state.formation = b.dataset.formation;
       localStorage.setItem("kf_formation", state.formation);
       renderTacticsShell();
+      renderSquad();
     });
   });
 
   document.querySelectorAll("[data-tactic-mode]").forEach((b) => {
     if (b.dataset.tacticMode === state.tacticMode) b.classList.add("is-active");
     b.addEventListener("click", () => {
+      if (state.tacticsLocked) return;
       if (!TACTIC_MODES.includes(b.dataset.tacticMode)) return;
       state.tacticMode = b.dataset.tacticMode;
       localStorage.setItem("kf_tactic_mode", state.tacticMode);
       renderTacticsShell();
       renderSquad();
       renderSelectedCard();
+    });
+  });
+
+  document.querySelectorAll("[data-md]").forEach((b) => {
+    b.addEventListener("click", () => {
+      state.activeMatchday = Number(b.dataset.md) || 1;
+      renderLeagueShell();
+      renderHomeCountdown();
     });
   });
 }
@@ -1387,13 +1635,10 @@ function initViewTabs() {
 function handleLockTactics() {
   jumpToView("squad");
   renderTacticsShell();
-
   if (!state.tacticsLocked) {
     const cards = document.querySelectorAll(".tacticsTopStrip .tacticsTopCard");
-    const lockTitle = cards[2]?.querySelector(".sectionTitle");
-    const lockSub = cards[2]?.querySelector(".muted.tiny:last-child");
-    safeText(lockTitle, "Ready");
-    safeText(lockSub, `Formation ${state.formation.replace(/^(\d)(\d)(\d)(\d)?$/, (_, a, b, c, d) => d ? `${a}-${b}-${c}-${d}` : `${a}-${b}-${c}`)} • ${savedTemplateLabel()} saved for next lock window.`);
+    safeText(cards[2]?.querySelector(".sectionTitle"), "Ready");
+    safeText(cards[2]?.querySelector(".muted.tiny:last-child"), `Formation ${formatFormationLabel(state.formation)} • ${savedTemplateLabel()} saved for next lock window.`);
   }
 }
 
@@ -1405,8 +1650,7 @@ async function enterKickForge() {
   }
 
   await ensureSession();
-  const packBtn = el("btn-pack");
-  if (packBtn) packBtn.disabled = false;
+  if (el("btn-pack")) el("btn-pack").disabled = false;
 
   try {
     await Promise.all([
@@ -1418,8 +1662,9 @@ async function enterKickForge() {
       loadDaily(),
       loadCosmetics()
     ]);
-    updateSynergy();
     renderTacticsShell();
+    renderLeagueShell();
+    updateSynergy();
     setActiveView("home");
     scrollToAppShell();
     startHomeCountdown();
@@ -1438,6 +1683,7 @@ async function enterKickForge() {
   renderMarketSelected();
   renderHomeCountdown();
   renderTacticsShell();
+  renderLeagueShell();
   healthCheck();
 
   el("btn-play")?.addEventListener("click", enterKickForge);
@@ -1452,6 +1698,12 @@ async function enterKickForge() {
 
   el("btn-lock-tactics")?.addEventListener("click", handleLockTactics);
   el("btn-lock-tactics-side")?.addEventListener("click", handleLockTactics);
+  el("btn-league-lock")?.addEventListener("click", handleLockTactics);
+
+  el("btn-register-league")?.addEventListener("click", () => {
+    state.leagueRegistered = true;
+    renderLeagueShell();
+  });
 
   el("btn-list")?.addEventListener("click", listSelected);
 
@@ -1479,6 +1731,7 @@ async function enterKickForge() {
         loadCosmetics()
       ]);
       renderTacticsShell();
+      renderLeagueShell();
     } catch (e) {
       alert(e.message);
     }
