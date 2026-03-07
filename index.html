@@ -27,8 +27,7 @@
       <nav class="kfNav">
         <a href="#overview">Overview</a>
         <a href="#features">Features</a>
-        <a href="#collection">Collection</a>
-        <a href="#squad">Squad</a>
+        <a href="#app-shell">App</a>
         <a href="#market">Market</a>
         <a href="#progress">Progress</a>
       </nav>
@@ -41,7 +40,7 @@
     </header>
 
     <main class="shell">
-      <!-- HERO -->
+      <!-- LANDING / HERO -->
       <section class="hero card kfHero" id="overview">
         <div class="heroBackdrop">
           <div class="heroOrb"></div>
@@ -190,235 +189,376 @@
         </div>
       </section>
 
-      <!-- RARITY SHOWCASE -->
-      <section class="rarityShowcase card">
-        <div class="sectionIntro">
-          <div class="heroEyebrow">Rarity Ladder</div>
-          <div class="sectionTitle sectionTitleWide">Every Pull Feels Different</div>
-        </div>
-
-        <div class="rarityStrip">
-          <div class="rarityTile rarity-common">
-            <div class="rarityTileTop">Common</div>
-            <div class="rarityTileBody">Reliable squad filler and market volume base.</div>
-          </div>
-          <div class="rarityTile rarity-uncommon">
-            <div class="rarityTileTop">Uncommon</div>
-            <div class="rarityTileBody">Cleaner upside and better role efficiency.</div>
-          </div>
-          <div class="rarityTile rarity-rare">
-            <div class="rarityTileTop">Rare</div>
-            <div class="rarityTileBody">Higher-value cards with stronger progression impact.</div>
-          </div>
-          <div class="rarityTile rarity-epic">
-            <div class="rarityTileTop">Epic</div>
-            <div class="rarityTileBody">Premium club pieces with stronger market attraction.</div>
-          </div>
-          <div class="rarityTile rarity-legendary">
-            <div class="rarityTileTop">Legendary</div>
-            <div class="rarityTileBody">Headline pulls with gold energy and real status.</div>
-          </div>
-          <div class="rarityTile rarity-icon">
-            <div class="rarityTileTop">Icon</div>
-            <div class="rarityTileBody">Top-tier prestige moments designed to feel massive.</div>
-          </div>
-        </div>
-      </section>
-
-      <!-- MARKET TICKER / PRO / REGISTRATION -->
-      <section class="grid3" style="margin-top:18px">
-        <div class="card promoCard">
-          <div class="heroEyebrow">Live Market</div>
-          <div class="sectionTitle">Ticker</div>
-          <div class="muted tiny">
-            Follow movement, spot value, and react faster than the rest of the market.
-          </div>
-        </div>
-
-        <div class="card promoCard">
-          <div class="heroEyebrow">PRO Access</div>
-          <div class="sectionTitle">Leagues</div>
-          <div class="muted tiny">
-            Daily fixtures, standings pressure, and roster-lock strategy are built for premium competition.
-          </div>
-        </div>
-
-        <div class="card promoCard">
-          <div class="heroEyebrow">Register</div>
-          <div class="sectionTitle">Start Free</div>
-          <div class="muted tiny">
-            Enter the live foundation now, open your first pack, and begin building your club immediately.
-          </div>
-        </div>
-      </section>
-
-      <!-- OVERVIEW -->
-      <section class="grid2" style="margin-top:18px">
-        <div class="card">
-          <div class="sectionTitle">KickForge Overview</div>
-          <div class="muted tiny">
-            This shell replaces the temporary Clash XI structure while keeping the live backend foundation active.
-          </div>
-
-          <div class="microRow" style="margin-top:14px">
-            <div class="micro cardMini">
-              <div class="microTitle">Packs</div>
-              <div class="microText">Reveal, claim, and feed your collection.</div>
-            </div>
-            <div class="micro cardMini">
-              <div class="microTitle">Squad Builder</div>
-              <div class="microText">Choose cards, align style, improve synergy.</div>
-            </div>
-            <div class="micro cardMini">
-              <div class="microTitle">Progression</div>
-              <div class="microText">Daily challenges, pass XP, cosmetics.</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="sectionTitle">Road To Full Rebuild</div>
-          <div class="muted tiny">
-            Current focus: landing compliance, player cards, squad pitch structure.
-          </div>
-
-          <div class="microRow" style="margin-top:14px">
-            <div class="micro cardMini">
-              <div class="microTitle">Now</div>
-              <div class="microText">Landing shell, card visuals, pitch view foundation.</div>
-            </div>
-            <div class="micro cardMini">
-              <div class="microTitle">Next</div>
-              <div class="microText">Tactics structure, token polish, side-panel logic.</div>
-            </div>
-            <div class="micro cardMini">
-              <div class="microTitle">Later</div>
-              <div class="microText">Leagues, live viewer, friendlies, full polish.</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- COLLECTION -->
-      <section class="collectionShell card" id="collection" style="margin-top:18px">
-        <div class="lockerHeader">
+      <!-- APP SHELL -->
+      <section class="appShell card" id="app-shell" style="margin-top:18px">
+        <div class="appShellHeader">
           <div>
-            <div class="sectionTitle">Collection</div>
-            <div class="muted tiny">Browse your cards. Filter by rarity. Select a player, then move into the squad builder.</div>
-          </div>
-
-          <div class="filterRow">
-            <button class="chip active" data-filter="ALL">All</button>
-            <button class="chip" data-filter="COMMON">Common</button>
-            <button class="chip" data-filter="RARE">Rare</button>
-            <button class="chip" data-filter="EPIC">Epic</button>
-            <button class="chip" data-filter="LEGENDARY">Legendary</button>
-          </div>
-        </div>
-
-        <div class="collectionBody">
-          <div class="invPanel">
-            <div class="invList" id="invList"></div>
-          </div>
-        </div>
-      </section>
-
-      <!-- SQUAD BUILDER -->
-      <section class="squadBuilder card" id="squad" style="margin-top:18px">
-        <div class="row squadHeader">
-          <div>
-            <div class="heroEyebrow">Squad Builder</div>
-            <div class="sectionTitle sectionTitleWide">Pitch View</div>
-            <div class="muted tiny">Select a player from Collection → click a pitch slot to equip. Click a filled slot with no selected card to unequip.</div>
-          </div>
-
-          <div class="squadHeaderTags">
-            <div class="tag">Base XI</div>
-            <div class="tag">Live Foundation</div>
-          </div>
-        </div>
-
-        <div class="squadLayout">
-          <!-- LEFT: PITCH -->
-          <div class="pitchPanel">
-            <div class="pitchPanelTop">
-              <div>
-                <div class="muted tiny">Formation View</div>
-                <div class="sectionTitle">Starting XI</div>
-              </div>
-
-              <div class="pitchMode">
-                <span class="badgeSm">Pitch Active</span>
-              </div>
+            <div class="heroEyebrow">KickForge App</div>
+            <div class="sectionTitle sectionTitleWide">Internal Hub</div>
+            <div class="muted tiny">
+              Home, Collection, Squad, Market, and Progress are now being split into dedicated app views.
             </div>
+          </div>
 
-            <div class="pitchStage">
-              <div class="pitchSurface">
-                <div class="pitchMarkings">
-                  <div class="pitchHalf"></div>
-                  <div class="pitchCircle"></div>
-                  <div class="pitchBox pitchBox--top"></div>
-                  <div class="pitchBox pitchBox--bottom"></div>
-                  <div class="pitchGoal pitchGoal--top"></div>
-                  <div class="pitchGoal pitchGoal--bottom"></div>
+          <div class="appShellActions">
+            <button class="appTab is-active" data-view-tab="home">Home</button>
+            <button class="appTab" data-view-tab="collection">Collection</button>
+            <button class="appTab" data-view-tab="squad">Squad</button>
+            <button class="appTab" data-view-tab="market">Market</button>
+            <button class="appTab" data-view-tab="progress">Progress</button>
+          </div>
+        </div>
+
+        <div class="appViews">
+          <!-- HOME / DASHBOARD -->
+          <section class="appView is-active" id="view-home" data-view="home">
+            <div class="dashboardGrid">
+              <div class="dashboardCol">
+                <div class="dashCard dashHeroCard">
+                  <div class="row">
+                    <div>
+                      <div class="sectionTitle">Home</div>
+                      <div class="muted tiny">Your daily command centre.</div>
+                    </div>
+                    <div class="tag">Live</div>
+                  </div>
+
+                  <div class="dashBigStatRow">
+                    <div class="dashBigStat">
+                      <span>Forge Coins</span>
+                      <strong id="home-coins">—</strong>
+                    </div>
+                    <div class="dashBigStat">
+                      <span>Battle Pass</span>
+                      <strong id="home-bp">Lv —</strong>
+                    </div>
+                  </div>
+
+                  <div class="dashActionRow">
+                    <button class="btn primary" id="btn-home-pack">Open Pack</button>
+                    <button class="btn ghost" id="btn-home-arena">Play Arena</button>
+                  </div>
                 </div>
 
-                <div class="pitchXIWrap">
-                  <div class="xi xi--pitch" id="xi"></div>
+                <div class="dashCard">
+                  <div class="row">
+                    <div>
+                      <div class="sectionTitle">Next Match</div>
+                      <div class="muted tiny">Daily competition scaffold</div>
+                    </div>
+                    <div class="tag">League</div>
+                  </div>
+
+                  <div class="dashPlaceholder">
+                    <div class="dashPlaceholderTitle">League registration flow comes next</div>
+                    <div class="muted tiny">This will later show countdown, lock time, opponent, and your latest standings position.</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="dashboardCol">
+                <div class="dashCard">
+                  <div class="row">
+                    <div>
+                      <div class="sectionTitle">Daily Challenges</div>
+                      <div class="muted tiny">Fast access from Home</div>
+                    </div>
+                    <div class="tag" id="daily-date-home">—</div>
+                  </div>
+                  <div class="dailyList" id="dailyListHome"></div>
+                </div>
+
+                <div class="dashCard">
+                  <div class="row">
+                    <div>
+                      <div class="sectionTitle">Market Movers</div>
+                      <div class="muted tiny">Early dashboard preview</div>
+                    </div>
+                    <div class="tag">Pulse</div>
+                  </div>
+
+                  <div class="dashMiniPulse">
+                    <div class="sparkWrap">
+                      <div class="sparkLine">
+                        <svg id="sparkSvgHome" viewBox="0 0 300 64" preserveAspectRatio="none"></svg>
+                      </div>
+                      <div class="sparkMeta">
+                        <div><span class="muted tiny">Last:</span> <span id="m-last-home">—</span></div>
+                        <div><span class="muted tiny">24h:</span> <span id="m-chg-home">—</span></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="dashboardCol">
+                <div class="dashCard">
+                  <div class="row">
+                    <div>
+                      <div class="sectionTitle">Squad Snapshot</div>
+                      <div class="muted tiny">Quick status</div>
+                    </div>
+                    <div class="tag">XI</div>
+                  </div>
+
+                  <div class="dashSquadGrid" id="dashSquadGrid">
+                    <div class="muted tiny">Enter KickForge to load squad data.</div>
+                  </div>
+                </div>
+
+                <div class="dashCard">
+                  <div class="row">
+                    <div>
+                      <div class="sectionTitle">Pass Progress</div>
+                      <div class="muted tiny">At-a-glance progression</div>
+                    </div>
+                    <div class="tag" id="bp-level-home">Lv 1</div>
+                  </div>
+
+                  <div class="bar" style="margin-top:12px">
+                    <div class="barFill" id="bpFillHome"></div>
+                  </div>
+                  <div class="muted tiny" id="bpTextHome">0 / 100 XP</div>
                 </div>
               </div>
             </div>
+          </section>
 
-            <div class="pitchFooter">
-              <div class="muted tiny">
-                Drag-and-drop and formation switching come later. This pass upgrades the pitch layout first.
-              </div>
-            </div>
-          </div>
-
-          <!-- RIGHT: SIDE PANEL -->
-          <aside class="squadSide">
-            <div class="sideCard synergyPanel">
-              <div class="row">
+          <!-- COLLECTION -->
+          <section class="appView" id="view-collection" data-view="collection">
+            <section class="collectionShell">
+              <div class="lockerHeader">
                 <div>
-                  <div class="sectionTitle">Synergy</div>
-                  <div class="muted tiny">Real-time style fit and squad coherence.</div>
+                  <div class="sectionTitle">Collection</div>
+                  <div class="muted tiny">Browse your cards. Filter by rarity. Select a player, then move into Squad.</div>
                 </div>
-                <div class="tag">Live</div>
-              </div>
 
-              <div class="chipRow squadChipRow" style="margin-top:12px">
-                <button class="chip active" data-style="PRESS">Press</button>
-                <button class="chip" data-style="POSSESSION">Possession</button>
-                <button class="chip" data-style="COUNTER">Counter</button>
-              </div>
-
-              <div class="chemBox" style="margin-top:14px">
-                <div class="chemRow">
-                  <div style="font-weight:900">Synergy</div>
-                  <div id="chemPct" style="font-weight:900">0%</div>
+                <div class="filterRow">
+                  <button class="chip active" data-filter="ALL">All</button>
+                  <button class="chip" data-filter="COMMON">Common</button>
+                  <button class="chip" data-filter="RARE">Rare</button>
+                  <button class="chip" data-filter="EPIC">Epic</button>
+                  <button class="chip" data-filter="LEGENDARY">Legendary</button>
                 </div>
-                <div class="bar"><div class="barFill" id="chemFill"></div></div>
-                <div class="muted tiny" id="chemNote">Equip players to build synergy.</div>
               </div>
-            </div>
 
-            <div class="sideCard selectedPanel" id="selectedCard">
-              <div class="muted tiny">Selected</div>
-              <div style="font-weight:900;margin-top:6px">None</div>
-              <div class="muted tiny" style="margin-top:6px">Pick a card from your collection.</div>
-            </div>
+              <div class="collectionBody">
+                <div class="invPanel">
+                  <div class="invList" id="invList"></div>
+                </div>
+              </div>
+            </section>
+          </section>
 
-            <div class="sideCard packResultPanel">
-              <div class="sectionTitle">Latest Pack</div>
-              <div class="muted tiny">New pack reveals appear here after claim.</div>
-              <div class="cards" id="cards" style="margin-top:12px"></div>
-            </div>
-          </aside>
+          <!-- SQUAD -->
+          <section class="appView" id="view-squad" data-view="squad">
+            <section class="squadBuilder" id="squad">
+              <div class="row squadHeader">
+                <div>
+                  <div class="heroEyebrow">Squad Builder</div>
+                  <div class="sectionTitle sectionTitleWide">Pitch View</div>
+                  <div class="muted tiny">Select a player from Collection → click a pitch slot to equip. Click a filled slot with no selected card to unequip.</div>
+                </div>
+
+                <div class="squadHeaderTags">
+                  <div class="tag">Base XI</div>
+                  <div class="tag">Live Foundation</div>
+                </div>
+              </div>
+
+              <div class="squadLayout">
+                <div class="pitchPanel">
+                  <div class="pitchPanelTop">
+                    <div>
+                      <div class="muted tiny">Formation View</div>
+                      <div class="sectionTitle">Starting XI</div>
+                    </div>
+
+                    <div class="pitchMode">
+                      <span class="badgeSm">Pitch Active</span>
+                    </div>
+                  </div>
+
+                  <div class="pitchStage">
+                    <div class="pitchSurface">
+                      <div class="pitchMarkings">
+                        <div class="pitchHalf"></div>
+                        <div class="pitchCircle"></div>
+                        <div class="pitchBox pitchBox--top"></div>
+                        <div class="pitchBox pitchBox--bottom"></div>
+                        <div class="pitchGoal pitchGoal--top"></div>
+                        <div class="pitchGoal pitchGoal--bottom"></div>
+                      </div>
+
+                      <div class="pitchXIWrap">
+                        <div class="xi xi--pitch" id="xi"></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="pitchFooter">
+                    <div class="muted tiny">
+                      Drag-and-drop and formation switching come later. This pass builds the app-shell split first.
+                    </div>
+                  </div>
+                </div>
+
+                <aside class="squadSide">
+                  <div class="sideCard synergyPanel">
+                    <div class="row">
+                      <div>
+                        <div class="sectionTitle">Synergy</div>
+                        <div class="muted tiny">Real-time style fit and squad coherence.</div>
+                      </div>
+                      <div class="tag">Live</div>
+                    </div>
+
+                    <div class="chipRow squadChipRow" style="margin-top:12px">
+                      <button class="chip active" data-style="PRESS">Press</button>
+                      <button class="chip" data-style="POSSESSION">Possession</button>
+                      <button class="chip" data-style="COUNTER">Counter</button>
+                    </div>
+
+                    <div class="chemBox" style="margin-top:14px">
+                      <div class="chemRow">
+                        <div style="font-weight:900">Synergy</div>
+                        <div id="chemPct" style="font-weight:900">0%</div>
+                      </div>
+                      <div class="bar"><div class="barFill" id="chemFill"></div></div>
+                      <div class="muted tiny" id="chemNote">Equip players to build synergy.</div>
+                    </div>
+                  </div>
+
+                  <div class="sideCard selectedPanel" id="selectedCard">
+                    <div class="muted tiny">Selected Player</div>
+                    <div style="font-weight:900;margin-top:6px">None</div>
+                    <div class="muted tiny" style="margin-top:6px">Choose a card in Collection. Then click a pitch slot to place that player.</div>
+                  </div>
+
+                  <div class="sideCard packResultPanel">
+                    <div class="sectionTitle">Latest Pack</div>
+                    <div class="muted tiny">New pack reveals appear here after claim.</div>
+                    <div class="cards" id="cards" style="margin-top:12px"></div>
+                  </div>
+                </aside>
+              </div>
+            </section>
+          </section>
+
+          <!-- MARKET -->
+          <section class="appView" id="view-market" data-view="market">
+            <section class="marketShell" id="market">
+              <div class="marketHeader">
+                <div>
+                  <div class="sectionTitle">Market</div>
+                  <div class="muted tiny">List cards for coins. Buy smart. Use market movement to improve your squad.</div>
+                </div>
+                <div class="marketActions">
+                  <button class="btn ghost" id="btn-refresh-market">Refresh</button>
+                </div>
+              </div>
+
+              <div class="marketBody">
+                <div class="marketCol">
+                  <div class="marketColTitle">List selected card</div>
+                  <div class="muted tiny">Pick a collection card, set the price, and put it on the market.</div>
+
+                  <div class="listBox">
+                    <div class="listRow">
+                      <div class="muted tiny">Selected:</div>
+                      <div id="mk-selected" style="font-weight:900">None</div>
+                    </div>
+
+                    <div class="muted tiny" id="mk-min">Min: —</div>
+
+                    <div class="priceRow">
+                      <input id="mk-price" class="inp" type="number" min="1" step="1" placeholder="Price (coins)"/>
+                      <button class="btn primary" id="btn-list">List</button>
+                    </div>
+
+                    <div class="muted tiny" id="mk-status">Tip: listed cards can’t be equipped.</div>
+                  </div>
+
+                  <div class="marketColTitle" style="margin-top:14px">My listings <span class="muted tiny" id="myCount"></span></div>
+                  <div class="myListings" id="myListings"></div>
+                </div>
+
+                <div class="marketCol">
+                  <div class="marketColTitle">Open listings</div>
+                  <div class="muted tiny">Other users’ available cards.</div>
+                  <div class="openListings" id="openListings"></div>
+
+                  <div class="marketColTitle" style="margin-top:14px">Recent trades</div>
+                  <div class="muted tiny">Latest market transactions.</div>
+                  <div class="trades" id="tradeList"></div>
+                </div>
+              </div>
+            </section>
+          </section>
+
+          <!-- PROGRESS -->
+          <section class="appView" id="view-progress" data-view="progress">
+            <section class="grid2" id="progress">
+              <div>
+                <div class="card passCard">
+                  <div class="row">
+                    <div>
+                      <div class="sectionTitle">Battle Pass</div>
+                      <div class="muted tiny">Level up through play and unlock long-term progression.</div>
+                    </div>
+                    <div class="tag" id="bp-level">Lv 1</div>
+                  </div>
+
+                  <div class="bar" style="margin-top:12px">
+                    <div class="barFill" id="bpFill"></div>
+                  </div>
+                  <div class="muted tiny" id="bpText">0 / 100 XP</div>
+                </div>
+
+                <div class="card dailyCard" style="margin-top:18px">
+                  <div class="row">
+                    <div>
+                      <div class="sectionTitle">Daily Challenges</div>
+                      <div class="muted tiny">Auto-generated • Claim rewards</div>
+                    </div>
+                    <div class="tag" id="daily-date">—</div>
+                  </div>
+
+                  <div class="dailyList" id="dailyList"></div>
+
+                  <div class="dailyBottom">
+                    <button class="btn primary" id="btn-chest" disabled>Open Daily Chest</button>
+                    <div class="muted tiny" id="chestStatus">Complete + claim all 3 to unlock.</div>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <div class="card cosCard">
+                  <div class="row">
+                    <div>
+                      <div class="sectionTitle">Cosmetics</div>
+                      <div class="muted tiny">Themes and future profile cosmetics</div>
+                    </div>
+                    <div class="tag" id="proTag">FREE</div>
+                  </div>
+
+                  <div class="cosList" id="cosList"></div>
+                </div>
+
+                <div class="card" style="margin-top:18px">
+                  <div class="sectionTitle">KickForge Progression</div>
+                  <div class="muted tiny" style="margin-top:8px">
+                    Daily return loops, pass progression, market ambition, and future premium league access.
+                  </div>
+                </div>
+              </div>
+            </section>
+          </section>
         </div>
       </section>
 
-      <!-- LEAGUE + ARENA -->
+      <!-- ARENA / LEAGUE STRIP -->
       <section class="grid2" style="margin-top:18px">
         <div class="card" id="league">
           <div class="row">
@@ -470,113 +610,6 @@
 
           <button class="btn primary" id="btn-arena" style="width:100%; margin-top:10px">Play Match</button>
           <div class="arenaLog" id="arenaLog">Equip at least 3 players to enter Arena.</div>
-        </div>
-      </section>
-
-      <!-- MARKET -->
-      <section class="marketShell card" id="market">
-        <div class="marketHeader">
-          <div>
-            <div class="sectionTitle">Market</div>
-            <div class="muted tiny">List cards for coins. Buy smart. Use market movement to improve your squad.</div>
-          </div>
-          <div class="marketActions">
-            <button class="btn ghost" id="btn-refresh-market">Refresh</button>
-          </div>
-        </div>
-
-        <div class="marketBody">
-          <div class="marketCol">
-            <div class="marketColTitle">List selected card</div>
-            <div class="muted tiny">Pick a collection card, set the price, and put it on the market.</div>
-
-            <div class="listBox">
-              <div class="listRow">
-                <div class="muted tiny">Selected:</div>
-                <div id="mk-selected" style="font-weight:900">None</div>
-              </div>
-
-              <div class="muted tiny" id="mk-min">Min: —</div>
-
-              <div class="priceRow">
-                <input id="mk-price" class="inp" type="number" min="1" step="1" placeholder="Price (coins)"/>
-                <button class="btn primary" id="btn-list">List</button>
-              </div>
-
-              <div class="muted tiny" id="mk-status">Tip: listed cards can’t be equipped.</div>
-            </div>
-
-            <div class="marketColTitle" style="margin-top:14px">My listings <span class="muted tiny" id="myCount"></span></div>
-            <div class="myListings" id="myListings"></div>
-          </div>
-
-          <div class="marketCol">
-            <div class="marketColTitle">Open listings</div>
-            <div class="muted tiny">Other users’ available cards.</div>
-            <div class="openListings" id="openListings"></div>
-
-            <div class="marketColTitle" style="margin-top:14px">Recent trades</div>
-            <div class="muted tiny">Latest market transactions.</div>
-            <div class="trades" id="tradeList"></div>
-          </div>
-        </div>
-      </section>
-
-      <!-- PROGRESSION -->
-      <section class="grid2" id="progress" style="margin-top:18px">
-        <div>
-          <div class="card passCard">
-            <div class="row">
-              <div>
-                <div class="sectionTitle">Battle Pass</div>
-                <div class="muted tiny">Level up through play and unlock long-term progression.</div>
-              </div>
-              <div class="tag" id="bp-level">Lv 1</div>
-            </div>
-
-            <div class="bar" style="margin-top:12px">
-              <div class="barFill" id="bpFill"></div>
-            </div>
-            <div class="muted tiny" id="bpText">0 / 100 XP</div>
-          </div>
-
-          <div class="card dailyCard" style="margin-top:18px">
-            <div class="row">
-              <div>
-                <div class="sectionTitle">Daily Challenges</div>
-                <div class="muted tiny">Auto-generated • Claim rewards</div>
-              </div>
-              <div class="tag" id="daily-date">—</div>
-            </div>
-
-            <div class="dailyList" id="dailyList"></div>
-
-            <div class="dailyBottom">
-              <button class="btn primary" id="btn-chest" disabled>Open Daily Chest</button>
-              <div class="muted tiny" id="chestStatus">Complete + claim all 3 to unlock.</div>
-            </div>
-          </div>
-        </div>
-
-        <div>
-          <div class="card cosCard">
-            <div class="row">
-              <div>
-                <div class="sectionTitle">Cosmetics</div>
-                <div class="muted tiny">Themes and future profile cosmetics</div>
-              </div>
-              <div class="tag" id="proTag">FREE</div>
-            </div>
-
-            <div class="cosList" id="cosList"></div>
-          </div>
-
-          <div class="card" style="margin-top:18px">
-            <div class="sectionTitle">KickForge Progression</div>
-            <div class="muted tiny" style="margin-top:8px">
-              Daily return loops, pass progression, market ambition, and future premium league access.
-            </div>
-          </div>
         </div>
       </section>
     </main>
