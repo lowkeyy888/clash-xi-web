@@ -10,6 +10,9 @@ const DEFAULT_RULES = {
   minPrice: { COMMON: 10, RARE: 25, EPIC: 60, LEGENDARY: 150 }
 };
 
+const FORMATIONS = ["343", "433", "442", "451", "4231", "352"];
+const TACTIC_MODES = ["balanced", "highpress", "counter", "control"];
+
 const state = {
   token: localStorage.getItem("cx_token") || null,
   userId: localStorage.getItem("cx_user") || null,
@@ -42,7 +45,11 @@ const state = {
   cosmetics: [],
   isPro: false,
   activeView: "home",
-  countdownTimer: null
+  countdownTimer: null,
+
+  formation: localStorage.getItem("kf_formation") || "433",
+  tacticMode: localStorage.getItem("kf_tactic_mode") || "balanced",
+  tacticsLocked: false
 };
 
 function slotLabel(k) {
@@ -54,6 +61,28 @@ function shortName(name) {
   const parts = String(name).trim().split(/\s+/);
   if (parts.length === 1) return parts[0];
   return `${parts[0]} ${parts[parts.length - 1]}`;
+}
+
+function titleCase(s) {
+  return String(s || "")
+    .replace(/([A-Z])/g, " $1")
+    .replace(/[-_]/g, " ")
+    .trim()
+    .replace(/\b\w/g, (m) => m.toUpperCase());
+}
+
+function tacticModeLabel(mode) {
+  if (mode === "highpress") return "High Press";
+  if (mode === "counter") return "Counter";
+  if (mode === "control") return "Control";
+  return "Balanced";
+}
+
+function savedTemplateLabel() {
+  if (state.tacticMode === "highpress") return "Aggressive Press";
+  if (state.tacticMode === "counter") return "Fast Break";
+  if (state.tacticMode === "control") return "Possession Control";
+  return "Balanced Press";
 }
 
 function rarityClass(r) {
@@ -229,9 +258,14 @@ function cardVisualModel(card) {
 
   const boost = roleStyle(card.role);
   const mods = { pace: 0, pass: 0, attack: 0, defense: 0 };
+
   if (boost === "PRESS") { mods.pace += 3; mods.defense += 4; }
   if (boost === "POSSESSION") { mods.pass += 5; mods.attack += 2; }
   if (boost === "COUNTER") { mods.pace += 5; mods.attack += 5; }
+
+  if (state.tacticMode === "highpress") { mods.pace += 2; mods.defense += 2; }
+  if (state.tacticMode === "counter") { mods.pace += 3; mods.attack += 2; }
+  if (state.tacticMode === "control") { mods.pass += 4; }
 
   const pace = clampStat(rarityBase + posBoost.pace + mods.pace + randIntSeed(rnd, -4, 6));
   const pass = clampStat(rarityBase + posBoost.pass + mods.pass + randIntSeed(rnd, -4, 6));
@@ -300,7 +334,7 @@ function seedXI() {
 function refreshSlotStates() {
   const grid = el("xi");
   if (!grid) return;
-  const armed = canEquipSelected();
+  const armed = canEquipSelected() && !state.tacticsLocked;
 
   [...grid.querySelectorAll(".slot")].forEach((node) => {
     const k = node.dataset.slot;
@@ -343,6 +377,11 @@ function renderSquad() {
 
 async function onSlotClick(slotKey) {
   const status = el("mk-status");
+
+  if (state.tacticsLocked) {
+    if (status) status.textContent = "Tactics are locked for the next fixture.";
+    return;
+  }
 
   if (!state.selectedCardId) {
     if (!state.squad[slotKey]) return;
@@ -406,6 +445,7 @@ function renderInventory() {
 
   list.querySelectorAll("[data-card-id]").forEach((node) => {
     node.addEventListener("click", () => {
+      if (state.tacticsLocked) return;
       const id = node.getAttribute("data-card-id");
       state.selectedCardId = state.selectedCardId === id ? null : id;
       renderSelectedCard();
@@ -432,7 +472,11 @@ function renderSelectedCard() {
     box.innerHTML = `
       <div class="muted tiny">Selected Player</div>
       <div style="font-weight:900;margin-top:6px">None</div>
-      <div class="muted tiny" style="margin-top:6px">Choose a card in Collection. Then click a pitch slot to place that player.</div>
+      <div class="muted tiny" style="margin-top:6px">
+        ${state.tacticsLocked
+          ? "Tactics are locked. Wait for the next open window to edit your squad."
+          : "Choose a card in Collection. Then click a pitch slot to place that player."}
+      </div>
     `;
     return;
   }
@@ -462,11 +506,13 @@ function renderSelectedCard() {
         </div>
 
         <div class="muted tiny" style="margin-top:10px">
-          ${isListed
-            ? "LISTED — cancel the market listing before using this card in your squad."
-            : inSquad
-              ? "Already equipped in your XI. Click another slot to move this player."
-              : "Ready to equip — click any armed pitch slot now."}
+          ${state.tacticsLocked
+            ? "TACTICS LOCKED — changes are blocked until the next fixture window opens."
+            : isListed
+              ? "LISTED — cancel the market listing before using this card in your squad."
+              : inSquad
+                ? "Already equipped in your XI. Click another slot to move this player."
+                : "Ready to equip — click any armed pitch slot now."}
         </div>
       </div>
     </div>
@@ -488,13 +534,15 @@ function updateSynergy() {
     return;
   }
 
-  const matches = equipped.filter((c) => roleStyle(c.role) === state.style).length;
-  const p = Math.round((matches / equipped.length) * 100);
+  const styleMatches = equipped.filter((c) => roleStyle(c.role) === state.style).length;
+  const modeBonus = state.tacticMode === "highpress" || state.tacticMode === "counter" ? 6 : state.tacticMode === "control" ? 4 : 3;
+  const raw = Math.round((styleMatches / equipped.length) * 100);
+  const p = Math.min(100, raw + modeBonus);
   const avgOvr = Math.round(equipped.reduce((a, c) => a + cardVisualModel(c).ovr, 0) / equipped.length);
 
   safeText(pct, `${p}%`);
   if (fill) fill.style.width = `${p}%`;
-  safeText(note, `Style: ${state.style} • matching roles: ${matches}/${equipped.length} • avg OVR ${avgOvr}`);
+  safeText(note, `Style: ${state.style} • mode: ${tacticModeLabel(state.tacticMode)} • fit ${styleMatches}/${equipped.length} • avg OVR ${avgOvr}`);
 }
 
 function renderPackResults(cards) {
@@ -511,6 +559,10 @@ function getNextLeagueKickoff(now = new Date()) {
   kickoff.setUTCHours(20, 0, 0, 0);
   if (now >= kickoff) kickoff.setUTCDate(kickoff.getUTCDate() + 1);
   return kickoff;
+}
+
+function getNextLockTime(now = new Date()) {
+  return new Date(getNextLeagueKickoff(now).getTime() - 3600000);
 }
 
 function formatTwo(n) {
@@ -530,20 +582,54 @@ function renderHomeCountdown() {
   safeText(el("cd-hours"), formatTwo(hours));
   safeText(el("cd-mins"), formatTwo(mins));
 
-  const lockTime = new Date(nextKickoff.getTime() - 3600000);
-  const sub = `Next kickoff ${nextKickoff.toUTCString().replace("GMT", "UTC")} • lock ${lockTime.getUTCHours().toString().padStart(2, "0")}:00 UTC`;
+  const lockTime = getNextLockTime(now);
+  const sub = `Next kickoff ${nextKickoff.toUTCString().replace("GMT", "UTC")} • lock ${formatTwo(lockTime.getUTCHours())}:00 UTC`;
   safeText(el("home-match-sub"), sub);
-
-  const titleEl = el("home-match-title");
-  if (titleEl && !titleEl.textContent.trim()) {
-    titleEl.textContent = "League Opponent";
-  }
 }
 
 function startHomeCountdown() {
   if (state.countdownTimer) clearInterval(state.countdownTimer);
   renderHomeCountdown();
-  state.countdownTimer = setInterval(renderHomeCountdown, 1000);
+  state.countdownTimer = setInterval(() => {
+    renderHomeCountdown();
+    renderTacticsShell();
+  }, 1000);
+}
+
+function renderTacticsShell() {
+  const now = new Date();
+  const lockTime = getNextLockTime(now);
+  state.tacticsLocked = now >= lockTime && now < getNextLeagueKickoff(now);
+
+  document.querySelectorAll("[data-formation]").forEach((btn) => {
+    btn.classList.toggle("is-active", btn.dataset.formation === state.formation);
+  });
+
+  document.querySelectorAll("[data-tactic-mode]").forEach((btn) => {
+    btn.classList.toggle("is-active", btn.dataset.tacticMode === state.tacticMode);
+  });
+
+  const cards = document.querySelectorAll(".tacticsTopStrip .tacticsTopCard");
+  const formationTitle = cards[0]?.querySelector(".sectionTitle");
+  const templateTitle = cards[1]?.querySelector(".sectionTitle");
+  const lockTitle = cards[2]?.querySelector(".sectionTitle");
+  const lockSub = cards[2]?.querySelector(".muted.tiny:last-child");
+
+  safeText(formationTitle, state.formation.replace(/^(\d)(\d)(\d)(\d)?$/, (_, a, b, c, d) => d ? `${a}-${b}-${c}-${d}` : `${a}-${b}-${c}`));
+  safeText(templateTitle, savedTemplateLabel());
+  safeText(lockTitle, state.tacticsLocked ? "Locked" : "Open");
+  safeText(lockSub, state.tacticsLocked ? "Current window locked until next daily cycle." : "Tactics lock 1 hour before kickoff.");
+
+  const lockBtnHome = el("btn-lock-tactics");
+  const lockBtnSide = el("btn-lock-tactics-side");
+  [lockBtnHome, lockBtnSide].forEach((btn) => {
+    if (!btn) return;
+    btn.textContent = state.tacticsLocked ? "Locked" : "Lock Tactics";
+    btn.disabled = state.tacticsLocked;
+  });
+
+  refreshSlotStates();
+  renderSelectedCard();
 }
 
 function showOverlay() {
@@ -997,21 +1083,9 @@ function renderHomeMovers() {
   const trades = state.market.trades || [];
   if (!trades.length) {
     wrap.innerHTML = `
-      <div class="moverRow">
-        <div class="moverDot rare"></div>
-        <div class="moverName">M. Velenz</div>
-        <div class="moverPct up">+12%</div>
-      </div>
-      <div class="moverRow">
-        <div class="moverDot epic"></div>
-        <div class="moverName">R. Ibarra</div>
-        <div class="moverPct up">+8%</div>
-      </div>
-      <div class="moverRow">
-        <div class="moverDot common"></div>
-        <div class="moverName">D. Kanez</div>
-        <div class="moverPct down">-5%</div>
-      </div>
+      <div class="moverRow"><div class="moverDot rare"></div><div class="moverName">M. Velenz</div><div class="moverPct up">+12%</div></div>
+      <div class="moverRow"><div class="moverDot epic"></div><div class="moverName">R. Ibarra</div><div class="moverPct up">+8%</div></div>
+      <div class="moverRow"><div class="moverDot common"></div><div class="moverName">D. Kanez</div><div class="moverPct down">-5%</div></div>
     `;
     return;
   }
@@ -1272,6 +1346,28 @@ function initChips() {
       safeText(el("arena-mode"), state.arenaMode);
     });
   });
+
+  document.querySelectorAll("[data-formation]").forEach((b) => {
+    if (b.dataset.formation === state.formation) b.classList.add("is-active");
+    b.addEventListener("click", () => {
+      if (!FORMATIONS.includes(b.dataset.formation)) return;
+      state.formation = b.dataset.formation;
+      localStorage.setItem("kf_formation", state.formation);
+      renderTacticsShell();
+    });
+  });
+
+  document.querySelectorAll("[data-tactic-mode]").forEach((b) => {
+    if (b.dataset.tacticMode === state.tacticMode) b.classList.add("is-active");
+    b.addEventListener("click", () => {
+      if (!TACTIC_MODES.includes(b.dataset.tacticMode)) return;
+      state.tacticMode = b.dataset.tacticMode;
+      localStorage.setItem("kf_tactic_mode", state.tacticMode);
+      renderTacticsShell();
+      renderSquad();
+      renderSelectedCard();
+    });
+  });
 }
 
 function initViewTabs() {
@@ -1286,6 +1382,19 @@ function initViewTabs() {
       jumpToView(btn.dataset.viewTabJump);
     });
   });
+}
+
+function handleLockTactics() {
+  jumpToView("squad");
+  renderTacticsShell();
+
+  if (!state.tacticsLocked) {
+    const cards = document.querySelectorAll(".tacticsTopStrip .tacticsTopCard");
+    const lockTitle = cards[2]?.querySelector(".sectionTitle");
+    const lockSub = cards[2]?.querySelector(".muted.tiny:last-child");
+    safeText(lockTitle, "Ready");
+    safeText(lockSub, `Formation ${state.formation.replace(/^(\d)(\d)(\d)(\d)?$/, (_, a, b, c, d) => d ? `${a}-${b}-${c}-${d}` : `${a}-${b}-${c}`)} • ${savedTemplateLabel()} saved for next lock window.`);
+  }
 }
 
 async function enterKickForge() {
@@ -1310,6 +1419,7 @@ async function enterKickForge() {
       loadCosmetics()
     ]);
     updateSynergy();
+    renderTacticsShell();
     setActiveView("home");
     scrollToAppShell();
     startHomeCountdown();
@@ -1327,6 +1437,7 @@ async function enterKickForge() {
   safeText(el("arena-mode"), state.arenaMode);
   renderMarketSelected();
   renderHomeCountdown();
+  renderTacticsShell();
   healthCheck();
 
   el("btn-play")?.addEventListener("click", enterKickForge);
@@ -1339,9 +1450,8 @@ async function enterKickForge() {
     await playArena();
   });
 
-  el("btn-lock-tactics")?.addEventListener("click", () => {
-    jumpToView("squad");
-  });
+  el("btn-lock-tactics")?.addEventListener("click", handleLockTactics);
+  el("btn-lock-tactics-side")?.addEventListener("click", handleLockTactics);
 
   el("btn-list")?.addEventListener("click", listSelected);
 
@@ -1368,6 +1478,7 @@ async function enterKickForge() {
         loadDaily(),
         loadCosmetics()
       ]);
+      renderTacticsShell();
     } catch (e) {
       alert(e.message);
     }
