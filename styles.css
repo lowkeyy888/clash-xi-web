@@ -517,6 +517,7 @@ button,input{font:inherit}
 
 .featureBlock,
 .rarityShowcase,
+.appShell,
 .marketShell,
 .collectionShell,
 .squadBuilder,
@@ -670,7 +671,7 @@ button,input{font:inherit}
   overflow:hidden;
 }
 
-#sparkSvg{
+#sparkSvg,#sparkSvgHome{
   width:100%;
   height:100%;
 }
@@ -685,9 +686,200 @@ button,input{font:inherit}
   letter-spacing:.03em;
 }
 
+/* APP SHELL */
+.appShell{
+  padding:18px;
+}
+
+.appShellHeader{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:16px;
+  padding-bottom:16px;
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+
+.appShellActions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+}
+
+.appTab{
+  min-height:42px;
+  padding:10px 14px;
+  border:1px solid rgba(255,255,255,.10);
+  background:rgba(255,255,255,.03);
+  color:var(--text-secondary);
+  font-family:var(--font-ui);
+  font-size:16px;
+  font-weight:800;
+  letter-spacing:.05em;
+  text-transform:uppercase;
+  cursor:pointer;
+  transition:.18s ease;
+  clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px);
+}
+
+.appTab:hover{
+  border-color:var(--border-bright);
+  color:var(--gold-light);
+}
+
+.appTab.is-active{
+  color:#08110B;
+  background:linear-gradient(135deg,var(--gold-light),var(--gold));
+  border-color:rgba(255,255,255,.18);
+  box-shadow:0 10px 24px rgba(232,184,75,.16);
+}
+
+.appViews{
+  margin-top:18px;
+}
+
+.appView{
+  display:none;
+}
+
+.appView.is-active{
+  display:block;
+}
+
+/* DASHBOARD / HOME */
+.dashboardGrid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:16px;
+}
+
+.dashboardCol{
+  display:grid;
+  gap:16px;
+  align-content:start;
+}
+
+.dashCard{
+  padding:16px;
+  border:1px solid var(--border-subtle);
+  background:
+    linear-gradient(180deg, rgba(13,31,20,.92), rgba(9,20,14,.96));
+  position:relative;
+  clip-path:polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px);
+  transition:transform .2s ease, border-color .2s ease;
+}
+
+.dashCard::before{
+  content:"";
+  position:absolute;
+  left:0;right:0;top:0;
+  height:2px;
+  background:linear-gradient(90deg, transparent, rgba(232,184,75,.9), transparent);
+  opacity:.45;
+}
+
+.dashCard:hover{
+  transform:translateY(-2px);
+  border-color:var(--border-bright);
+}
+
+.dashHeroCard{
+  min-height:250px;
+}
+
+.dashBigStatRow{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  margin-top:18px;
+}
+
+.dashBigStat{
+  padding:14px;
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(0,0,0,.16);
+  clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px);
+}
+
+.dashBigStat span{
+  display:block;
+  color:var(--text-secondary);
+  font-size:12px;
+  text-transform:uppercase;
+  letter-spacing:.05em;
+}
+
+.dashBigStat strong{
+  display:block;
+  margin-top:8px;
+  font-family:var(--font-display);
+  font-size:48px;
+  line-height:.9;
+  color:var(--gold-light);
+}
+
+.dashActionRow{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  margin-top:16px;
+}
+
+.dashPlaceholder{
+  margin-top:16px;
+  padding:14px;
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(0,0,0,.14);
+  clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px);
+}
+
+.dashPlaceholderTitle{
+  font-family:var(--font-ui);
+  font-size:20px;
+  font-weight:800;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  color:var(--gold-light);
+}
+
+.dashMiniPulse{
+  margin-top:14px;
+}
+
+.dashSquadGrid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:10px;
+  margin-top:14px;
+}
+
+.dashSquadPill{
+  min-height:56px;
+  padding:10px;
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(0,0,0,.12);
+  clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px);
+}
+
+.dashSquadPill .slotName{
+  font-family:var(--font-ui);
+  font-size:13px;
+  font-weight:800;
+  letter-spacing:.05em;
+  text-transform:uppercase;
+  color:var(--gold-light);
+}
+
+.dashSquadPill .slotValue{
+  margin-top:4px;
+  font-size:13px;
+  color:var(--text-secondary);
+}
+
 /* COLLECTION */
 .collectionShell{
-  padding:16px;
+  padding:0;
 }
 
 .collectionBody{
@@ -741,7 +933,7 @@ button,input{font:inherit}
   padding-right:6px;
 }
 
-/* STEP 3 — CARD VISUAL SYSTEM */
+/* CARD VISUAL SYSTEM */
 .kfCollectionGrid{
   display:grid;
   grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
@@ -1094,9 +1286,19 @@ button,input{font:inherit}
   margin-top:12px;
 }
 
-/* STEP 4 — SQUAD BUILDER / PITCH */
+.pulseKick{
+  animation:pulseKick .4s ease;
+}
+
+@keyframes pulseKick{
+  0%{transform:scale(1)}
+  50%{transform:scale(1.015)}
+  100%{transform:scale(1)}
+}
+
+/* SQUAD */
 .squadBuilder{
-  padding:18px;
+  padding:0;
 }
 
 .squadHeader{
@@ -1160,9 +1362,7 @@ button,input{font:inherit}
   position:absolute;
   inset:0;
   background:
-    repeating-linear-gradient(180deg,
-      rgba(255,255,255,.018) 0 8.33%,
-      rgba(255,255,255,0) 8.33% 16.66%);
+    repeating-linear-gradient(180deg, rgba(255,255,255,.018) 0 8.33%, rgba(255,255,255,0) 8.33% 16.66%);
   opacity:.75;
   pointer-events:none;
 }
@@ -1287,17 +1487,17 @@ button,input{font:inherit}
   border-style:solid;
 }
 
-.xi--pitch .slot:nth-child(1){left:50%;top:85%;transform:translateX(-50%)}  /* GK */
-.xi--pitch .slot:nth-child(2){left:16%;top:70%}                                /* LB */
-.xi--pitch .slot:nth-child(3){left:38%;top:72%;transform:translateX(-50%)}     /* CB1 */
-.xi--pitch .slot:nth-child(4){left:62%;top:72%;transform:translateX(-50%)}     /* CB2 */
-.xi--pitch .slot:nth-child(5){right:16%;top:70%}                               /* RB */
-.xi--pitch .slot:nth-child(6){left:28%;top:50%;transform:translateX(-50%)}     /* CM1 */
-.xi--pitch .slot:nth-child(7){left:72%;top:50%;transform:translateX(-50%)}     /* CM2 */
-.xi--pitch .slot:nth-child(8){left:50%;top:38%;transform:translateX(-50%)}     /* CAM */
-.xi--pitch .slot:nth-child(9){left:18%;top:16%}                                /* LW */
-.xi--pitch .slot:nth-child(10){left:50%;top:10%;transform:translateX(-50%)}    /* ST */
-.xi--pitch .slot:nth-child(11){right:18%;top:16%}                              /* RW */
+.xi--pitch .slot:nth-child(1){left:50%;top:85%;transform:translateX(-50%)}
+.xi--pitch .slot:nth-child(2){left:16%;top:70%}
+.xi--pitch .slot:nth-child(3){left:38%;top:72%;transform:translateX(-50%)}
+.xi--pitch .slot:nth-child(4){left:62%;top:72%;transform:translateX(-50%)}
+.xi--pitch .slot:nth-child(5){right:16%;top:70%}
+.xi--pitch .slot:nth-child(6){left:28%;top:50%;transform:translateX(-50%)}
+.xi--pitch .slot:nth-child(7){left:72%;top:50%;transform:translateX(-50%)}
+.xi--pitch .slot:nth-child(8){left:50%;top:38%;transform:translateX(-50%)}
+.xi--pitch .slot:nth-child(9){left:18%;top:16%}
+.xi--pitch .slot:nth-child(10){left:50%;top:10%;transform:translateX(-50%)}
+.xi--pitch .slot:nth-child(11){right:18%;top:16%}
 
 .squadSide{
   display:grid;
@@ -1365,7 +1565,7 @@ button,input{font:inherit}
   background:linear-gradient(90deg, var(--emerald), var(--gold));
 }
 
-/* Market */
+/* MARKET */
 .marketHeader{
   display:flex;
   align-items:flex-start;
@@ -1468,6 +1668,7 @@ button,input{font:inherit}
   clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px);
 }
 
+/* PROGRESS */
 .arenaLog{
   margin-top:10px;
   padding:10px;
@@ -1543,7 +1744,7 @@ button,input{font:inherit}
   font-size:13px;
 }
 
-/* overlay */
+/* OVERLAY */
 .hidden{display:none !important}
 
 .overlay{
@@ -1813,6 +2014,14 @@ button,input{font:inherit}
   .heroTitle{
     font-size:124px;
   }
+
+  .dashboardGrid{
+    grid-template-columns:1fr 1fr;
+  }
+
+  .dashboardCol:last-child{
+    grid-column:1 / -1;
+  }
 }
 
 @media (max-width: 980px){
@@ -1832,6 +2041,19 @@ button,input{font:inherit}
   .rarityStrip,
   .heroMiniGrid{
     grid-template-columns:1fr 1fr;
+  }
+
+  .appShellHeader{
+    grid-template-columns:1fr;
+    display:grid;
+  }
+
+  .appShellActions{
+    justify-content:flex-start;
+  }
+
+  .dashboardGrid{
+    grid-template-columns:1fr;
   }
 
   .revealCards{
@@ -1903,7 +2125,8 @@ button,input{font:inherit}
 
   .btn,
   .smallBtn,
-  .chip{
+  .chip,
+  .appTab{
     font-size:15px;
   }
 
@@ -1912,7 +2135,9 @@ button,input{font:inherit}
   .heroStats,
   .rarityStrip,
   .heroMiniGrid,
-  .kfSelected__stats{
+  .kfSelected__stats,
+  .dashBigStatRow,
+  .dashActionRow{
     grid-template-columns:1fr;
   }
 
@@ -1928,6 +2153,10 @@ button,input{font:inherit}
 
   .kfCard{
     min-height:230px;
+  }
+
+  .dashSquadGrid{
+    grid-template-columns:1fr;
   }
 
   .pitchSurface,
