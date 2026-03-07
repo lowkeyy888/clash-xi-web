@@ -26,6 +26,9 @@ const state = {
 
   arenaMode: "BRONZE",
 
+  walletCoins: null,
+  battlepass: null,
+
   market: {
     listings: [],
     mine: [],
@@ -37,7 +40,8 @@ const state = {
 
   daily: null,
   cosmetics: [],
-  isPro: false
+  isPro: false,
+  activeView: "home"
 };
 
 function slotLabel(k) {
@@ -48,9 +52,7 @@ function shortName(name) {
   if (!name) return "Unknown";
   const parts = String(name).trim().split(/\s+/);
   if (parts.length === 1) return parts[0];
-  const first = parts[0];
-  const last = parts[parts.length - 1];
-  return `${first} ${last}`;
+  return `${parts[0]} ${parts[parts.length - 1]}`;
 }
 
 function rarityClass(r) {
@@ -89,7 +91,9 @@ function setUserLabel() {
 }
 
 function setCoins(coins) {
+  state.walletCoins = coins ?? null;
   safeText(el("pill-coins"), `Coins: ${coins ?? "—"}`);
+  safeText(el("home-coins"), coins ?? "—");
 }
 
 function pulseSelectedPanel() {
@@ -100,15 +104,25 @@ function pulseSelectedPanel() {
   panel.classList.add("pulseKick");
 }
 
-function scrollToSquad() {
-  const squad = el("squad");
-  if (!squad) return;
-  squad.scrollIntoView({ behavior: "smooth", block: "start" });
+function scrollToAppShell() {
+  const node = el("app-shell");
+  if (!node) return;
+  node.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function setActiveView(view) {
+  state.activeView = view;
+  document.querySelectorAll("[data-view-tab]").forEach((btn) => {
+    btn.classList.toggle("is-active", btn.dataset.viewTab === view);
+  });
+  document.querySelectorAll(".appView").forEach((panel) => {
+    panel.classList.toggle("is-active", panel.dataset.view === view);
+  });
 }
 
 async function api(path, opts = {}) {
   const headers = { ...(opts.headers || {}) };
-  if (state.token) headers["Authorization"] = `Bearer ${state.token}`;
+  if (state.token) headers.Authorization = `Bearer ${state.token}`;
   if (!headers["Content-Type"] && opts.method !== "GET") headers["Content-Type"] = "application/json";
 
   const res = await fetch(`${API_BASE}${path}`, { ...opts, headers });
@@ -319,6 +333,7 @@ function renderSquad() {
 
   refreshSlotStates();
   updateSynergy();
+  renderDashSquadSnapshot();
 }
 
 async function onSlotClick(slotKey) {
@@ -392,9 +407,11 @@ function renderInventory() {
       renderInventory();
       refreshSlotStates();
       renderMarketSelected();
+
       if (state.selectedCardId) {
+        setActiveView("squad");
         pulseSelectedPanel();
-        scrollToSquad();
+        scrollToAppShell();
       }
     });
   });
@@ -482,6 +499,25 @@ function renderPackResults(cards) {
   wrap.innerHTML = cards.length
     ? `<div class="kfPackGrid">${cards.map((c) => cardHTML(c, { compact: true, selectable: false })).join("")}</div>`
     : "";
+}
+
+function renderDashSquadSnapshot() {
+  const wrap = el("dashSquadGrid");
+  if (!wrap) return;
+
+  const keys = ["GK", "CB1", "CM1", "CAM", "ST", "RW"];
+  const pills = keys.map((slot) => {
+    const cardId = state.squad[slot];
+    const c = cardId ? getCardById(cardId) : null;
+    return `
+      <div class="dashSquadPill">
+        <div class="slotName">${slotLabel(slot)}</div>
+        <div class="slotValue">${c ? `${shortName(c.display_name)} · OVR ${cardVisualModel(c).ovr}` : "Empty"}</div>
+      </div>
+    `;
+  });
+
+  wrap.innerHTML = pills.join("");
 }
 
 function showOverlay() {
@@ -633,10 +669,14 @@ async function flipNext() {
 
 async function openPack() {
   const btn = el("btn-pack");
-  if (btn) {
-    btn.disabled = true;
-    btn.textContent = "Opening…";
-  }
+  const btnHome = el("btn-home-pack");
+
+  [btn, btnHome].forEach((b) => {
+    if (b) {
+      b.disabled = true;
+      b.textContent = "Opening…";
+    }
+  });
 
   showOverlay();
   resetRevealUI();
@@ -653,18 +693,29 @@ async function openPack() {
     hideOverlay();
     alert(e.message);
   } finally {
-    if (btn) {
-      btn.disabled = false;
-      btn.textContent = "Open Pack";
-    }
+    [btn, btnHome].forEach((b) => {
+      if (b) {
+        b.disabled = false;
+        b.textContent = "Open Pack";
+      }
+    });
   }
 }
 
 function updateBattlePassUI(bp) {
   if (!bp) return;
+  state.battlepass = bp;
+
+  const pct = Math.round((bp.xp / bp.need) * 100);
+
   safeText(el("bp-level"), `Lv ${bp.level}`);
-  if (el("bpFill")) el("bpFill").style.width = `${Math.round((bp.xp / bp.need) * 100)}%`;
+  if (el("bpFill")) el("bpFill").style.width = `${pct}%`;
   safeText(el("bpText"), `${bp.xp} / ${bp.need} XP`);
+
+  safeText(el("bp-level-home"), `Lv ${bp.level}`);
+  if (el("bpFillHome")) el("bpFillHome").style.width = `${pct}%`;
+  safeText(el("bpTextHome"), `${bp.xp} / ${bp.need} XP`);
+  safeText(el("home-bp"), `Lv ${bp.level}`);
 }
 
 async function loadMe() {
@@ -682,11 +733,15 @@ async function loadPro() {
 async function playArena() {
   const log = el("arenaLog");
   const btn = el("btn-arena");
+  const homeBtn = el("btn-home-arena");
 
-  if (btn) {
-    btn.disabled = true;
-    btn.textContent = "Playing…";
-  }
+  [btn, homeBtn].forEach((b) => {
+    if (b) {
+      b.disabled = true;
+      b.textContent = "Playing…";
+    }
+  });
+
   safeText(log, "Match starting…");
 
   try {
@@ -706,50 +761,19 @@ async function playArena() {
   } catch (e) {
     safeText(log, e.message);
   } finally {
-    if (btn) {
-      btn.disabled = false;
-      btn.textContent = "Play Match";
-    }
+    [btn, homeBtn].forEach((b) => {
+      if (b) {
+        b.disabled = false;
+        b.textContent = "Play Arena";
+      }
+    });
   }
 }
 
-async function loadDaily() {
-  const d = await api("/v1/challenges/today", { method: "GET" });
-  state.daily = d;
-  renderDaily(d);
-}
-
-function renderDaily(d) {
-  const date = el("daily-date");
-  const list = el("dailyList");
-  const chestBtn = el("btn-chest");
-  const chestStatus = el("chestStatus");
-
-  safeText(date, d.date || "—");
-  if (!list) return;
-
-  list.innerHTML = (d.tasks || []).map((t) => {
-    const done = t.completed;
-    const canClaim = done && !t.claimed;
-    const status = t.claimed ? "CLAIMED" : done ? "READY" : "IN PROGRESS";
-    return `
-      <div class="dailyItem">
-        <div>
-          <div style="font-weight:900">${t.title}</div>
-          <div class="dailyMeta">${t.desc}</div>
-          <div class="dailyMeta">Reward: +${t.rewardCoins}c • +${t.rewardBpXp} XP</div>
-        </div>
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
-          <div class="dailyProg">${t.progress}/${t.target}</div>
-          <button class="smallBtn ${canClaim ? "primary" : "ghost"}" data-claim="${t.key}" ${canClaim ? "" : "disabled"}>${status}</button>
-        </div>
-      </div>
-    `;
-  }).join("");
-
-  document.querySelectorAll("[data-claim]").forEach((btn) => {
+function attachDailyClaimHandlers(rootSelector, attrName) {
+  document.querySelectorAll(`${rootSelector} [${attrName}]`).forEach((btn) => {
     btn.addEventListener("click", async () => {
-      const key = btn.getAttribute("data-claim");
+      const key = btn.getAttribute(attrName);
       btn.disabled = true;
       try {
         const res = await api("/v1/challenges/claim", { method: "POST", body: JSON.stringify({ taskKey: key }) });
@@ -761,6 +785,46 @@ function renderDaily(d) {
       }
     });
   });
+}
+
+async function loadDaily() {
+  const d = await api("/v1/challenges/today", { method: "GET" });
+  state.daily = d;
+  renderDaily(d);
+  renderDailyHome(d);
+}
+
+function dailyRowHTML(t, attrName) {
+  const done = t.completed;
+  const canClaim = done && !t.claimed;
+  const status = t.claimed ? "CLAIMED" : done ? "READY" : "IN PROGRESS";
+
+  return `
+    <div class="dailyItem">
+      <div>
+        <div style="font-weight:900">${t.title}</div>
+        <div class="dailyMeta">${t.desc}</div>
+        <div class="dailyMeta">Reward: +${t.rewardCoins}c • +${t.rewardBpXp} XP</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
+        <div class="dailyProg">${t.progress}/${t.target}</div>
+        <button class="smallBtn ${canClaim ? "primary" : "ghost"}" ${attrName}="${t.key}" ${canClaim ? "" : "disabled"}>${status}</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderDaily(d) {
+  const date = el("daily-date");
+  const list = el("dailyList");
+  const chestBtn = el("btn-chest");
+  const chestStatus = el("chestStatus");
+
+  safeText(date, d.date || "—");
+  if (list) {
+    list.innerHTML = (d.tasks || []).map((t) => dailyRowHTML(t, "data-claim")).join("");
+    attachDailyClaimHandlers("#view-progress", "data-claim");
+  }
 
   if (chestBtn) chestBtn.disabled = !(d.chest?.available) || d.chest?.opened;
 
@@ -789,6 +853,15 @@ function renderDaily(d) {
       }
     };
   }
+}
+
+function renderDailyHome(d) {
+  safeText(el("daily-date-home"), d.date || "—");
+  const list = el("dailyListHome");
+  if (!list) return;
+
+  list.innerHTML = (d.tasks || []).map((t) => dailyRowHTML(t, "data-claim-home")).join("");
+  attachDailyClaimHandlers("#view-home", "data-claim-home");
 }
 
 function applyTheme(themeKey) {
@@ -1026,12 +1099,12 @@ async function listSelected() {
   }
 }
 
-function renderPulse() {
-  safeText(el("m-last"), state.market.pulse.last == null ? "—" : String(state.market.pulse.last));
-  safeText(el("m-chg"), state.market.pulse.chg24h == null ? "—" : (state.market.pulse.chg24h > 0 ? `+${state.market.pulse.chg24h}` : `${state.market.pulse.chg24h}`));
+function renderOnePulse(svgId, lastId, chgId) {
+  safeText(el(lastId), state.market.pulse.last == null ? "—" : String(state.market.pulse.last));
+  safeText(el(chgId), state.market.pulse.chg24h == null ? "—" : (state.market.pulse.chg24h > 0 ? `+${state.market.pulse.chg24h}` : `${state.market.pulse.chg24h}`));
 
   const pts = state.market.pulse.points || [];
-  const svg = el("sparkSvg");
+  const svg = el(svgId);
   if (!svg) return;
 
   const w = 300;
@@ -1069,6 +1142,11 @@ function renderPulse() {
     <path d="${d}" fill="none" stroke="rgba(232,184,75,.90)" stroke-width="2.2" />
     <path d="${d} L${w} ${h} L0 ${h} Z" fill="rgba(232,184,75,.10)" />
   `;
+}
+
+function renderPulse() {
+  renderOnePulse("sparkSvg", "m-last", "m-chg");
+  renderOnePulse("sparkSvgHome", "m-last-home", "m-chg-home");
 }
 
 async function loadInventory() {
@@ -1120,6 +1198,14 @@ function initChips() {
   });
 }
 
+function initViewTabs() {
+  document.querySelectorAll("[data-view-tab]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      setActiveView(btn.dataset.viewTab);
+    });
+  });
+}
+
 async function enterKickForge() {
   const ok = await healthCheck();
   if (!ok) {
@@ -1142,6 +1228,8 @@ async function enterKickForge() {
       loadCosmetics()
     ]);
     updateSynergy();
+    setActiveView("home");
+    scrollToAppShell();
   } catch (e) {
     alert(e.message);
   }
@@ -1151,13 +1239,24 @@ async function enterKickForge() {
   seedXI();
   setUserLabel();
   initChips();
+  initViewTabs();
+  setActiveView("home");
   safeText(el("arena-mode"), state.arenaMode);
   renderMarketSelected();
+  renderDashSquadSnapshot();
   healthCheck();
 
   el("btn-play")?.addEventListener("click", enterKickForge);
   el("btn-pack")?.addEventListener("click", openPack);
+  el("btn-home-pack")?.addEventListener("click", openPack);
+
   el("btn-arena")?.addEventListener("click", playArena);
+  el("btn-home-arena")?.addEventListener("click", async () => {
+    setActiveView("squad");
+    scrollToAppShell();
+    await playArena();
+  });
+
   el("btn-list")?.addEventListener("click", listSelected);
 
   el("btn-refresh-market")?.addEventListener("click", async () => {
