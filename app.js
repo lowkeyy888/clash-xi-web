@@ -1,12 +1,9 @@
-// CLASH XI — Step 6.6 Daily Challenges + Daily Chest + Cosmetics + PRO scaffold
 const API_BASE = "https://clash-xi-api.lowkeyy9191.workers.dev";
 
 const el = (id) => document.getElementById(id);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-const SLOT_KEYS = ["GK","LB","CB1","CB2","RB","CM1","CM2","CAM","LW","ST","RW"];
-const slotLabel = (k) => k.replace("1","").replace("2","");
-
+const SLOT_KEYS = ["GK", "LB", "CB1", "CB2", "RB", "CM1", "CM2", "CAM", "LW", "ST", "RW"];
 const DEFAULT_RULES = {
   maxOpenListings: 5,
   feeBps: 500,
@@ -43,17 +40,8 @@ const state = {
   isPro: false
 };
 
-function setConn(ok) {
-  const n = el("pill-conn");
-  if (n) n.textContent = ok ? "API: Connected" : "API: Offline";
-}
-function setUserLabel() {
-  const n = el("pill-user");
-  if (n) n.textContent = state.userId ? `User: ${state.userId.slice(0, 8)}` : "Guest";
-}
-function setCoins(coins) {
-  const n = el("pill-coins");
-  if (n) n.textContent = `Coins: ${coins ?? "—"}`;
+function slotLabel(k) {
+  return String(k).replace("1", "").replace("2", "");
 }
 
 function rarityClass(r) {
@@ -65,16 +53,35 @@ function minPriceFor(r) {
   return rules.minPrice?.[String(r || "COMMON").toUpperCase()] ?? 10;
 }
 
+function safeText(node, value) {
+  if (node) node.textContent = value;
+}
+
+function setConn(ok) {
+  safeText(el("pill-conn"), ok ? "API: Connected" : "API: Offline");
+}
+
+function setUserLabel() {
+  safeText(el("pill-user"), state.userId ? `User: ${state.userId.slice(0, 8)}` : "Guest");
+}
+
+function setCoins(coins) {
+  safeText(el("pill-coins"), `Coins: ${coins ?? "—"}`);
+}
+
 async function api(path, opts = {}) {
-  const headers = opts.headers || {};
+  const headers = { ...(opts.headers || {}) };
   if (state.token) headers["Authorization"] = `Bearer ${state.token}`;
-  headers["Content-Type"] = "application/json";
+  if (!headers["Content-Type"] && opts.method !== "GET") headers["Content-Type"] = "application/json";
 
   const res = await fetch(`${API_BASE}${path}`, { ...opts, headers });
   const txt = await res.text();
   let json = null;
   try { json = JSON.parse(txt); } catch {}
-  if (!res.ok) throw new Error(json?.error || txt || "API error");
+
+  if (!res.ok) {
+    throw new Error(json?.error || txt || "API error");
+  }
   return json;
 }
 
@@ -99,14 +106,14 @@ async function ensureSession() {
   setUserLabel();
 }
 
-function canEquipSelected() {
-  if (!state.selectedCardId) return false;
-  return !state.market.listedSet.has(state.selectedCardId);
+function getCardById(id) {
+  return state.inventory.find((c) => c.id === id) || null;
 }
 
-/* =========================
-   XI / SQUAD
-   ========================= */
+function canEquipSelected() {
+  return !!state.selectedCardId && !state.market.listedSet.has(state.selectedCardId);
+}
+
 function seedXI() {
   const grid = el("xi");
   if (!grid) return;
@@ -134,10 +141,6 @@ function refreshSlotStates() {
     node.classList.toggle("armed", armed);
     node.classList.toggle("equipped", !!state.squad[k]);
   });
-}
-
-function getCardById(id) {
-  return state.inventory.find((c) => c.id === id) || null;
 }
 
 function renderSquad() {
@@ -175,35 +178,41 @@ async function onSlotClick(slotKey) {
 
   if (!state.selectedCardId) {
     if (!state.squad[slotKey]) return;
-    await api("/v1/squad/unequip", { method: "POST", body: JSON.stringify({ slot: slotKey }) });
-    delete state.squad[slotKey];
-    renderSquad();
+    try {
+      await api("/v1/squad/unequip", { method: "POST", body: JSON.stringify({ slot: slotKey }) });
+      delete state.squad[slotKey];
+      renderSquad();
+    } catch (e) {
+      if (status) status.textContent = e.message;
+    }
     return;
   }
 
   if (state.market.listedSet.has(state.selectedCardId)) {
-    if (status) status.textContent = "This card is LISTED. Cancel listing before equipping.";
+    if (status) status.textContent = "This card is listed on the market. Cancel listing first.";
     return;
   }
 
   const cardId = state.selectedCardId;
-  await api("/v1/squad/equip", { method: "POST", body: JSON.stringify({ slot: slotKey, cardId }) });
 
-  for (const k of Object.keys(state.squad)) {
-    if (state.squad[k] === cardId) delete state.squad[k];
+  try {
+    await api("/v1/squad/equip", { method: "POST", body: JSON.stringify({ slot: slotKey, cardId }) });
+
+    for (const k of Object.keys(state.squad)) {
+      if (state.squad[k] === cardId) delete state.squad[k];
+    }
+    state.squad[slotKey] = cardId;
+
+    state.selectedCardId = null;
+    renderSelectedCard();
+    renderInventory();
+    renderSquad();
+    renderMarketSelected();
+  } catch (e) {
+    if (status) status.textContent = e.message;
   }
-  state.squad[slotKey] = cardId;
-
-  state.selectedCardId = null;
-  renderSelectedCard();
-  renderInventory();
-  renderSquad();
-  renderMarketSelected();
 }
 
-/* =========================
-   LOCKER
-   ========================= */
 function renderInventory() {
   const list = el("invList");
   if (!list) return;
@@ -212,7 +221,7 @@ function renderInventory() {
   list.innerHTML = "";
 
   if (!items.length) {
-    list.innerHTML = `<div class="muted tiny">No cards yet. Open a pack.</div>`;
+    list.innerHTML = `<div class="muted tiny">No cards yet. Open your first KickForge pack.</div>`;
     return;
   }
 
@@ -241,6 +250,7 @@ function renderInventory() {
         ${isListed ? `<div class="badgeSm">LISTED</div>` : ``}
       </div>
     `;
+
     list.appendChild(row);
   });
 }
@@ -248,13 +258,14 @@ function renderInventory() {
 function renderSelectedCard() {
   const box = el("selectedCard");
   if (!box) return;
+
   const c = state.selectedCardId ? getCardById(state.selectedCardId) : null;
 
   if (!c) {
     box.innerHTML = `
       <div class="muted tiny">Selected</div>
       <div style="font-weight:900;margin-top:6px">None</div>
-      <div class="muted tiny" style="margin-top:6px">Pick a card to arm slots.</div>
+      <div class="muted tiny" style="margin-top:6px">Pick a card from your collection.</div>
     `;
     return;
   }
@@ -265,14 +276,11 @@ function renderSelectedCard() {
     <div class="muted tiny">Selected</div>
     <div style="font-weight:900;margin-top:6px">${c.display_name}</div>
     <div class="muted tiny" style="margin-top:6px">${c.position} • ${c.role}</div>
-    <div class="muted tiny" style="margin-top:6px">${isListed ? "LISTED — cancel before equipping." : "Tap a slot to equip."}</div>
+    <div class="muted tiny" style="margin-top:6px">${isListed ? "LISTED — cancel listing before using it in the squad." : "Click a squad slot to equip this player."}</div>
     <div style="margin-top:10px" class="rarity ${rarityClass(c.rarity)}">${c.rarity}</div>
   `;
 }
 
-/* =========================
-   SYNERGY
-   ========================= */
 function roleStyle(role) {
   const r = (role || "").toLowerCase();
   if (r.includes("press") || r.includes("ball winner") || r.includes("aggressive") || r.includes("overlap")) return "PRESS";
@@ -285,34 +293,203 @@ function updateSynergy() {
   const pct = el("chemPct");
   const fill = el("chemFill");
   const note = el("chemNote");
+
   const equippedIds = Object.values(state.squad).filter(Boolean);
   const equipped = equippedIds.map(getCardById).filter(Boolean);
 
   if (!equipped.length) {
-    if (pct) pct.textContent = "0%";
+    safeText(pct, "0%");
     if (fill) fill.style.width = "0%";
-    if (note) note.textContent = "Equip players to build synergy.";
+    safeText(note, "Equip players to build synergy.");
     return;
   }
 
   const matches = equipped.filter((c) => roleStyle(c.role) === state.style).length;
   const p = Math.round((matches / equipped.length) * 100);
-  if (pct) pct.textContent = `${p}%`;
+
+  safeText(pct, `${p}%`);
   if (fill) fill.style.width = `${p}%`;
-  if (note) note.textContent = `Style: ${state.style} • Matching roles: ${matches}/${equipped.length}`;
+  safeText(note, `Style: ${state.style} • matching roles: ${matches}/${equipped.length}`);
 }
 
-/* =========================
-   ME / BP / PRO / ARENA
-   ========================= */
+function renderPackResults(cards) {
+  const wrap = el("cards");
+  if (!wrap) return;
+
+  wrap.innerHTML = "";
+  cards.forEach((c) => {
+    const row = document.createElement("div");
+    row.className = "cardRow";
+    row.innerHTML = `
+      <div>
+        <div style="font-weight:900">${c.displayName}</div>
+        <div class="muted tiny">${c.position} • ${c.role}</div>
+      </div>
+      <div class="rarity ${rarityClass(c.rarity)}">${c.rarity}</div>
+    `;
+    wrap.appendChild(row);
+  });
+}
+
+function showOverlay() {
+  const o = el("revealOverlay");
+  if (!o) return;
+  o.classList.remove("hidden");
+  o.setAttribute("aria-hidden", "false");
+}
+
+function hideOverlay() {
+  const o = el("revealOverlay");
+  if (!o) return;
+  o.classList.add("hidden");
+  o.setAttribute("aria-hidden", "true");
+}
+
+function setOverlaySub(t) {
+  safeText(el("overlaySub"), t);
+}
+
+function resetRevealUI() {
+  state.revealIndex = 0;
+  state.revealCards = [];
+  state.revealing = false;
+
+  const inner = el("overlayInner");
+  if (inner) inner.classList.remove("legendaryBurst");
+
+  const claim = el("btn-claim");
+  if (claim) {
+    claim.disabled = true;
+    claim.textContent = "Claim";
+  }
+
+  safeText(el("revealHint"), "Tap to reveal");
+
+  const pack = el("revealPack");
+  if (pack) pack.classList.add("shake");
+
+  const list = el("revealCards");
+  if (!list) return;
+
+  list.innerHTML = "";
+  for (let i = 0; i < 3; i++) {
+    const card = document.createElement("div");
+    card.className = "flipCard";
+    card.dataset.i = String(i);
+    card.innerHTML = `
+      <div class="flipInner">
+        <div class="flipFace flipBack"><div class="q">?</div><div class="t">Reveal</div></div>
+        <div class="flipFace flipFront">
+          <div class="cardTop">
+            <div><div class="cardName">Unknown</div><div class="cardMeta">— • —</div></div>
+            <div class="badge">—</div>
+          </div>
+          <div class="cardFooter"><span class="muted">KICKFORGE</span><span class="muted">v1</span></div>
+        </div>
+      </div>
+    `;
+    list.appendChild(card);
+  }
+}
+
+function injectRevealData(cards) {
+  const list = el("revealCards");
+  if (!list) return;
+
+  [...list.querySelectorAll(".flipCard")].forEach((node, i) => {
+    const c = cards[i];
+    if (!c) return;
+
+    node.classList.remove("rCommon", "rRare", "rEpic", "rLegend");
+    node.classList.add(rarityClass(c.rarity));
+
+    const badge = node.querySelector(".badge");
+    const name = node.querySelector(".cardName");
+    const meta = node.querySelector(".cardMeta");
+
+    if (badge) badge.textContent = c.rarity;
+    if (name) name.textContent = c.displayName;
+    if (meta) meta.textContent = `${c.position} • ${c.role}`;
+  });
+}
+
+function legendaryBurst() {
+  const inner = el("overlayInner");
+  if (!inner) return;
+  inner.classList.remove("legendaryBurst");
+  void inner.offsetWidth;
+  inner.classList.add("legendaryBurst");
+}
+
+async function flipNext() {
+  if (state.revealing) return;
+  if (state.revealIndex >= state.revealCards.length) return;
+  state.revealing = true;
+
+  const i = state.revealIndex;
+  const card = state.revealCards[i];
+  const node = el("revealCards")?.querySelector(`.flipCard[data-i="${i}"]`);
+  if (node) node.classList.add("flipped");
+
+  if (card?.rarity === "LEGENDARY") {
+    legendaryBurst();
+    setOverlaySub("Legendary pull.");
+  } else if (card?.rarity === "EPIC") {
+    setOverlaySub("Epic pull.");
+  } else if (card?.rarity === "RARE") {
+    setOverlaySub("Rare pull.");
+  } else {
+    setOverlaySub("Common pull.");
+  }
+
+  await sleep(550);
+  state.revealIndex += 1;
+  state.revealing = false;
+
+  if (state.revealIndex >= state.revealCards.length) {
+    const pack = el("revealPack");
+    if (pack) pack.classList.remove("shake");
+    setOverlaySub("Pack complete.");
+    const claim = el("btn-claim");
+    if (claim) claim.disabled = false;
+    safeText(el("revealHint"), "Done");
+  }
+}
+
+async function openPack() {
+  const btn = el("btn-pack");
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = "Opening…";
+  }
+
+  showOverlay();
+  resetRevealUI();
+  setOverlaySub("Generating pack…");
+
+  try {
+    await ensureSession();
+    const data = await api("/v1/packs/open", { method: "POST", body: JSON.stringify({ kind: "DAILY" }) });
+    state.revealCards = data.cards || [];
+    injectRevealData(state.revealCards);
+    renderPackResults(state.revealCards);
+    await loadDaily();
+  } catch (e) {
+    hideOverlay();
+    alert(e.message);
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = "Open Pack";
+    }
+  }
+}
+
 function updateBattlePassUI(bp) {
-  const bpLevel = el("bp-level");
-  const bpFill = el("bpFill");
-  const bpText = el("bpText");
   if (!bp) return;
-  if (bpLevel) bpLevel.textContent = `Lv ${bp.level}`;
-  if (bpFill) bpFill.style.width = `${Math.round((bp.xp / bp.need) * 100)}%`;
-  if (bpText) bpText.textContent = `${bp.xp} / ${bp.need} XP`;
+  safeText(el("bp-level"), `Lv ${bp.level}`);
+  if (el("bpFill")) el("bpFill").style.width = `${Math.round((bp.xp / bp.need) * 100)}%`;
+  safeText(el("bpText"), `${bp.xp} / ${bp.need} XP`);
 }
 
 async function loadMe() {
@@ -324,32 +501,35 @@ async function loadMe() {
 async function loadPro() {
   const data = await api("/v1/pro/status", { method: "GET" });
   state.isPro = !!data.isPro;
-  const t = el("proTag");
-  if (t) t.textContent = state.isPro ? "PRO" : "FREE";
+  safeText(el("proTag"), state.isPro ? "PRO" : "FREE");
 }
 
 async function playArena() {
   const log = el("arenaLog");
   const btn = el("btn-arena");
+
   if (btn) {
     btn.disabled = true;
     btn.textContent = "Playing…";
   }
-  if (log) log.textContent = "Match starting…";
+  safeText(log, "Match starting…");
 
   try {
     const res = await api("/v1/arena/play", {
       method: "POST",
       body: JSON.stringify({ mode: state.arenaMode, style: state.style })
     });
-    if (log) {
-      log.textContent = `${res.result} • Team ${res.teamRating} vs Opp ${res.oppRating} • +${res.rewards.coins} coins • +${res.rewards.bpXp} BP XP`;
-    }
+
+    safeText(
+      log,
+      `${res.result} • Team ${res.teamRating} vs Opp ${res.oppRating} • +${res.rewards.coins} coins • +${res.rewards.bpXp} BP XP`
+    );
+
     setCoins(res.coins);
     updateBattlePassUI(res.battlepass);
     await loadDaily();
   } catch (e) {
-    if (log) log.textContent = e.message;
+    safeText(log, e.message);
   } finally {
     if (btn) {
       btn.disabled = false;
@@ -358,9 +538,6 @@ async function playArena() {
   }
 }
 
-/* =========================
-   DAILY CHALLENGES + CHEST
-   ========================= */
 async function loadDaily() {
   const d = await api("/v1/challenges/today", { method: "GET" });
   state.daily = d;
@@ -373,7 +550,7 @@ function renderDaily(d) {
   const chestBtn = el("btn-chest");
   const chestStatus = el("chestStatus");
 
-  if (date) date.textContent = d.date || "—";
+  safeText(date, d.date || "—");
   if (!list) return;
 
   list.innerHTML = (d.tasks || []).map((t) => {
@@ -389,7 +566,7 @@ function renderDaily(d) {
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
           <div class="dailyProg">${t.progress}/${t.target}</div>
-          <button class="smallBtn primary" data-claim="${t.key}" ${canClaim ? "" : "disabled"}>${status}</button>
+          <button class="smallBtn ${canClaim ? "primary" : "ghost"}" data-claim="${t.key}" ${canClaim ? "" : "disabled"}>${status}</button>
         </div>
       </div>
     `;
@@ -406,8 +583,6 @@ function renderDaily(d) {
         await loadDaily();
       } catch (e) {
         alert(e.message);
-      } finally {
-        btn.disabled = false;
       }
     });
   });
@@ -419,10 +594,10 @@ function renderDaily(d) {
   if (chestStatus) {
     if (d.chest?.opened) {
       chestStatus.textContent = d.chest.duplicate
-        ? "Chest opened (duplicate → +40 coins)."
+        ? "Chest opened — duplicate converted into coins."
         : "Chest opened — new cosmetic unlocked.";
     } else if (d.chest?.available) {
-      chestStatus.textContent = "Chest unlocked. Open it.";
+      chestStatus.textContent = "All challenges complete. Open your daily chest.";
     } else {
       chestStatus.textContent = "Complete + claim all 3 to unlock.";
     }
@@ -443,18 +618,15 @@ function renderDaily(d) {
   }
 }
 
-/* =========================
-   COSMETICS
-   ========================= */
+function applyTheme(themeKey) {
+  document.body.classList.remove("theme-obsidian", "theme-neon", "theme-emerald");
+  document.body.classList.add(`theme-${themeKey || "obsidian"}`);
+}
+
 async function loadCosmetics() {
   const data = await api("/v1/cosmetics", { method: "GET" });
   state.cosmetics = data.items || [];
   renderCosmetics(state.cosmetics);
-}
-
-function applyTheme(themeKey) {
-  document.body.classList.remove("theme-obsidian", "theme-neon", "theme-emerald");
-  if (themeKey) document.body.classList.add(`theme-${themeKey}`);
 }
 
 function renderCosmetics(items) {
@@ -464,7 +636,7 @@ function renderCosmetics(items) {
   const theme = items.find((x) => x.type === "THEME" && x.equipped);
   applyTheme(theme?.meta?.theme || "obsidian");
 
-  wrap.innerHTML = items.map((c) => {
+  wrap.innerHTML = items.length ? items.map((c) => {
     const eq = c.equipped;
     return `
       <div class="cosItem">
@@ -477,7 +649,7 @@ function renderCosmetics(items) {
         </button>
       </div>
     `;
-  }).join("");
+  }).join("") : `<div class="muted tiny">No cosmetics yet.</div>`;
 
   document.querySelectorAll("[data-equip]").forEach((btn) => {
     btn.addEventListener("click", async () => {
@@ -493,9 +665,6 @@ function renderCosmetics(items) {
   });
 }
 
-/* =========================
-   MARKET
-   ========================= */
 function renderMarketSelected() {
   const n = el("mk-selected");
   const min = el("mk-min");
@@ -505,8 +674,8 @@ function renderMarketSelected() {
   const c = state.selectedCardId ? getCardById(state.selectedCardId) : null;
 
   if (!c) {
-    if (n) n.textContent = "None";
-    if (min) min.textContent = "Min: —";
+    safeText(n, "None");
+    safeText(min, "Min: —");
     if (btn) btn.disabled = false;
     return;
   }
@@ -514,18 +683,14 @@ function renderMarketSelected() {
   const isListed = state.market.listedSet.has(c.id);
   const minP = minPriceFor(c.rarity);
 
-  if (n) n.textContent = `${c.display_name} (${c.rarity})`;
-  if (min) min.textContent = `Min: ${minP} coins`;
+  safeText(n, `${c.display_name} (${c.rarity})`);
+  safeText(min, `Min: ${minP} coins`);
 
   if (btn) btn.disabled = isListed;
-  if (isListed && status) status.textContent = "Selected card is LISTED. Cancel listing to use it.";
+  if (isListed && status) status.textContent = "Selected card is listed. Cancel the listing to use it.";
 }
 
 function listingHTML(x, isMine = false) {
-  const name = x.display_name || "Unknown";
-  const meta = `${x.position} • ${x.role} • ${x.rarity}`;
-  const price = x.price;
-
   const right = isMine
     ? `<button class="smallBtn danger" data-cancel="${x.listing_id}">Cancel</button>`
     : `<button class="smallBtn primary" data-buy="${x.listing_id}">Buy</button>`;
@@ -533,11 +698,11 @@ function listingHTML(x, isMine = false) {
   return `
     <div class="listing">
       <div>
-        <div style="font-weight:900">${name}</div>
-        <div class="listingMeta">${meta}</div>
+        <div style="font-weight:900">${x.display_name || "Unknown"}</div>
+        <div class="listingMeta">${x.position} • ${x.role} • ${x.rarity}</div>
       </div>
       <div class="listingRight">
-        <div class="priceTag">${price}c</div>
+        <div class="priceTag">${x.price}c</div>
         ${right}
       </div>
     </div>
@@ -556,6 +721,7 @@ function formatAgo(ts) {
 function renderTrades() {
   const wrap = el("tradeList");
   if (!wrap) return;
+
   const t = state.market.trades || [];
   wrap.innerHTML = t.length ? t.map((x) => `
     <div class="tradeRow">
@@ -578,19 +744,17 @@ async function loadMarket() {
   ]);
 
   state.market.rules = rules || DEFAULT_RULES;
-  state.market.pulse = pulse;
+  state.market.pulse = pulse || { last: null, chg24h: null, points: [] };
   state.market.trades = trades.trades || [];
 
   const allOpen = open.listings || [];
   state.market.listings = allOpen.filter((x) => x.seller_user_id !== state.userId);
 
   state.market.mine = mine.listings || [];
-
   const openMine = state.market.mine.filter((x) => x.status === "OPEN");
   state.market.listedSet = new Set(openMine.map((x) => x.card_id));
 
-  const myCount = el("myCount");
-  if (myCount) myCount.textContent = `(${openMine.length}/${state.market.rules.maxOpenListings})`;
+  safeText(el("myCount"), `(${openMine.length}/${state.market.rules.maxOpenListings})`);
 
   renderPulse();
   renderListings();
@@ -608,14 +772,14 @@ function renderListings() {
   if (openWrap) {
     openWrap.innerHTML = state.market.listings.length
       ? state.market.listings.map((x) => listingHTML(x, false)).join("")
-      : `<div class="muted tiny">No listings yet.</div>`;
+      : `<div class="muted tiny">No open listings.</div>`;
   }
 
   const openMine = state.market.mine.filter((x) => x.status === "OPEN");
   if (myWrap) {
     myWrap.innerHTML = openMine.length
       ? openMine.map((x) => listingHTML(x, true)).join("")
-      : `<div class="muted tiny">No listings yet.</div>`;
+      : `<div class="muted tiny">No active listings.</div>`;
   }
 
   document.querySelectorAll("[data-buy]").forEach((btn) => {
@@ -629,7 +793,7 @@ function renderListings() {
         await loadInventory();
         await loadMarket();
         await loadDaily();
-        if (status) status.textContent = `Bought. Paid ${res.paid} coins. Fee ${res.fee}.`;
+        if (status) status.textContent = `Purchase complete. Paid ${res.paid} coins.`;
       } catch (e) {
         if (status) status.textContent = e.message;
       } finally {
@@ -659,45 +823,49 @@ function renderListings() {
 async function listSelected() {
   const status = el("mk-status");
   const price = Number(el("mk-price")?.value || 0);
-  if (!state.selectedCardId) return (status.textContent = "Select a card first.");
+
+  if (!state.selectedCardId) {
+    if (status) status.textContent = "Select a card first.";
+    return;
+  }
 
   const c = getCardById(state.selectedCardId);
   const minP = minPriceFor(c?.rarity);
 
   if (!Number.isFinite(price) || price < minP) {
-    return (status.textContent = `Min price for ${c?.rarity} is ${minP}.`);
+    if (status) status.textContent = `Min price for ${c?.rarity} is ${minP}.`;
+    return;
   }
 
   const btn = el("btn-list");
-  btn.disabled = true;
+  if (btn) btn.disabled = true;
+
   try {
     await api("/v1/market/list", { method: "POST", body: JSON.stringify({ cardId: state.selectedCardId, price }) });
-    status.textContent = "Listed successfully.";
+    if (status) status.textContent = "Listed successfully.";
     if (el("mk-price")) el("mk-price").value = "";
     await loadMarket();
     await loadDaily();
   } catch (e) {
-    status.textContent = e.message;
+    if (status) status.textContent = e.message;
   } finally {
-    btn.disabled = false;
+    if (btn) btn.disabled = false;
   }
 }
 
 function renderPulse() {
-  const last = state.market.pulse.last;
-  const chg = state.market.pulse.chg24h;
+  safeText(el("m-last"), state.market.pulse.last == null ? "—" : String(state.market.pulse.last));
+  safeText(el("m-chg"), state.market.pulse.chg24h == null ? "—" : (state.market.pulse.chg24h > 0 ? `+${state.market.pulse.chg24h}` : `${state.market.pulse.chg24h}`));
+
   const pts = state.market.pulse.points || [];
-
-  if (el("m-last")) el("m-last").textContent = last == null ? "—" : String(last);
-  if (el("m-chg")) el("m-chg").textContent = chg == null ? "—" : (chg > 0 ? `+${chg}` : `${chg}`);
-
   const svg = el("sparkSvg");
   if (!svg) return;
 
-  const w = 300, h = 64;
+  const w = 300;
+  const h = 64;
 
   if (!pts.length) {
-    svg.innerHTML = `<path d="M0 ${h-8} L${w} ${h-8}" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="2"/>`;
+    svg.innerHTML = `<path d="M0 ${h - 8} L${w} ${h - 8}" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="2"/>`;
     return;
   }
 
@@ -710,9 +878,9 @@ function renderPulse() {
   if (pts.length === 1) {
     const y = yOf(pts[0].price);
     svg.innerHTML = `
-      <path d="M0 ${y.toFixed(2)} L${w} ${y.toFixed(2)}" fill="none" stroke="rgba(46,245,255,.65)" stroke-width="2.2" />
-      <path d="M0 ${y.toFixed(2)} L${w} ${y.toFixed(2)} L${w} ${h} L0 ${h} Z" fill="rgba(46,245,255,.10)" />
-      <circle cx="${w-8}" cy="${y.toFixed(2)}" r="3.4" fill="rgba(168,255,46,.85)" />
+      <path d="M0 ${y.toFixed(2)} L${w} ${y.toFixed(2)}" fill="none" stroke="rgba(232,184,75,.85)" stroke-width="2.2" />
+      <path d="M0 ${y.toFixed(2)} L${w} ${y.toFixed(2)} L${w} ${h} L0 ${h} Z" fill="rgba(232,184,75,.10)" />
+      <circle cx="${w - 8}" cy="${y.toFixed(2)}" r="3.4" fill="rgba(0,230,118,.90)" />
     `;
     return;
   }
@@ -725,189 +893,11 @@ function renderPulse() {
   }).join(" ");
 
   svg.innerHTML = `
-    <path d="${d}" fill="none" stroke="rgba(46,245,255,.65)" stroke-width="2.2" />
-    <path d="${d} L${w} ${h} L0 ${h} Z" fill="rgba(46,245,255,.10)" />
+    <path d="${d}" fill="none" stroke="rgba(232,184,75,.90)" stroke-width="2.2" />
+    <path d="${d} L${w} ${h} L0 ${h} Z" fill="rgba(232,184,75,.10)" />
   `;
 }
 
-/* =========================
-   PACK REVEAL
-   ========================= */
-function renderPackResults(cards) {
-  const wrap = el("cards");
-  if (!wrap) return;
-  wrap.innerHTML = "";
-  cards.forEach((c) => {
-    const row = document.createElement("div");
-    row.className = "cardRow";
-    row.innerHTML = `
-      <div>
-        <div style="font-weight:900">${c.displayName}</div>
-        <div class="muted tiny">${c.position} • ${c.role}</div>
-      </div>
-      <div class="rarity ${rarityClass(c.rarity)}">${c.rarity}</div>
-    `;
-    wrap.appendChild(row);
-  });
-}
-
-function showOverlay() {
-  const o = el("revealOverlay");
-  if (o) {
-    o.classList.remove("hidden");
-    o.setAttribute("aria-hidden", "false");
-  }
-}
-function hideOverlay() {
-  const o = el("revealOverlay");
-  if (o) {
-    o.classList.add("hidden");
-    o.setAttribute("aria-hidden", "true");
-  }
-}
-function setOverlaySub(t) {
-  const n = el("overlaySub");
-  if (n) n.textContent = t;
-}
-
-function resetRevealUI() {
-  state.revealIndex = 0;
-  state.revealCards = [];
-  state.revealing = false;
-
-  const inner = el("overlayInner");
-  if (inner) inner.classList.remove("legendaryBurst");
-
-  const claim = el("btn-claim");
-  if (claim) {
-    claim.disabled = true;
-    claim.textContent = "Claim";
-  }
-
-  const hint = el("revealHint");
-  if (hint) hint.textContent = "Tap to reveal";
-
-  const pack = el("revealPack");
-  if (pack) pack.classList.add("shake");
-
-  const list = el("revealCards");
-  if (!list) return;
-  list.innerHTML = "";
-
-  for (let i = 0; i < 3; i++) {
-    const card = document.createElement("div");
-    card.className = "flipCard";
-    card.dataset.i = String(i);
-    card.innerHTML = `
-      <div class="flipInner">
-        <div class="flipFace flipBack"><div class="q">?</div><div class="t">Reveal</div></div>
-        <div class="flipFace flipFront">
-          <div class="cardTop">
-            <div><div class="cardName">Unknown</div><div class="cardMeta">— • —</div></div>
-            <div class="badge">—</div>
-          </div>
-          <div class="cardFooter"><span class="muted">CLASH XI</span><span class="muted">v1</span></div>
-        </div>
-      </div>
-    `;
-    list.appendChild(card);
-  }
-}
-
-function injectRevealData(cards) {
-  const list = el("revealCards");
-  if (!list) return;
-  const nodes = [...list.querySelectorAll(".flipCard")];
-
-  nodes.forEach((node, i) => {
-    const c = cards[i];
-    node.classList.remove("rCommon", "rRare", "rEpic", "rLegend");
-    node.classList.add(rarityClass(c.rarity));
-    const badge = node.querySelector(".badge");
-    const name = node.querySelector(".cardName");
-    const meta = node.querySelector(".cardMeta");
-    if (badge) badge.textContent = c.rarity;
-    if (name) name.textContent = c.displayName;
-    if (meta) meta.textContent = `${c.position} • ${c.role}`;
-  });
-}
-
-function legendaryBurst() {
-  const inner = el("overlayInner");
-  if (!inner) return;
-  inner.classList.remove("legendaryBurst");
-  void inner.offsetWidth;
-  inner.classList.add("legendaryBurst");
-}
-
-async function flipNext() {
-  if (state.revealing) return;
-  if (state.revealIndex >= state.revealCards.length) return;
-  state.revealing = true;
-
-  const i = state.revealIndex;
-  const card = state.revealCards[i];
-  const node = el("revealCards")?.querySelector(`.flipCard[data-i="${i}"]`);
-  if (node) node.classList.add("flipped");
-
-  if (card?.rarity === "LEGENDARY") {
-    legendaryBurst();
-    setOverlaySub("SIGNATURE LEGENDARY!");
-  } else if (card?.rarity === "EPIC") {
-    setOverlaySub("Epic pull.");
-  } else if (card?.rarity === "RARE") {
-    setOverlaySub("Rare pull.");
-  } else {
-    setOverlaySub("Common.");
-  }
-
-  await sleep(550);
-  state.revealIndex += 1;
-  state.revealing = false;
-
-  if (state.revealIndex >= state.revealCards.length) {
-    const pack = el("revealPack");
-    if (pack) pack.classList.remove("shake");
-    setOverlaySub("Pack complete.");
-    const claim = el("btn-claim");
-    if (claim) claim.disabled = false;
-    const hint = el("revealHint");
-    if (hint) hint.textContent = "Done";
-  }
-}
-
-async function openPack() {
-  const btn = el("btn-pack");
-  if (btn) {
-    btn.disabled = true;
-    btn.textContent = "Opening…";
-  }
-
-  showOverlay();
-  resetRevealUI();
-  setOverlaySub("Generating cards…");
-
-  try {
-    await ensureSession();
-    const data = await api("/v1/packs/open", { method: "POST", body: JSON.stringify({ kind: "DAILY" }) });
-    state.revealCards = data.cards || [];
-    injectRevealData(state.revealCards);
-    renderPackResults(state.revealCards);
-    await loadDaily();
-  } catch (e) {
-    hideOverlay();
-    alert(e.message);
-  } finally {
-    if (btn) {
-      btn.disabled = false;
-      btn.textContent = "Open Pack";
-    }
-  }
-}
-
-/* =========================
-   LOAD BASE DATA
-   ========================= */
 async function loadInventory() {
   const data = await api("/v1/inventory", { method: "GET" });
   state.inventory = data.cards || [];
@@ -923,9 +913,6 @@ async function loadSquad() {
   renderSquad();
 }
 
-/* =========================
-   UI INIT
-   ========================= */
 function initChips() {
   document.querySelectorAll("[data-filter]").forEach((b) => {
     b.addEventListener("click", () => {
@@ -938,6 +925,7 @@ function initChips() {
 
   document.querySelectorAll("[data-style]").forEach((b) => {
     if (b.dataset.style === state.style) b.classList.add("active");
+
     b.addEventListener("click", () => {
       state.style = b.dataset.style;
       localStorage.setItem("cx_style", state.style);
@@ -949,65 +937,83 @@ function initChips() {
 
   document.querySelectorAll("[data-arena]").forEach((b) => {
     if (b.dataset.arena === state.arenaMode) b.classList.add("active");
+
     b.addEventListener("click", () => {
       state.arenaMode = b.dataset.arena;
       document.querySelectorAll("[data-arena]").forEach((x) => x.classList.remove("active"));
       b.classList.add("active");
-      const t = el("arena-mode");
-      if (t) t.textContent = state.arenaMode;
+      safeText(el("arena-mode"), state.arenaMode);
     });
   });
 }
 
-/* =========================
-   BOOT
-   ========================= */
-(async function boot() {
+async function enterKickForge() {
+  const ok = await healthCheck();
+  if (!ok) {
+    alert("API offline. Check your Worker.");
+    return;
+  }
+
+  await ensureSession();
+  const packBtn = el("btn-pack");
+  if (packBtn) packBtn.disabled = false;
+
+  try {
+    await Promise.all([
+      loadInventory(),
+      loadSquad(),
+      loadMe(),
+      loadPro(),
+      loadMarket(),
+      loadDaily(),
+      loadCosmetics()
+    ]);
+    updateSynergy();
+  } catch (e) {
+    alert(e.message);
+  }
+}
+
+(function boot() {
   seedXI();
   setUserLabel();
   initChips();
+  safeText(el("arena-mode"), state.arenaMode);
+  renderMarketSelected();
 
-  const ok = await healthCheck();
-  setConn(ok);
+  healthCheck();
 
-  el("btn-play")?.addEventListener("click", async () => {
-    const ok2 = await healthCheck();
-    if (!ok2) return alert("API offline. Check Worker.");
-
-    await ensureSession();
-    if (el("btn-pack")) el("btn-pack").disabled = false;
-
-    await loadInventory();
-    await loadSquad();
-    await loadMe();
-    await loadPro();
-    await loadMarket();
-    await loadDaily();
-    await loadCosmetics();
-    updateSynergy();
-  });
-
+  el("btn-play")?.addEventListener("click", enterKickForge);
   el("btn-pack")?.addEventListener("click", openPack);
   el("btn-arena")?.addEventListener("click", playArena);
+  el("btn-list")?.addEventListener("click", listSelected);
 
   el("btn-refresh-market")?.addEventListener("click", async () => {
     const status = el("mk-status");
-    if (status) status.textContent = "Refreshing…";
-    await loadMarket();
-    if (status) status.textContent = "Refreshed.";
+    if (status) status.textContent = "Refreshing market…";
+    try {
+      await loadMarket();
+      if (status) status.textContent = "Market refreshed.";
+    } catch (e) {
+      if (status) status.textContent = e.message;
+    }
   });
-
-  el("btn-list")?.addEventListener("click", listSelected);
 
   el("btn-close")?.addEventListener("click", () => hideOverlay());
   el("btn-claim")?.addEventListener("click", async () => {
     hideOverlay();
-    await loadInventory();
-    await loadSquad();
-    await loadMe();
-    await loadMarket();
-    await loadDaily();
-    await loadCosmetics();
+    try {
+      await Promise.all([
+        loadInventory(),
+        loadSquad(),
+        loadMe(),
+        loadMarket(),
+        loadDaily(),
+        loadCosmetics()
+      ]);
+    } catch (e) {
+      alert(e.message);
+    }
   });
 
   const revealAction = async () => {
@@ -1017,8 +1023,4 @@ function initChips() {
 
   el("revealPack")?.addEventListener("click", revealAction);
   el("revealCards")?.addEventListener("click", revealAction);
-
-  const t = el("arena-mode");
-  if (t) t.textContent = state.arenaMode;
-  renderMarketSelected();
 })();
