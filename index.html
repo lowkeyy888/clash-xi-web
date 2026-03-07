@@ -3,26 +3,35 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <meta name="theme-color" content="#0B0F14"/>
-  <title>CLASH XI</title>
-  <meta name="description" content="Build your XI. Open packs. Climb Arena. Trade the market."/>
+  <meta name="theme-color" content="#060E09"/>
+  <title>KickForge</title>
+  <meta name="description" content="KickForge — Build Your Squad. Own the League. Rule the World."/>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;500;600;700;800&family=Barlow+Condensed:wght@400;600;700;800&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="./styles.css"/>
 </head>
-<body>
+<body class="theme-obsidian">
   <div id="app">
-    <header class="topbar">
-      <div class="brand">
-        <div class="logo">XI</div>
+    <header class="topbar kfTopbar">
+      <div class="brand kfBrand">
+        <div class="logo kfLogo">KF</div>
         <div>
-          <div class="brandName">CLASH XI</div>
-          <div class="brandTag">Arena • Packs • Market</div>
+          <div class="brandName">KICKFORGE</div>
+          <div class="brandTag">Build Your Squad. Own the League. Rule the World.</div>
         </div>
       </div>
+
+      <nav class="kfNav">
+        <a href="#overview">Overview</a>
+        <a href="#collection">Collection</a>
+        <a href="#squad">Squad</a>
+        <a href="#league">League</a>
+        <a href="#market">Market</a>
+        <a href="#progress">Progress</a>
+      </nav>
 
       <div class="pillRow">
         <div class="pill" id="pill-conn">API: …</div>
@@ -32,47 +41,55 @@
     </header>
 
     <main class="shell">
-      <section class="hero card">
+      <!-- HERO -->
+      <section class="hero card kfHero" id="overview">
         <div class="heroLeft">
-          <h1>Build a meta XI.<br/>Win the Arena.<br/>Move the market.</h1>
+          <div class="tag">KICKFORGE ALPHA</div>
+          <h1>Build your squad.<br/>Own the league.<br/>Rule the world.</h1>
           <p class="muted">
-            Fictional players with real progression. Ultra-rare Signature Legends.
-            Marketplace prices are driven by actual trades — up or down.
+            KickForge is a football squad-building experience powered by fictional cards, pack openings,
+            tactical squad building, player-driven markets, daily progression, and PRO league competition.
           </p>
 
           <div class="ctaRow">
-            <button class="btn primary" id="btn-play">Play Now</button>
+            <button class="btn primary" id="btn-play">Enter KickForge</button>
             <button class="btn ghost" id="btn-pack" disabled>Open Pack</button>
           </div>
 
           <div class="microRow">
             <div class="micro cardMini">
-              <div class="microTitle">Daily loop</div>
-              <div class="microText">Pack → Arena → Upgrades → Market</div>
+              <div class="microTitle">Collection loop</div>
+              <div class="microText">Open packs → collect cards → build better squads</div>
             </div>
             <div class="micro cardMini">
-              <div class="microTitle">Meta chase</div>
-              <div class="microText">Signature Legends are scarce — craftable later</div>
+              <div class="microTitle">Competitive path</div>
+              <div class="microText">Arena, standings, and future PRO league structure</div>
             </div>
             <div class="micro cardMini">
-              <div class="microTitle">Market rules</div>
-              <div class="microText">Min price by rarity • listing limit</div>
+              <div class="microTitle">Player economy</div>
+              <div class="microText">List cards, buy undervalued players, move the market</div>
             </div>
           </div>
         </div>
 
         <div class="heroRight">
-          <div class="pack card packBox">
-            <div class="packTop">Starter Pack</div>
+          <div class="card packBox">
+            <div class="row">
+              <div>
+                <div class="sectionTitle">Starter Pack</div>
+                <div class="muted tiny">3-card reveal • rarity chase • squad upgrades</div>
+              </div>
+              <div class="tag">LIVE</div>
+            </div>
             <div class="packGlow"></div>
-            <div class="packHint">Open to reveal 3 cards</div>
+            <div class="packHint">KickForge pack opening is connected to the live foundation.</div>
           </div>
 
-          <div class="market card">
+          <div class="card">
             <div class="row">
               <div>
                 <div class="sectionTitle">Market Pulse</div>
-                <div class="muted tiny">Driven by real trades</div>
+                <div class="muted tiny">Trade-driven movement</div>
               </div>
               <div class="tag">v1</div>
             </div>
@@ -87,95 +104,191 @@
               </div>
             </div>
 
-            <div class="muted tiny">Step 6.6 adds daily challenges, daily chest, cosmetics, and PRO scaffold.</div>
+            <div class="muted tiny">Foundation preserved while the full KickForge front-end rebuild begins.</div>
           </div>
 
-          <div class="card arenaCard">
-            <div class="row">
-              <div>
-                <div class="sectionTitle">Arena</div>
-                <div class="muted tiny">Simulated match • Win coins • Earn BP XP</div>
-              </div>
-              <div class="tag" id="arena-mode">BRONZE</div>
+          <div class="grid2">
+            <div class="card cardMini">
+              <div class="microTitle">Collection</div>
+              <div class="microText">Rarity ladder, hidden value, future traits</div>
+            </div>
+            <div class="card cardMini">
+              <div class="microTitle">League</div>
+              <div class="microText">1 match/day • lock before kickoff • standings</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- QUICK DASHBOARD -->
+      <section class="grid2" style="margin-top:18px">
+        <div class="card">
+          <div class="sectionTitle">KickForge Overview</div>
+          <div class="muted tiny">This shell replaces the temporary Clash XI structure while keeping the live backend foundation.</div>
+
+          <div class="microRow" style="margin-top:14px">
+            <div class="micro cardMini">
+              <div class="microTitle">Packs</div>
+              <div class="microText">Reveal, claim, and feed your collection</div>
+            </div>
+            <div class="micro cardMini">
+              <div class="microTitle">Squad Builder</div>
+              <div class="microText">Choose cards, align style, improve synergy</div>
+            </div>
+            <div class="micro cardMini">
+              <div class="microTitle">Progression</div>
+              <div class="microText">Daily challenges, pass XP, cosmetics</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="sectionTitle">Road to Full Rebuild</div>
+          <div class="muted tiny">Current focus: rebrand + shell reset + preserved working engine.</div>
+
+          <div class="microRow" style="margin-top:14px">
+            <div class="micro cardMini">
+              <div class="microTitle">Now</div>
+              <div class="microText">KickForge shell, hero, module structure</div>
+            </div>
+            <div class="micro cardMini">
+              <div class="microTitle">Next</div>
+              <div class="microText">Design tokens, angular UI, collection screens</div>
+            </div>
+            <div class="micro cardMini">
+              <div class="microTitle">Later</div>
+              <div class="microText">Full tactics, live match viewer, PRO leagues</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- COLLECTION + SQUAD -->
+      <section class="grid2" style="margin-top:18px">
+        <div class="locker card" id="collection" style="margin-top:0">
+          <div class="lockerHeader">
+            <div>
+              <div class="sectionTitle">Collection</div>
+              <div class="muted tiny">Browse your owned cards. Filter by rarity. Select a card to use in the squad or market.</div>
             </div>
 
+            <div class="filterRow">
+              <button class="chip active" data-filter="ALL">All</button>
+              <button class="chip" data-filter="COMMON">Common</button>
+              <button class="chip" data-filter="RARE">Rare</button>
+              <button class="chip" data-filter="EPIC">Epic</button>
+              <button class="chip" data-filter="LEGENDARY">Legendary</button>
+            </div>
+          </div>
+
+          <div class="lockerBody">
+            <div class="invPanel">
+              <div class="invList" id="invList"></div>
+            </div>
+
+            <div class="detailPanel">
+              <div class="detailCard" id="selectedCard">
+                <div class="muted tiny">Selected</div>
+                <div style="font-weight:900;margin-top:6px">None</div>
+                <div class="muted tiny" style="margin-top:6px">Pick a card from your collection.</div>
+              </div>
+
+              <div class="detailCard">
+                <div class="sectionTitle">Pack Results</div>
+                <div class="muted tiny">New pack reveals appear here after claim.</div>
+                <div class="cards" id="cards" style="margin-top:12px"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" id="squad">
+          <div class="sectionTitle">Squad Builder</div>
+          <div class="muted tiny">Select a card, then click a slot to equip. Squad logic remains connected to the live foundation.</div>
+
+          <div class="row" style="margin-top:14px">
+            <div class="muted tiny">Team style</div>
             <div class="chipRow">
-              <button class="chip active" data-arena="BRONZE">Bronze</button>
-              <button class="chip" data-arena="SILVER">Silver</button>
-              <button class="chip" data-arena="GOLD">Gold</button>
-            </div>
-
-            <button class="btn primary" id="btn-arena" style="width:100%; margin-top:10px">Play Match</button>
-            <div class="arenaLog" id="arenaLog">Equip at least 3 players to enter Arena.</div>
-          </div>
-
-          <div class="card passCard">
-            <div class="row">
-              <div>
-                <div class="sectionTitle">Battle Pass</div>
-                <div class="muted tiny">Auto leveling • Cosmetics later</div>
-              </div>
-              <div class="tag" id="bp-level">Lv 1</div>
-            </div>
-
-            <div class="bar" style="margin-top:12px">
-              <div class="barFill" id="bpFill"></div>
-            </div>
-            <div class="muted tiny" id="bpText">0 / 100 XP</div>
-          </div>
-
-          <!-- STEP 6.6C1: DAILY CHALLENGES -->
-          <div class="card dailyCard">
-            <div class="row">
-              <div>
-                <div class="sectionTitle">Daily Challenges</div>
-                <div class="muted tiny">Auto-generated • Claim rewards</div>
-              </div>
-              <div class="tag" id="daily-date">—</div>
-            </div>
-
-            <div class="dailyList" id="dailyList"></div>
-
-            <div class="dailyBottom">
-              <button class="btn primary" id="btn-chest" disabled>Open Daily Chest</button>
-              <div class="muted tiny" id="chestStatus">Complete + claim all 3 to unlock.</div>
+              <button class="chip active" data-style="PRESS">Press</button>
+              <button class="chip" data-style="POSSESSION">Possession</button>
+              <button class="chip" data-style="COUNTER">Counter</button>
             </div>
           </div>
 
-          <!-- STEP 6.6C1: COSMETICS -->
-          <div class="card cosCard">
-            <div class="row">
-              <div>
-                <div class="sectionTitle">Cosmetics</div>
-                <div class="muted tiny">Themes (free) • PRO later</div>
-              </div>
-              <div class="tag" id="proTag">FREE</div>
-            </div>
+          <div class="xi" id="xi" style="margin-top:14px"></div>
 
-            <div class="cosList" id="cosList"></div>
+          <div class="chemBox" style="margin-top:14px">
+            <div class="chemRow">
+              <div style="font-weight:900">Synergy</div>
+              <div id="chemPct" style="font-weight:900">0%</div>
+            </div>
+            <div class="bar"><div class="barFill" id="chemFill"></div></div>
+            <div class="muted tiny" id="chemNote">Equip players to build synergy.</div>
           </div>
         </div>
       </section>
 
-      <section class="grid2">
-        <div class="card">
-          <div class="sectionTitle">Your XI</div>
-          <div class="muted tiny">Click a card in Locker → click a slot to equip</div>
-          <div class="xi" id="xi"></div>
+      <!-- LEAGUE + ARENA -->
+      <section class="grid2" style="margin-top:18px">
+        <div class="card" id="league">
+          <div class="row">
+            <div>
+              <div class="sectionTitle">League Hub</div>
+              <div class="muted tiny">KickForge league infrastructure starts here.</div>
+            </div>
+            <div class="tag">PRO</div>
+          </div>
+
+          <div class="microRow" style="margin-top:14px">
+            <div class="micro cardMini">
+              <div class="microTitle">1 Match / Day</div>
+              <div class="microText">Scheduled kickoff cadence for premium competition</div>
+            </div>
+            <div class="micro cardMini">
+              <div class="microTitle">Roster Lock</div>
+              <div class="microText">Final squad snapshot before the daily fixture</div>
+            </div>
+            <div class="micro cardMini">
+              <div class="microTitle">Standings</div>
+              <div class="microText">Table ranking, points, GF, GA, GD</div>
+            </div>
+          </div>
+
+          <div class="detailCard" style="margin-top:14px">
+            <div class="muted tiny">Status</div>
+            <div style="font-weight:900;margin-top:6px">PRO League scaffold will be connected next.</div>
+            <div class="muted tiny" style="margin-top:6px">
+              This section will later show next match countdown, lock timer, standings, and division access.
+            </div>
+          </div>
         </div>
 
-        <div class="card">
-          <div class="sectionTitle">Pack Results</div>
-          <div class="muted tiny">Claim → Locker updates instantly.</div>
-          <div class="cards" id="cards"></div>
+        <div class="card arenaCard">
+          <div class="row">
+            <div>
+              <div class="sectionTitle">Arena</div>
+              <div class="muted tiny">Simulated match • Win coins • Earn pass XP</div>
+            </div>
+            <div class="tag" id="arena-mode">BRONZE</div>
+          </div>
+
+          <div class="chipRow">
+            <button class="chip active" data-arena="BRONZE">Bronze</button>
+            <button class="chip" data-arena="SILVER">Silver</button>
+            <button class="chip" data-arena="GOLD">Gold</button>
+          </div>
+
+          <button class="btn primary" id="btn-arena" style="width:100%; margin-top:10px">Play Match</button>
+          <div class="arenaLog" id="arenaLog">Equip at least 3 players to enter Arena.</div>
         </div>
       </section>
 
-      <section class="marketShell card">
+      <!-- MARKET -->
+      <section class="marketShell card" id="market">
         <div class="marketHeader">
           <div>
             <div class="sectionTitle">Market</div>
-            <div class="muted tiny">List a card for coins. Others buy it. Trades move the pulse.</div>
+            <div class="muted tiny">List cards for coins. Buy smart. Use market movement to improve your squad.</div>
           </div>
           <div class="marketActions">
             <button class="btn ghost" id="btn-refresh-market">Refresh</button>
@@ -185,7 +298,7 @@
         <div class="marketBody">
           <div class="marketCol">
             <div class="marketColTitle">List selected card</div>
-            <div class="muted tiny">Select a card in Locker. Set price. List it.</div>
+            <div class="muted tiny">Pick a collection card, set the price, and put it on the market.</div>
 
             <div class="listBox">
               <div class="listRow">
@@ -209,54 +322,70 @@
 
           <div class="marketCol">
             <div class="marketColTitle">Open listings</div>
-            <div class="muted tiny">Buy cards using coins. 5% fee on seller payout.</div>
+            <div class="muted tiny">Other users’ available cards.</div>
             <div class="openListings" id="openListings"></div>
 
             <div class="marketColTitle" style="margin-top:14px">Recent trades</div>
-            <div class="muted tiny">Latest sales (global)</div>
+            <div class="muted tiny">Latest market transactions.</div>
             <div class="trades" id="tradeList"></div>
           </div>
         </div>
       </section>
 
-      <section class="locker card">
-        <div class="lockerHeader">
-          <div>
-            <div class="sectionTitle">Locker</div>
-            <div class="muted tiny">Click a card → then click a slot to equip. Click an equipped slot to unequip.</div>
+      <!-- PROGRESSION -->
+      <section class="grid2" id="progress" style="margin-top:18px">
+        <div>
+          <div class="card passCard">
+            <div class="row">
+              <div>
+                <div class="sectionTitle">Battle Pass</div>
+                <div class="muted tiny">Level up through play and unlock long-term progression.</div>
+              </div>
+              <div class="tag" id="bp-level">Lv 1</div>
+            </div>
+
+            <div class="bar" style="margin-top:12px">
+              <div class="barFill" id="bpFill"></div>
+            </div>
+            <div class="muted tiny" id="bpText">0 / 100 XP</div>
           </div>
 
-          <div class="styleToggle">
-            <div class="muted tiny" style="margin-right:8px">Team style</div>
-            <button class="chip" data-style="PRESS">Press</button>
-            <button class="chip" data-style="POSSESSION">Possession</button>
-            <button class="chip" data-style="COUNTER">Counter</button>
+          <div class="card dailyCard" style="margin-top:18px">
+            <div class="row">
+              <div>
+                <div class="sectionTitle">Daily Challenges</div>
+                <div class="muted tiny">Auto-generated • Claim rewards</div>
+              </div>
+              <div class="tag" id="daily-date">—</div>
+            </div>
+
+            <div class="dailyList" id="dailyList"></div>
+
+            <div class="dailyBottom">
+              <button class="btn primary" id="btn-chest" disabled>Open Daily Chest</button>
+              <div class="muted tiny" id="chestStatus">Complete + claim all 3 to unlock.</div>
+            </div>
           </div>
         </div>
 
-        <div class="lockerBody">
-          <div class="invPanel">
-            <div class="filterRow">
-              <button class="chip active" data-filter="ALL">All</button>
-              <button class="chip" data-filter="COMMON">Common</button>
-              <button class="chip" data-filter="RARE">Rare</button>
-              <button class="chip" data-filter="EPIC">Epic</button>
-              <button class="chip" data-filter="LEGENDARY">Legendary</button>
+        <div>
+          <div class="card cosCard">
+            <div class="row">
+              <div>
+                <div class="sectionTitle">Cosmetics</div>
+                <div class="muted tiny">Themes and future profile cosmetics</div>
+              </div>
+              <div class="tag" id="proTag">FREE</div>
             </div>
 
-            <div class="invList" id="invList"></div>
+            <div class="cosList" id="cosList"></div>
           </div>
 
-          <div class="detailPanel">
-            <div class="detailCard" id="selectedCard"></div>
-
-            <div class="chemBox">
-              <div class="chemRow">
-                <div style="font-weight:900">Synergy</div>
-                <div id="chemPct" style="font-weight:900">0%</div>
-              </div>
-              <div class="bar"><div class="barFill" id="chemFill"></div></div>
-              <div class="muted tiny" id="chemNote">Equip players to build synergy.</div>
+          <div class="card" style="margin-top:18px">
+            <div class="sectionTitle">KickForge Progression Vision</div>
+            <div class="muted tiny" style="margin-top:8px">
+              This rebuild keeps the live progression systems while preparing the future premium dashboard,
+              battle pass page, profile wallet, and PRO league entry flow.
             </div>
           </div>
         </div>
@@ -264,15 +393,16 @@
     </main>
 
     <footer class="footer muted tiny">
-      CLASH XI — Web/PWA on Cloudflare. Fictional players. No licensing risk.
+      KickForge — fictional football card ecosystem built on Cloudflare foundation.
     </footer>
   </div>
 
+  <!-- PACK REVEAL OVERLAY -->
   <div class="overlay hidden" id="revealOverlay" aria-hidden="true">
     <div class="overlayInner card" id="overlayInner">
       <div class="overlayHeader">
         <div>
-          <div class="overlayTitle">Pack Open</div>
+          <div class="overlayTitle">KickForge Pack Open</div>
           <div class="muted tiny" id="overlaySub">Revealing…</div>
         </div>
         <button class="btn ghost" id="btn-close" type="button">Close</button>
@@ -280,7 +410,7 @@
 
       <div class="revealStage">
         <div class="revealPack" id="revealPack" role="button" tabindex="0" aria-label="Reveal next card">
-          <div class="revealPackLabel">DAILY PACK</div>
+          <div class="revealPackLabel">KICKFORGE PACK</div>
           <div class="revealPackHint muted tiny" id="revealHint">Tap to reveal</div>
           <div class="revealPackGlow"></div>
         </div>
