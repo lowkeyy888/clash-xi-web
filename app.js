@@ -1,12 +1,9 @@
-// CLASH XI — Step 6.6 Daily Challenges + Daily Chest + Cosmetics + PRO scaffold
 const API_BASE = "https://clash-xi-api.lowkeyy9191.workers.dev";
 
 const el = (id) => document.getElementById(id);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-const SLOT_KEYS = ["GK","LB","CB1","CB2","RB","CM1","CM2","CAM","LW","ST","RW"];
-const slotLabel = (k) => k.replace("1","").replace("2","");
-
+const SLOT_KEYS = ["GK", "LB", "CB1", "CB2", "RB", "CM1", "CM2", "CAM", "LW", "ST", "RW"];
 const DEFAULT_RULES = {
   maxOpenListings: 5,
   feeBps: 500,
@@ -43,21 +40,35 @@ const state = {
   isPro: false
 };
 
-function setConn(ok) {
-  const n = el("pill-conn");
-  if (n) n.textContent = ok ? "API: Connected" : "API: Offline";
+function slotLabel(k) {
+  return String(k).replace("1", "").replace("2", "");
 }
-function setUserLabel() {
-  const n = el("pill-user");
-  if (n) n.textContent = state.userId ? `User: ${state.userId.slice(0, 8)}` : "Guest";
-}
-function setCoins(coins) {
-  const n = el("pill-coins");
-  if (n) n.textContent = `Coins: ${coins ?? "—"}`;
+
+function shortName(name) {
+  if (!name) return "Unknown";
+  const parts = String(name).trim().split(/\s+/);
+  if (parts.length === 1) return parts[0];
+  const first = parts[0];
+  const last = parts[parts.length - 1];
+  return `${first} ${last}`;
 }
 
 function rarityClass(r) {
   return r === "LEGENDARY" ? "rLegend" : r === "EPIC" ? "rEpic" : r === "RARE" ? "rRare" : "rCommon";
+}
+
+function rarityFrame(r) {
+  if (r === "LEGENDARY") return "kfCard--legendary";
+  if (r === "EPIC") return "kfCard--epic";
+  if (r === "RARE") return "kfCard--rare";
+  return "kfCard--common";
+}
+
+function rarityShort(r) {
+  if (r === "LEGENDARY") return "LEG";
+  if (r === "EPIC") return "EPIC";
+  if (r === "RARE") return "RARE";
+  return "COM";
 }
 
 function minPriceFor(r) {
@@ -65,15 +76,46 @@ function minPriceFor(r) {
   return rules.minPrice?.[String(r || "COMMON").toUpperCase()] ?? 10;
 }
 
+function safeText(node, value) {
+  if (node) node.textContent = value;
+}
+
+function setConn(ok) {
+  safeText(el("pill-conn"), ok ? "API: Connected" : "API: Offline");
+}
+
+function setUserLabel() {
+  safeText(el("pill-user"), state.userId ? `User: ${state.userId.slice(0, 8)}` : "Guest");
+}
+
+function setCoins(coins) {
+  safeText(el("pill-coins"), `Coins: ${coins ?? "—"}`);
+}
+
+function pulseSelectedPanel() {
+  const panel = el("selectedCard");
+  if (!panel) return;
+  panel.classList.remove("pulseKick");
+  void panel.offsetWidth;
+  panel.classList.add("pulseKick");
+}
+
+function scrollToSquad() {
+  const squad = el("squad");
+  if (!squad) return;
+  squad.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
 async function api(path, opts = {}) {
-  const headers = opts.headers || {};
+  const headers = { ...(opts.headers || {}) };
   if (state.token) headers["Authorization"] = `Bearer ${state.token}`;
-  headers["Content-Type"] = "application/json";
+  if (!headers["Content-Type"] && opts.method !== "GET") headers["Content-Type"] = "application/json";
 
   const res = await fetch(`${API_BASE}${path}`, { ...opts, headers });
   const txt = await res.text();
   let json = null;
   try { json = JSON.parse(txt); } catch {}
+
   if (!res.ok) throw new Error(json?.error || txt || "API error");
   return json;
 }
@@ -99,14 +141,125 @@ async function ensureSession() {
   setUserLabel();
 }
 
-function canEquipSelected() {
-  if (!state.selectedCardId) return false;
-  return !state.market.listedSet.has(state.selectedCardId);
+function getCardById(id) {
+  return state.inventory.find((c) => c.id === id) || null;
 }
 
-/* =========================
-   XI / SQUAD
-   ========================= */
+function canEquipSelected() {
+  return !!state.selectedCardId && !state.market.listedSet.has(state.selectedCardId);
+}
+
+function hashString(str) {
+  let h = 2166136261;
+  for (let i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
+function mulberry32(a) {
+  return function () {
+    let t = a += 0x6D2B79F5;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function randIntSeed(rnd, min, max) {
+  return Math.floor(rnd() * (max - min + 1)) + min;
+}
+
+function clampStat(n) {
+  return Math.max(35, Math.min(99, n));
+}
+
+function roleStyle(role) {
+  const r = (role || "").toLowerCase();
+  if (r.includes("press") || r.includes("ball winner") || r.includes("aggressive") || r.includes("overlap")) return "PRESS";
+  if (r.includes("playmaking") || r.includes("tempo") || r.includes("ball-playing")) return "POSSESSION";
+  if (r.includes("poacher") || r.includes("direct") || r.includes("ghost")) return "COUNTER";
+  return "PRESS";
+}
+
+function cardVisualModel(card) {
+  const seed = hashString(`${card.id}|${card.display_name}|${card.position}|${card.role}|${card.rarity}`);
+  const rnd = mulberry32(seed);
+
+  const rarityBase = {
+    COMMON: 62,
+    RARE: 72,
+    EPIC: 82,
+    LEGENDARY: 91
+  }[card.rarity] ?? 62;
+
+  const posBoost = {
+    GK: { pace: -10, pass: 0, attack: -18, defense: 18 },
+    CB: { pace: -4, pass: 1, attack: -10, defense: 15 },
+    LB: { pace: 6, pass: 4, attack: -2, defense: 8 },
+    RB: { pace: 6, pass: 4, attack: -2, defense: 8 },
+    CDM: { pace: 0, pass: 8, attack: -5, defense: 12 },
+    CM: { pace: 1, pass: 10, attack: 3, defense: 5 },
+    CAM: { pace: 3, pass: 12, attack: 10, defense: -6 },
+    LW: { pace: 12, pass: 4, attack: 12, defense: -10 },
+    RW: { pace: 12, pass: 4, attack: 12, defense: -10 },
+    ST: { pace: 10, pass: 0, attack: 16, defense: -14 }
+  }[card.position] || { pace: 0, pass: 0, attack: 0, defense: 0 };
+
+  const boost = roleStyle(card.role);
+  const mods = { pace: 0, pass: 0, attack: 0, defense: 0 };
+  if (boost === "PRESS") { mods.pace += 3; mods.defense += 4; }
+  if (boost === "POSSESSION") { mods.pass += 5; mods.attack += 2; }
+  if (boost === "COUNTER") { mods.pace += 5; mods.attack += 5; }
+
+  const pace = clampStat(rarityBase + posBoost.pace + mods.pace + randIntSeed(rnd, -4, 6));
+  const pass = clampStat(rarityBase + posBoost.pass + mods.pass + randIntSeed(rnd, -4, 6));
+  const attack = clampStat(rarityBase + posBoost.attack + mods.attack + randIntSeed(rnd, -4, 6));
+  const defense = clampStat(rarityBase + posBoost.defense + mods.defense + randIntSeed(rnd, -4, 6));
+
+  const ovr = clampStat(Math.round((pace + pass + attack + defense) / 4));
+  return { ovr, pace, pass, attack, defense };
+}
+
+function cardHTML(card, opts = {}) {
+  const vm = cardVisualModel(card);
+  const selected = !!opts.selected;
+  const listed = !!opts.listed;
+  const compact = !!opts.compact;
+  const selectable = opts.selectable !== false;
+
+  return `
+    <div class="kfCard ${rarityFrame(card.rarity)} ${selected ? "is-selected" : ""} ${listed ? "is-listed" : ""} ${compact ? "is-compact" : ""}" ${selectable ? `data-card-id="${card.id}"` : ""}>
+      <div class="kfCard__shine"></div>
+      <div class="kfCard__top">
+        <div class="kfCard__ovr">${vm.ovr}</div>
+        <div class="kfCard__metaRight">
+          <div class="kfCard__pos">${card.position}</div>
+          <div class="kfCard__rarity">${rarityShort(card.rarity)}</div>
+        </div>
+      </div>
+
+      <div class="kfCard__body">
+        <div class="kfCard__name">${card.display_name}</div>
+        <div class="kfCard__role">${card.role}</div>
+      </div>
+
+      <div class="kfCard__stats">
+        <div class="kfStat"><span>PAC</span><strong>${vm.pace}</strong></div>
+        <div class="kfStat"><span>PAS</span><strong>${vm.pass}</strong></div>
+        <div class="kfStat"><span>ATT</span><strong>${vm.attack}</strong></div>
+        <div class="kfStat"><span>DEF</span><strong>${vm.defense}</strong></div>
+      </div>
+
+      <div class="kfCard__footer">
+        <div class="kfCard__badge ${rarityFrame(card.rarity)}">${card.rarity}</div>
+        ${listed ? `<div class="kfCard__listed">LISTED</div>` : ``}
+      </div>
+    </div>
+  `;
+}
+
 function seedXI() {
   const grid = el("xi");
   if (!grid) return;
@@ -136,10 +289,6 @@ function refreshSlotStates() {
   });
 }
 
-function getCardById(id) {
-  return state.inventory.find((c) => c.id === id) || null;
-}
-
 function renderSquad() {
   const grid = el("xi");
   if (!grid) return;
@@ -159,10 +308,12 @@ function renderSquad() {
       return;
     }
 
+    const vm = cardVisualModel(c);
     node.innerHTML = `
       <div class="p">${slotLabel(k)}</div>
-      <div class="n">${c.display_name}</div>
-      <div class="muted tiny">${c.position} • ${c.role} • ${c.rarity}</div>
+      <div class="n">${shortName(c.display_name)}</div>
+      <div class="muted tiny">${c.position} • ${c.rarity}</div>
+      <div class="muted tiny">OVR ${vm.ovr}</div>
     `;
   });
 
@@ -175,144 +326,345 @@ async function onSlotClick(slotKey) {
 
   if (!state.selectedCardId) {
     if (!state.squad[slotKey]) return;
-    await api("/v1/squad/unequip", { method: "POST", body: JSON.stringify({ slot: slotKey }) });
-    delete state.squad[slotKey];
-    renderSquad();
+    try {
+      await api("/v1/squad/unequip", { method: "POST", body: JSON.stringify({ slot: slotKey }) });
+      delete state.squad[slotKey];
+      renderSquad();
+      renderSelectedCard();
+    } catch (e) {
+      if (status) status.textContent = e.message;
+    }
     return;
   }
 
   if (state.market.listedSet.has(state.selectedCardId)) {
-    if (status) status.textContent = "This card is LISTED. Cancel listing before equipping.";
+    if (status) status.textContent = "This card is listed on the market. Cancel listing first.";
     return;
   }
 
   const cardId = state.selectedCardId;
-  await api("/v1/squad/equip", { method: "POST", body: JSON.stringify({ slot: slotKey, cardId }) });
 
-  for (const k of Object.keys(state.squad)) {
-    if (state.squad[k] === cardId) delete state.squad[k];
+  try {
+    await api("/v1/squad/equip", { method: "POST", body: JSON.stringify({ slot: slotKey, cardId }) });
+
+    for (const k of Object.keys(state.squad)) {
+      if (state.squad[k] === cardId) delete state.squad[k];
+    }
+    state.squad[slotKey] = cardId;
+
+    state.selectedCardId = null;
+    renderSelectedCard();
+    renderInventory();
+    renderSquad();
+    renderMarketSelected();
+  } catch (e) {
+    if (status) status.textContent = e.message;
   }
-  state.squad[slotKey] = cardId;
-
-  state.selectedCardId = null;
-  renderSelectedCard();
-  renderInventory();
-  renderSquad();
-  renderMarketSelected();
 }
 
-/* =========================
-   LOCKER
-   ========================= */
 function renderInventory() {
   const list = el("invList");
   if (!list) return;
 
   const items = state.inventory.filter((c) => (state.filter === "ALL" ? true : c.rarity === state.filter));
-  list.innerHTML = "";
 
   if (!items.length) {
-    list.innerHTML = `<div class="muted tiny">No cards yet. Open a pack.</div>`;
+    list.innerHTML = `<div class="muted tiny">No cards yet. Open your first KickForge pack.</div>`;
     return;
   }
 
-  items.forEach((c) => {
-    const isListed = state.market.listedSet.has(c.id);
+  list.innerHTML = `
+    <div class="kfCollectionGrid">
+      ${items.map((c) => cardHTML(c, {
+        selected: state.selectedCardId === c.id,
+        listed: state.market.listedSet.has(c.id),
+        compact: false,
+        selectable: true
+      })).join("")}
+    </div>
+  `;
 
-    const row = document.createElement("div");
-    row.className = "invItem";
-    if (state.selectedCardId === c.id) row.classList.add("selected");
-
-    row.addEventListener("click", () => {
-      state.selectedCardId = state.selectedCardId === c.id ? null : c.id;
+  list.querySelectorAll("[data-card-id]").forEach((node) => {
+    node.addEventListener("click", () => {
+      const id = node.getAttribute("data-card-id");
+      state.selectedCardId = state.selectedCardId === id ? null : id;
       renderSelectedCard();
       renderInventory();
       refreshSlotStates();
       renderMarketSelected();
+      if (state.selectedCardId) {
+        pulseSelectedPanel();
+        scrollToSquad();
+      }
     });
-
-    row.innerHTML = `
-      <div>
-        <div class="invName">${c.display_name}</div>
-        <div class="invMeta">${c.position} • ${c.role}</div>
-      </div>
-      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
-        <div class="rarity ${rarityClass(c.rarity)}">${c.rarity}</div>
-        ${isListed ? `<div class="badgeSm">LISTED</div>` : ``}
-      </div>
-    `;
-    list.appendChild(row);
   });
 }
 
 function renderSelectedCard() {
   const box = el("selectedCard");
   if (!box) return;
+
   const c = state.selectedCardId ? getCardById(state.selectedCardId) : null;
 
   if (!c) {
     box.innerHTML = `
-      <div class="muted tiny">Selected</div>
+      <div class="muted tiny">Selected Player</div>
       <div style="font-weight:900;margin-top:6px">None</div>
-      <div class="muted tiny" style="margin-top:6px">Pick a card to arm slots.</div>
+      <div class="muted tiny" style="margin-top:6px">Choose a card in Collection. Then click a pitch slot to place that player.</div>
     `;
     return;
   }
 
+  const vm = cardVisualModel(c);
   const isListed = state.market.listedSet.has(c.id);
+  const inSquad = Object.values(state.squad).includes(c.id);
 
   box.innerHTML = `
-    <div class="muted tiny">Selected</div>
-    <div style="font-weight:900;margin-top:6px">${c.display_name}</div>
-    <div class="muted tiny" style="margin-top:6px">${c.position} • ${c.role}</div>
-    <div class="muted tiny" style="margin-top:6px">${isListed ? "LISTED — cancel before equipping." : "Tap a slot to equip."}</div>
-    <div style="margin-top:10px" class="rarity ${rarityClass(c.rarity)}">${c.rarity}</div>
-  `;
-}
+    <div class="kfSelected">
+      <div class="kfSelected__cardWrap">
+        ${cardHTML(c, { selected: true, listed: isListed, compact: true, selectable: false })}
+      </div>
 
-/* =========================
-   SYNERGY
-   ========================= */
-function roleStyle(role) {
-  const r = (role || "").toLowerCase();
-  if (r.includes("press") || r.includes("ball winner") || r.includes("aggressive") || r.includes("overlap")) return "PRESS";
-  if (r.includes("playmaking") || r.includes("tempo") || r.includes("ball-playing")) return "POSSESSION";
-  if (r.includes("poacher") || r.includes("direct") || r.includes("ghost")) return "COUNTER";
-  return "PRESS";
+      <div class="kfSelected__panel">
+        <div class="muted tiny">Selected Player</div>
+        <div class="kfSelected__name">${c.display_name}</div>
+        <div class="kfSelected__meta">${c.position} • ${c.role} • ${c.rarity}</div>
+
+        <div class="kfSelected__ovr">OVR ${vm.ovr}</div>
+
+        <div class="kfSelected__stats">
+          <div><span>Pace</span><strong>${vm.pace}</strong></div>
+          <div><span>Pass</span><strong>${vm.pass}</strong></div>
+          <div><span>Attack</span><strong>${vm.attack}</strong></div>
+          <div><span>Defense</span><strong>${vm.defense}</strong></div>
+        </div>
+
+        <div class="muted tiny" style="margin-top:10px">
+          ${isListed
+            ? "LISTED — cancel the market listing before using this card in your squad."
+            : inSquad
+              ? "Already equipped in your XI. Click another slot to move this player."
+              : "Ready to equip — click any armed pitch slot now."}
+        </div>
+      </div>
+    </div>
+  `;
 }
 
 function updateSynergy() {
   const pct = el("chemPct");
   const fill = el("chemFill");
   const note = el("chemNote");
+
   const equippedIds = Object.values(state.squad).filter(Boolean);
   const equipped = equippedIds.map(getCardById).filter(Boolean);
 
   if (!equipped.length) {
-    if (pct) pct.textContent = "0%";
+    safeText(pct, "0%");
     if (fill) fill.style.width = "0%";
-    if (note) note.textContent = "Equip players to build synergy.";
+    safeText(note, "Equip players to build synergy.");
     return;
   }
 
   const matches = equipped.filter((c) => roleStyle(c.role) === state.style).length;
   const p = Math.round((matches / equipped.length) * 100);
-  if (pct) pct.textContent = `${p}%`;
+  const avgOvr = Math.round(equipped.reduce((a, c) => a + cardVisualModel(c).ovr, 0) / equipped.length);
+
+  safeText(pct, `${p}%`);
   if (fill) fill.style.width = `${p}%`;
-  if (note) note.textContent = `Style: ${state.style} • Matching roles: ${matches}/${equipped.length}`;
+  safeText(note, `Style: ${state.style} • matching roles: ${matches}/${equipped.length} • avg OVR ${avgOvr}`);
 }
 
-/* =========================
-   ME / BP / PRO / ARENA
-   ========================= */
+function renderPackResults(cards) {
+  const wrap = el("cards");
+  if (!wrap) return;
+
+  wrap.innerHTML = cards.length
+    ? `<div class="kfPackGrid">${cards.map((c) => cardHTML(c, { compact: true, selectable: false })).join("")}</div>`
+    : "";
+}
+
+function showOverlay() {
+  const o = el("revealOverlay");
+  if (!o) return;
+  o.classList.remove("hidden");
+  o.setAttribute("aria-hidden", "false");
+}
+
+function hideOverlay() {
+  const o = el("revealOverlay");
+  if (!o) return;
+  o.classList.add("hidden");
+  o.setAttribute("aria-hidden", "true");
+}
+
+function setOverlaySub(t) {
+  safeText(el("overlaySub"), t);
+}
+
+function resetRevealUI() {
+  state.revealIndex = 0;
+  state.revealCards = [];
+  state.revealing = false;
+
+  const inner = el("overlayInner");
+  if (inner) inner.classList.remove("legendaryBurst");
+
+  const claim = el("btn-claim");
+  if (claim) {
+    claim.disabled = true;
+    claim.textContent = "Claim";
+  }
+
+  safeText(el("revealHint"), "Tap to reveal");
+
+  const pack = el("revealPack");
+  if (pack) pack.classList.add("shake");
+
+  const list = el("revealCards");
+  if (!list) return;
+
+  list.innerHTML = "";
+  for (let i = 0; i < 3; i++) {
+    const card = document.createElement("div");
+    card.className = "flipCard";
+    card.dataset.i = String(i);
+    card.innerHTML = `
+      <div class="flipInner">
+        <div class="flipFace flipBack">
+          <div class="q">?</div>
+          <div class="t">Reveal</div>
+        </div>
+        <div class="flipFace flipFront">
+          <div class="cardTop">
+            <div>
+              <div class="cardName">Unknown</div>
+              <div class="cardMeta">— • —</div>
+            </div>
+            <div class="badge">—</div>
+          </div>
+          <div class="kfRevealStats">
+            <div class="kfStat"><span>PAC</span><strong>--</strong></div>
+            <div class="kfStat"><span>PAS</span><strong>--</strong></div>
+            <div class="kfStat"><span>ATT</span><strong>--</strong></div>
+            <div class="kfStat"><span>DEF</span><strong>--</strong></div>
+          </div>
+          <div class="cardFooter"><span class="muted">KICKFORGE</span><span class="muted">v1</span></div>
+        </div>
+      </div>
+    `;
+    list.appendChild(card);
+  }
+}
+
+function injectRevealData(cards) {
+  const list = el("revealCards");
+  if (!list) return;
+
+  [...list.querySelectorAll(".flipCard")].forEach((node, i) => {
+    const c = cards[i];
+    if (!c) return;
+
+    const vm = cardVisualModel(c);
+    const badge = node.querySelector(".badge");
+    const name = node.querySelector(".cardName");
+    const meta = node.querySelector(".cardMeta");
+    const statsWrap = node.querySelector(".kfRevealStats");
+
+    node.classList.remove("rCommon", "rRare", "rEpic", "rLegend");
+    node.classList.add(rarityClass(c.rarity));
+
+    if (badge) badge.textContent = c.rarity;
+    if (name) name.textContent = c.displayName;
+    if (meta) meta.textContent = `${c.position} • ${c.role}`;
+    if (statsWrap) {
+      statsWrap.innerHTML = `
+        <div class="kfStat"><span>PAC</span><strong>${vm.pace}</strong></div>
+        <div class="kfStat"><span>PAS</span><strong>${vm.pass}</strong></div>
+        <div class="kfStat"><span>ATT</span><strong>${vm.attack}</strong></div>
+        <div class="kfStat"><span>DEF</span><strong>${vm.defense}</strong></div>
+      `;
+    }
+  });
+}
+
+function legendaryBurst() {
+  const inner = el("overlayInner");
+  if (!inner) return;
+  inner.classList.remove("legendaryBurst");
+  void inner.offsetWidth;
+  inner.classList.add("legendaryBurst");
+}
+
+async function flipNext() {
+  if (state.revealing) return;
+  if (state.revealIndex >= state.revealCards.length) return;
+  state.revealing = true;
+
+  const i = state.revealIndex;
+  const card = state.revealCards[i];
+  const node = el("revealCards")?.querySelector(`.flipCard[data-i="${i}"]`);
+  if (node) node.classList.add("flipped");
+
+  if (card?.rarity === "LEGENDARY") {
+    legendaryBurst();
+    setOverlaySub("Legendary pull.");
+  } else if (card?.rarity === "EPIC") {
+    setOverlaySub("Epic pull.");
+  } else if (card?.rarity === "RARE") {
+    setOverlaySub("Rare pull.");
+  } else {
+    setOverlaySub("Common pull.");
+  }
+
+  await sleep(550);
+  state.revealIndex += 1;
+  state.revealing = false;
+
+  if (state.revealIndex >= state.revealCards.length) {
+    const pack = el("revealPack");
+    if (pack) pack.classList.remove("shake");
+    setOverlaySub("Pack complete.");
+    const claim = el("btn-claim");
+    if (claim) claim.disabled = false;
+    safeText(el("revealHint"), "Done");
+  }
+}
+
+async function openPack() {
+  const btn = el("btn-pack");
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = "Opening…";
+  }
+
+  showOverlay();
+  resetRevealUI();
+  setOverlaySub("Generating pack…");
+
+  try {
+    await ensureSession();
+    const data = await api("/v1/packs/open", { method: "POST", body: JSON.stringify({ kind: "DAILY" }) });
+    state.revealCards = data.cards || [];
+    injectRevealData(state.revealCards);
+    renderPackResults(state.revealCards);
+    await loadDaily();
+  } catch (e) {
+    hideOverlay();
+    alert(e.message);
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = "Open Pack";
+    }
+  }
+}
+
 function updateBattlePassUI(bp) {
-  const bpLevel = el("bp-level");
-  const bpFill = el("bpFill");
-  const bpText = el("bpText");
   if (!bp) return;
-  if (bpLevel) bpLevel.textContent = `Lv ${bp.level}`;
-  if (bpFill) bpFill.style.width = `${Math.round((bp.xp / bp.need) * 100)}%`;
-  if (bpText) bpText.textContent = `${bp.xp} / ${bp.need} XP`;
+  safeText(el("bp-level"), `Lv ${bp.level}`);
+  if (el("bpFill")) el("bpFill").style.width = `${Math.round((bp.xp / bp.need) * 100)}%`;
+  safeText(el("bpText"), `${bp.xp} / ${bp.need} XP`);
 }
 
 async function loadMe() {
@@ -324,32 +676,35 @@ async function loadMe() {
 async function loadPro() {
   const data = await api("/v1/pro/status", { method: "GET" });
   state.isPro = !!data.isPro;
-  const t = el("proTag");
-  if (t) t.textContent = state.isPro ? "PRO" : "FREE";
+  safeText(el("proTag"), state.isPro ? "PRO" : "FREE");
 }
 
 async function playArena() {
   const log = el("arenaLog");
   const btn = el("btn-arena");
+
   if (btn) {
     btn.disabled = true;
     btn.textContent = "Playing…";
   }
-  if (log) log.textContent = "Match starting…";
+  safeText(log, "Match starting…");
 
   try {
     const res = await api("/v1/arena/play", {
       method: "POST",
       body: JSON.stringify({ mode: state.arenaMode, style: state.style })
     });
-    if (log) {
-      log.textContent = `${res.result} • Team ${res.teamRating} vs Opp ${res.oppRating} • +${res.rewards.coins} coins • +${res.rewards.bpXp} BP XP`;
-    }
+
+    safeText(
+      log,
+      `${res.result} • Team ${res.teamRating} vs Opp ${res.oppRating} • +${res.rewards.coins} coins • +${res.rewards.bpXp} BP XP`
+    );
+
     setCoins(res.coins);
     updateBattlePassUI(res.battlepass);
     await loadDaily();
   } catch (e) {
-    if (log) log.textContent = e.message;
+    safeText(log, e.message);
   } finally {
     if (btn) {
       btn.disabled = false;
@@ -358,9 +713,6 @@ async function playArena() {
   }
 }
 
-/* =========================
-   DAILY CHALLENGES + CHEST
-   ========================= */
 async function loadDaily() {
   const d = await api("/v1/challenges/today", { method: "GET" });
   state.daily = d;
@@ -373,7 +725,7 @@ function renderDaily(d) {
   const chestBtn = el("btn-chest");
   const chestStatus = el("chestStatus");
 
-  if (date) date.textContent = d.date || "—";
+  safeText(date, d.date || "—");
   if (!list) return;
 
   list.innerHTML = (d.tasks || []).map((t) => {
@@ -389,7 +741,7 @@ function renderDaily(d) {
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
           <div class="dailyProg">${t.progress}/${t.target}</div>
-          <button class="smallBtn primary" data-claim="${t.key}" ${canClaim ? "" : "disabled"}>${status}</button>
+          <button class="smallBtn ${canClaim ? "primary" : "ghost"}" data-claim="${t.key}" ${canClaim ? "" : "disabled"}>${status}</button>
         </div>
       </div>
     `;
@@ -406,23 +758,19 @@ function renderDaily(d) {
         await loadDaily();
       } catch (e) {
         alert(e.message);
-      } finally {
-        btn.disabled = false;
       }
     });
   });
 
-  if (chestBtn) {
-    chestBtn.disabled = !(d.chest?.available) || d.chest?.opened;
-  }
+  if (chestBtn) chestBtn.disabled = !(d.chest?.available) || d.chest?.opened;
 
   if (chestStatus) {
     if (d.chest?.opened) {
       chestStatus.textContent = d.chest.duplicate
-        ? "Chest opened (duplicate → +40 coins)."
+        ? "Chest opened — duplicate converted into coins."
         : "Chest opened — new cosmetic unlocked.";
     } else if (d.chest?.available) {
-      chestStatus.textContent = "Chest unlocked. Open it.";
+      chestStatus.textContent = "All challenges complete. Open your daily chest.";
     } else {
       chestStatus.textContent = "Complete + claim all 3 to unlock.";
     }
@@ -443,18 +791,15 @@ function renderDaily(d) {
   }
 }
 
-/* =========================
-   COSMETICS
-   ========================= */
+function applyTheme(themeKey) {
+  document.body.classList.remove("theme-obsidian", "theme-neon", "theme-emerald");
+  document.body.classList.add(`theme-${themeKey || "obsidian"}`);
+}
+
 async function loadCosmetics() {
   const data = await api("/v1/cosmetics", { method: "GET" });
   state.cosmetics = data.items || [];
   renderCosmetics(state.cosmetics);
-}
-
-function applyTheme(themeKey) {
-  document.body.classList.remove("theme-obsidian", "theme-neon", "theme-emerald");
-  if (themeKey) document.body.classList.add(`theme-${themeKey}`);
 }
 
 function renderCosmetics(items) {
@@ -464,7 +809,7 @@ function renderCosmetics(items) {
   const theme = items.find((x) => x.type === "THEME" && x.equipped);
   applyTheme(theme?.meta?.theme || "obsidian");
 
-  wrap.innerHTML = items.map((c) => {
+  wrap.innerHTML = items.length ? items.map((c) => {
     const eq = c.equipped;
     return `
       <div class="cosItem">
@@ -477,7 +822,7 @@ function renderCosmetics(items) {
         </button>
       </div>
     `;
-  }).join("");
+  }).join("") : `<div class="muted tiny">No cosmetics yet.</div>`;
 
   document.querySelectorAll("[data-equip]").forEach((btn) => {
     btn.addEventListener("click", async () => {
@@ -493,9 +838,6 @@ function renderCosmetics(items) {
   });
 }
 
-/* =========================
-   MARKET
-   ========================= */
 function renderMarketSelected() {
   const n = el("mk-selected");
   const min = el("mk-min");
@@ -505,8 +847,8 @@ function renderMarketSelected() {
   const c = state.selectedCardId ? getCardById(state.selectedCardId) : null;
 
   if (!c) {
-    if (n) n.textContent = "None";
-    if (min) min.textContent = "Min: —";
+    safeText(n, "None");
+    safeText(min, "Min: —");
     if (btn) btn.disabled = false;
     return;
   }
@@ -514,18 +856,14 @@ function renderMarketSelected() {
   const isListed = state.market.listedSet.has(c.id);
   const minP = minPriceFor(c.rarity);
 
-  if (n) n.textContent = `${c.display_name} (${c.rarity})`;
-  if (min) min.textContent = `Min: ${minP} coins`;
+  safeText(n, `${c.display_name} (${c.rarity})`);
+  safeText(min, `Min: ${minP} coins`);
 
   if (btn) btn.disabled = isListed;
-  if (isListed && status) status.textContent = "Selected card is LISTED. Cancel listing to use it.";
+  if (isListed && status) status.textContent = "Selected card is listed. Cancel the listing to use it.";
 }
 
 function listingHTML(x, isMine = false) {
-  const name = x.display_name || "Unknown";
-  const meta = `${x.position} • ${x.role} • ${x.rarity}`;
-  const price = x.price;
-
   const right = isMine
     ? `<button class="smallBtn danger" data-cancel="${x.listing_id}">Cancel</button>`
     : `<button class="smallBtn primary" data-buy="${x.listing_id}">Buy</button>`;
@@ -533,11 +871,11 @@ function listingHTML(x, isMine = false) {
   return `
     <div class="listing">
       <div>
-        <div style="font-weight:900">${name}</div>
-        <div class="listingMeta">${meta}</div>
+        <div style="font-weight:900">${x.display_name || "Unknown"}</div>
+        <div class="listingMeta">${x.position} • ${x.role} • ${x.rarity}</div>
       </div>
       <div class="listingRight">
-        <div class="priceTag">${price}c</div>
+        <div class="priceTag">${x.price}c</div>
         ${right}
       </div>
     </div>
@@ -553,21 +891,6 @@ function formatAgo(ts) {
   return `${h}h ago`;
 }
 
-function renderTrades() {
-  const wrap = el("tradeList");
-  if (!wrap) return;
-  const t = state.market.trades || [];
-  wrap.innerHTML = t.length ? t.map((x) => `
-    <div class="tradeRow">
-      <div>
-        <div style="font-weight:900">${x.display_name}</div>
-        <div class="tradeMeta">${x.position} • ${x.role} • ${x.rarity} • ${formatAgo(x.created_at)}</div>
-      </div>
-      <div class="priceTag">${x.price}c</div>
-    </div>
-  `).join("") : `<div class="muted tiny">No trades yet.</div>`;
-}
-
 async function loadMarket() {
   const [rules, pulse, open, mine, trades] = await Promise.all([
     api("/v1/market/rules", { method: "GET" }).catch(() => DEFAULT_RULES),
@@ -578,19 +901,17 @@ async function loadMarket() {
   ]);
 
   state.market.rules = rules || DEFAULT_RULES;
-  state.market.pulse = pulse;
+  state.market.pulse = pulse || { last: null, chg24h: null, points: [] };
   state.market.trades = trades.trades || [];
 
   const allOpen = open.listings || [];
   state.market.listings = allOpen.filter((x) => x.seller_user_id !== state.userId);
 
   state.market.mine = mine.listings || [];
-
   const openMine = state.market.mine.filter((x) => x.status === "OPEN");
   state.market.listedSet = new Set(openMine.map((x) => x.card_id));
 
-  const myCount = el("myCount");
-  if (myCount) myCount.textContent = `(${openMine.length}/${state.market.rules.maxOpenListings})`;
+  safeText(el("myCount"), `(${openMine.length}/${state.market.rules.maxOpenListings})`);
 
   renderPulse();
   renderListings();
@@ -608,14 +929,14 @@ function renderListings() {
   if (openWrap) {
     openWrap.innerHTML = state.market.listings.length
       ? state.market.listings.map((x) => listingHTML(x, false)).join("")
-      : `<div class="muted tiny">No listings yet.</div>`;
+      : `<div class="muted tiny">No open listings.</div>`;
   }
 
   const openMine = state.market.mine.filter((x) => x.status === "OPEN");
   if (myWrap) {
     myWrap.innerHTML = openMine.length
       ? openMine.map((x) => listingHTML(x, true)).join("")
-      : `<div class="muted tiny">No listings yet.</div>`;
+      : `<div class="muted tiny">No active listings.</div>`;
   }
 
   document.querySelectorAll("[data-buy]").forEach((btn) => {
@@ -629,7 +950,7 @@ function renderListings() {
         await loadInventory();
         await loadMarket();
         await loadDaily();
-        if (status) status.textContent = `Bought. Paid ${res.paid} coins. Fee ${res.fee}.`;
+        if (status) status.textContent = `Purchase complete. Paid ${res.paid} coins.`;
       } catch (e) {
         if (status) status.textContent = e.message;
       } finally {
@@ -656,48 +977,68 @@ function renderListings() {
   });
 }
 
+function renderTrades() {
+  const wrap = el("tradeList");
+  if (!wrap) return;
+
+  const t = state.market.trades || [];
+  wrap.innerHTML = t.length ? t.map((x) => `
+    <div class="tradeRow">
+      <div>
+        <div style="font-weight:900">${x.display_name}</div>
+        <div class="tradeMeta">${x.position} • ${x.role} • ${x.rarity} • ${formatAgo(x.created_at)}</div>
+      </div>
+      <div class="priceTag">${x.price}c</div>
+    </div>
+  `).join("") : `<div class="muted tiny">No trades yet.</div>`;
+}
+
 async function listSelected() {
   const status = el("mk-status");
   const price = Number(el("mk-price")?.value || 0);
-  if (!state.selectedCardId) return (status.textContent = "Select a card first.");
+
+  if (!state.selectedCardId) {
+    if (status) status.textContent = "Select a card first.";
+    return;
+  }
 
   const c = getCardById(state.selectedCardId);
   const minP = minPriceFor(c?.rarity);
 
   if (!Number.isFinite(price) || price < minP) {
-    return (status.textContent = `Min price for ${c?.rarity} is ${minP}.`);
+    if (status) status.textContent = `Min price for ${c?.rarity} is ${minP}.`;
+    return;
   }
 
   const btn = el("btn-list");
-  btn.disabled = true;
+  if (btn) btn.disabled = true;
+
   try {
     await api("/v1/market/list", { method: "POST", body: JSON.stringify({ cardId: state.selectedCardId, price }) });
-    status.textContent = "Listed successfully.";
+    if (status) status.textContent = "Listed successfully.";
     if (el("mk-price")) el("mk-price").value = "";
     await loadMarket();
     await loadDaily();
   } catch (e) {
-    status.textContent = e.message;
+    if (status) status.textContent = e.message;
   } finally {
-    btn.disabled = false;
+    if (btn) btn.disabled = false;
   }
 }
 
 function renderPulse() {
-  const last = state.market.pulse.last;
-  const chg = state.market.pulse.chg24h;
+  safeText(el("m-last"), state.market.pulse.last == null ? "—" : String(state.market.pulse.last));
+  safeText(el("m-chg"), state.market.pulse.chg24h == null ? "—" : (state.market.pulse.chg24h > 0 ? `+${state.market.pulse.chg24h}` : `${state.market.pulse.chg24h}`));
+
   const pts = state.market.pulse.points || [];
-
-  if (el("m-last")) el("m-last").textContent = last == null ? "—" : String(last);
-  if (el("m-chg")) el("m-chg").textContent = chg == null ? "—" : (chg > 0 ? `+${chg}` : `${chg}`);
-
   const svg = el("sparkSvg");
   if (!svg) return;
 
-  const w = 300, h = 64;
+  const w = 300;
+  const h = 64;
 
   if (!pts.length) {
-    svg.innerHTML = `<path d="M0 ${h-8} L${w} ${h-8}" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="2"/>`;
+    svg.innerHTML = `<path d="M0 ${h - 8} L${w} ${h - 8}" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="2"/>`;
     return;
   }
 
@@ -710,9 +1051,9 @@ function renderPulse() {
   if (pts.length === 1) {
     const y = yOf(pts[0].price);
     svg.innerHTML = `
-      <path d="M0 ${y.toFixed(2)} L${w} ${y.toFixed(2)}" fill="none" stroke="rgba(46,245,255,.65)" stroke-width="2.2" />
-      <path d="M0 ${y.toFixed(2)} L${w} ${y.toFixed(2)} L${w} ${h} L0 ${h} Z" fill="rgba(46,245,255,.10)" />
-      <circle cx="${w-8}" cy="${y.toFixed(2)}" r="3.4" fill="rgba(168,255,46,.85)" />
+      <path d="M0 ${y.toFixed(2)} L${w} ${y.toFixed(2)}" fill="none" stroke="rgba(232,184,75,.85)" stroke-width="2.2" />
+      <path d="M0 ${y.toFixed(2)} L${w} ${y.toFixed(2)} L${w} ${h} L0 ${h} Z" fill="rgba(232,184,75,.10)" />
+      <circle cx="${w - 8}" cy="${y.toFixed(2)}" r="3.4" fill="rgba(0,230,118,.90)" />
     `;
     return;
   }
@@ -725,189 +1066,11 @@ function renderPulse() {
   }).join(" ");
 
   svg.innerHTML = `
-    <path d="${d}" fill="none" stroke="rgba(46,245,255,.65)" stroke-width="2.2" />
-    <path d="${d} L${w} ${h} L0 ${h} Z" fill="rgba(46,245,255,.10)" />
+    <path d="${d}" fill="none" stroke="rgba(232,184,75,.90)" stroke-width="2.2" />
+    <path d="${d} L${w} ${h} L0 ${h} Z" fill="rgba(232,184,75,.10)" />
   `;
 }
 
-/* =========================
-   PACK REVEAL
-   ========================= */
-function renderPackResults(cards) {
-  const wrap = el("cards");
-  if (!wrap) return;
-  wrap.innerHTML = "";
-  cards.forEach((c) => {
-    const row = document.createElement("div");
-    row.className = "cardRow";
-    row.innerHTML = `
-      <div>
-        <div style="font-weight:900">${c.displayName}</div>
-        <div class="muted tiny">${c.position} • ${c.role}</div>
-      </div>
-      <div class="rarity ${rarityClass(c.rarity)}">${c.rarity}</div>
-    `;
-    wrap.appendChild(row);
-  });
-}
-
-function showOverlay() {
-  const o = el("revealOverlay");
-  if (o) {
-    o.classList.remove("hidden");
-    o.setAttribute("aria-hidden", "false");
-  }
-}
-function hideOverlay() {
-  const o = el("revealOverlay");
-  if (o) {
-    o.classList.add("hidden");
-    o.setAttribute("aria-hidden", "true");
-  }
-}
-function setOverlaySub(t) {
-  const n = el("overlaySub");
-  if (n) n.textContent = t;
-}
-
-function resetRevealUI() {
-  state.revealIndex = 0;
-  state.revealCards = [];
-  state.revealing = false;
-
-  const inner = el("overlayInner");
-  if (inner) inner.classList.remove("legendaryBurst");
-
-  const claim = el("btn-claim");
-  if (claim) {
-    claim.disabled = true;
-    claim.textContent = "Claim";
-  }
-
-  const hint = el("revealHint");
-  if (hint) hint.textContent = "Tap to reveal";
-
-  const pack = el("revealPack");
-  if (pack) pack.classList.add("shake");
-
-  const list = el("revealCards");
-  if (!list) return;
-  list.innerHTML = "";
-
-  for (let i = 0; i < 3; i++) {
-    const card = document.createElement("div");
-    card.className = "flipCard";
-    card.dataset.i = String(i);
-    card.innerHTML = `
-      <div class="flipInner">
-        <div class="flipFace flipBack"><div class="q">?</div><div class="t">Reveal</div></div>
-        <div class="flipFace flipFront">
-          <div class="cardTop">
-            <div><div class="cardName">Unknown</div><div class="cardMeta">— • —</div></div>
-            <div class="badge">—</div>
-          </div>
-          <div class="cardFooter"><span class="muted">CLASH XI</span><span class="muted">v1</span></div>
-        </div>
-      </div>
-    `;
-    list.appendChild(card);
-  }
-}
-
-function injectRevealData(cards) {
-  const list = el("revealCards");
-  if (!list) return;
-  const nodes = [...list.querySelectorAll(".flipCard")];
-
-  nodes.forEach((node, i) => {
-    const c = cards[i];
-    node.classList.remove("rCommon", "rRare", "rEpic", "rLegend");
-    node.classList.add(rarityClass(c.rarity));
-    const badge = node.querySelector(".badge");
-    const name = node.querySelector(".cardName");
-    const meta = node.querySelector(".cardMeta");
-    if (badge) badge.textContent = c.rarity;
-    if (name) name.textContent = c.displayName;
-    if (meta) meta.textContent = `${c.position} • ${c.role}`;
-  });
-}
-
-function legendaryBurst() {
-  const inner = el("overlayInner");
-  if (!inner) return;
-  inner.classList.remove("legendaryBurst");
-  void inner.offsetWidth;
-  inner.classList.add("legendaryBurst");
-}
-
-async function flipNext() {
-  if (state.revealing) return;
-  if (state.revealIndex >= state.revealCards.length) return;
-  state.revealing = true;
-
-  const i = state.revealIndex;
-  const card = state.revealCards[i];
-  const node = el("revealCards")?.querySelector(`.flipCard[data-i="${i}"]`);
-  if (node) node.classList.add("flipped");
-
-  if (card?.rarity === "LEGENDARY") {
-    legendaryBurst();
-    setOverlaySub("SIGNATURE LEGENDARY!");
-  } else if (card?.rarity === "EPIC") {
-    setOverlaySub("Epic pull.");
-  } else if (card?.rarity === "RARE") {
-    setOverlaySub("Rare pull.");
-  } else {
-    setOverlaySub("Common.");
-  }
-
-  await sleep(550);
-  state.revealIndex += 1;
-  state.revealing = false;
-
-  if (state.revealIndex >= state.revealCards.length) {
-    const pack = el("revealPack");
-    if (pack) pack.classList.remove("shake");
-    setOverlaySub("Pack complete.");
-    const claim = el("btn-claim");
-    if (claim) claim.disabled = false;
-    const hint = el("revealHint");
-    if (hint) hint.textContent = "Done";
-  }
-}
-
-async function openPack() {
-  const btn = el("btn-pack");
-  if (btn) {
-    btn.disabled = true;
-    btn.textContent = "Opening…";
-  }
-
-  showOverlay();
-  resetRevealUI();
-  setOverlaySub("Generating cards…");
-
-  try {
-    await ensureSession();
-    const data = await api("/v1/packs/open", { method: "POST", body: JSON.stringify({ kind: "DAILY" }) });
-    state.revealCards = data.cards || [];
-    injectRevealData(state.revealCards);
-    renderPackResults(state.revealCards);
-    await loadDaily();
-  } catch (e) {
-    hideOverlay();
-    alert(e.message);
-  } finally {
-    if (btn) {
-      btn.disabled = false;
-      btn.textContent = "Open Pack";
-    }
-  }
-}
-
-/* =========================
-   LOAD BASE DATA
-   ========================= */
 async function loadInventory() {
   const data = await api("/v1/inventory", { method: "GET" });
   state.inventory = data.cards || [];
@@ -923,9 +1086,6 @@ async function loadSquad() {
   renderSquad();
 }
 
-/* =========================
-   UI INIT
-   ========================= */
 function initChips() {
   document.querySelectorAll("[data-filter]").forEach((b) => {
     b.addEventListener("click", () => {
@@ -938,6 +1098,7 @@ function initChips() {
 
   document.querySelectorAll("[data-style]").forEach((b) => {
     if (b.dataset.style === state.style) b.classList.add("active");
+
     b.addEventListener("click", () => {
       state.style = b.dataset.style;
       localStorage.setItem("cx_style", state.style);
@@ -949,65 +1110,82 @@ function initChips() {
 
   document.querySelectorAll("[data-arena]").forEach((b) => {
     if (b.dataset.arena === state.arenaMode) b.classList.add("active");
+
     b.addEventListener("click", () => {
       state.arenaMode = b.dataset.arena;
       document.querySelectorAll("[data-arena]").forEach((x) => x.classList.remove("active"));
       b.classList.add("active");
-      const t = el("arena-mode");
-      if (t) t.textContent = state.arenaMode;
+      safeText(el("arena-mode"), state.arenaMode);
     });
   });
 }
 
-/* =========================
-   BOOT
-   ========================= */
-(async function boot() {
+async function enterKickForge() {
+  const ok = await healthCheck();
+  if (!ok) {
+    alert("API offline. Check your Worker.");
+    return;
+  }
+
+  await ensureSession();
+  const packBtn = el("btn-pack");
+  if (packBtn) packBtn.disabled = false;
+
+  try {
+    await Promise.all([
+      loadInventory(),
+      loadSquad(),
+      loadMe(),
+      loadPro(),
+      loadMarket(),
+      loadDaily(),
+      loadCosmetics()
+    ]);
+    updateSynergy();
+  } catch (e) {
+    alert(e.message);
+  }
+}
+
+(function boot() {
   seedXI();
   setUserLabel();
   initChips();
+  safeText(el("arena-mode"), state.arenaMode);
+  renderMarketSelected();
+  healthCheck();
 
-  const ok = await healthCheck();
-  setConn(ok);
-
-  el("btn-play")?.addEventListener("click", async () => {
-    const ok2 = await healthCheck();
-    if (!ok2) return alert("API offline. Check Worker.");
-
-    await ensureSession();
-    if (el("btn-pack")) el("btn-pack").disabled = false;
-
-    await loadInventory();
-    await loadSquad();
-    await loadMe();
-    await loadPro();
-    await loadMarket();
-    await loadDaily();
-    await loadCosmetics();
-    updateSynergy();
-  });
-
+  el("btn-play")?.addEventListener("click", enterKickForge);
   el("btn-pack")?.addEventListener("click", openPack);
   el("btn-arena")?.addEventListener("click", playArena);
+  el("btn-list")?.addEventListener("click", listSelected);
 
   el("btn-refresh-market")?.addEventListener("click", async () => {
     const status = el("mk-status");
-    if (status) status.textContent = "Refreshing…";
-    await loadMarket();
-    if (status) status.textContent = "Refreshed.";
+    if (status) status.textContent = "Refreshing market…";
+    try {
+      await loadMarket();
+      if (status) status.textContent = "Market refreshed.";
+    } catch (e) {
+      if (status) status.textContent = e.message;
+    }
   });
-
-  el("btn-list")?.addEventListener("click", listSelected);
 
   el("btn-close")?.addEventListener("click", () => hideOverlay());
   el("btn-claim")?.addEventListener("click", async () => {
     hideOverlay();
-    await loadInventory();
-    await loadSquad();
-    await loadMe();
-    await loadMarket();
-    await loadDaily();
-    await loadCosmetics();
+    try {
+      await Promise.all([
+        loadInventory(),
+        loadSquad(),
+        loadMe(),
+        loadMarket(),
+        loadDaily(),
+        loadCosmetics()
+      ]);
+    } catch (e) {
+      alert(e.message);
+    }
   });
 
   const revealAction = async () => {
@@ -1017,8 +1195,4 @@ function initChips() {
 
   el("revealPack")?.addEventListener("click", revealAction);
   el("revealCards")?.addEventListener("click", revealAction);
-
-  const t = el("arena-mode");
-  if (t) t.textContent = state.arenaMode;
-  renderMarketSelected();
 })();
