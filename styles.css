@@ -1180,6 +1180,13 @@ button,input,select{font:inherit}
 }
 .kfCard--common::before{background:#6E7B72}
 
+.kfCard--uncommon{
+  background:linear-gradient(180deg, #0D2A12 0%, #061508 100%);
+  border-color:#2D7A3A;
+  box-shadow:0 0 20px rgba(0,230,118,.10), 0 10px 26px rgba(0,0,0,.34);
+}
+.kfCard--uncommon::before{background:linear-gradient(90deg, #2D7A3A, #00E676)}
+
 .kfCard--rare{
   background:
     linear-gradient(180deg, #0D1A2E 0%, #060D1A 100%),
@@ -1215,6 +1222,18 @@ button,input,select{font:inherit}
   clip-path:polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px);
 }
 
+.kfCard--icon{
+  background:linear-gradient(180deg, #1A0808 0%, #0D0404 100%);
+  border-color:#CC3333;
+  box-shadow:0 0 20px rgba(204,51,51,.24), 0 0 34px rgba(232,184,75,.16), 0 10px 26px rgba(0,0,0,.34);
+  animation:iconPulse 2s ease-in-out infinite;
+}
+.kfCard--icon::before{
+  background:linear-gradient(90deg, #E8B84B, #CC3333, #E8B84B);
+  background-size:200% 100%;
+  animation:iconStrip 2s linear infinite;
+}
+
 .kfCard__shine{
   position:absolute;
   inset:-20%;
@@ -1243,9 +1262,11 @@ button,input,select{font:inherit}
 }
 
 .kfCard--common .kfCard__ovr{color:#BCC8BF}
+.kfCard--uncommon .kfCard__ovr{color:#72FFB2}
 .kfCard--rare .kfCard__ovr{color:var(--blue-mid)}
 .kfCard--epic .kfCard__ovr{color:var(--purple-mid)}
 .kfCard--legendary .kfCard__ovr{color:var(--gold-light)}
+.kfCard--icon .kfCard__ovr{color:#FFD7D7}
 
 .kfCard__metaRight{
   display:grid;
@@ -2162,36 +2183,38 @@ button,input,select{font:inherit}
 
 .marketTopNav{
   display:flex;
-  gap:10px;
+  gap:18px;
   flex-wrap:wrap;
+  align-items:flex-end;
+  padding-bottom:6px;
+  border-bottom:1px solid rgba(255,255,255,.06);
 }
 
 .marketTopTab{
-  min-height:46px;
-  padding:11px 16px;
-  border:1px solid rgba(255,255,255,.10);
-  background:rgba(255,255,255,.03);
+  min-height:40px;
+  padding:8px 0;
+  border:none;
+  border-bottom:2px solid transparent;
+  background:transparent;
   color:var(--text-secondary);
   font-family:var(--font-ui);
   font-size:18px;
   font-weight:800;
-  letter-spacing:.05em;
+  letter-spacing:.06em;
   text-transform:uppercase;
   cursor:pointer;
   transition:.18s ease;
-  clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px);
 }
 
 .marketTopTab:hover{
-  border-color:var(--border-bright);
   color:var(--gold-light);
 }
 
 .marketTopTab.is-active{
-  color:#08110B;
-  background:linear-gradient(135deg,var(--gold-light),var(--gold));
-  border-color:rgba(255,255,255,.18);
-  box-shadow:0 10px 24px rgba(232,184,75,.16);
+  color:var(--gold-light);
+  border-bottom-color:var(--gold-light);
+  text-shadow:0 0 14px rgba(232,184,75,.18);
+  box-shadow:inset 0 -1px 0 rgba(232,184,75,.28);
 }
 
 .marketZone{
@@ -2475,81 +2498,279 @@ button,input,select{font:inherit}
   margin-bottom:14px;
 }
 
+.marketZoneIntro--coins{
+  justify-content:center;
+  text-align:center;
+}
+
+/* PACK MARKET */
 .marketPackGrid{
   display:grid;
   grid-template-columns:repeat(4,1fr);
   gap:14px;
 }
 
-.marketPlaceholderCard{
-  min-height:180px;
+.marketPackCard{
+  min-height:290px;
   padding:18px;
   border:1px solid rgba(255,255,255,.08);
   background:
     linear-gradient(180deg, rgba(255,255,255,.03), rgba(0,0,0,.18)),
     rgba(0,0,0,.12);
   display:grid;
-  align-content:end;
-  gap:8px;
-  clip-path:polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px);
-}
-
-.marketPlaceholderTitle{
-  font-family:var(--font-ui);
-  font-size:26px;
-  font-weight:900;
-  letter-spacing:.04em;
-  text-transform:uppercase;
-  color:var(--gold-light);
-}
-
-.marketPlaceholderMeta{
-  color:var(--text-secondary);
-  font-size:14px;
-  line-height:1.3;
-}
-
-.coinBundleGrid{
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:14px;
-}
-
-.coinBundleCard{
-  min-height:160px;
-  padding:18px;
-  border:1px solid rgba(255,255,255,.08);
-  background:
-    linear-gradient(180deg, rgba(232,184,75,.06), rgba(0,0,0,.16)),
-    rgba(0,0,0,.12);
-  display:grid;
-  align-content:center;
-  justify-items:center;
+  grid-template-rows:auto auto auto auto 1fr auto;
   gap:10px;
+  position:relative;
   clip-path:polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px);
+  transition:transform .18s ease, border-color .18s ease, box-shadow .18s ease;
 }
 
-.coinBundleValue{
-  font-family:var(--font-display);
-  font-size:54px;
-  line-height:.9;
-  color:var(--gold-light);
+.marketPackCard:hover{
+  transform:translateY(-3px);
+  border-color:var(--border-bright);
+  box-shadow:0 0 18px rgba(232,184,75,.10);
+}
+
+.marketPackCard::before{
+  content:"";
+  position:absolute;
+  left:0;right:0;top:0;
+  height:2px;
+  background:linear-gradient(90deg, rgba(232,184,75,0), rgba(232,184,75,.95), rgba(232,184,75,0));
+  opacity:.2;
+}
+
+.marketPackTop{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  align-items:flex-start;
+}
+
+.marketPackIcon{
+  font-size:52px;
+  line-height:1;
+  filter:drop-shadow(0 8px 18px rgba(0,0,0,.26));
+}
+
+.marketPackBadge,
+.marketPackResaleTag{
+  min-height:24px;
+  padding:4px 8px;
+  border:1px solid rgba(255,255,255,.10);
+  font-family:var(--font-ui);
+  font-size:11px;
+  font-weight:900;
+  letter-spacing:.08em;
   text-transform:uppercase;
-  text-align:center;
+  display:inline-flex;
+  align-items:center;
+  clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px);
 }
 
-.coinBundlePrice{
+.marketPackBadge--common{
+  background:rgba(255,255,255,.05);
+  color:#D0D8D1;
+}
+
+.marketPackBadge--rare{
+  background:rgba(79,195,247,.10);
+  color:var(--blue-mid);
+  border-color:rgba(79,195,247,.28);
+}
+
+.marketPackBadge--legendary{
+  background:rgba(232,184,75,.10);
+  color:var(--gold-light);
+  border-color:rgba(232,184,75,.28);
+}
+
+.marketPackResaleTag{
+  background:rgba(255,61,90,.10);
+  color:#FFD9DF;
+  border-color:rgba(255,61,90,.22);
+}
+
+.marketPackName{
   font-family:var(--font-ui);
   font-size:28px;
   font-weight:900;
   letter-spacing:.04em;
   text-transform:uppercase;
+  color:var(--gold-light);
+  line-height:.95;
 }
 
-.marketCoinNotes{
+.marketPackMeta{
+  color:var(--text-secondary);
+  font-size:14px;
+  line-height:1.3;
+}
+
+.marketPackPriceRow{
+  display:grid;
+  gap:4px;
+  align-content:end;
+}
+
+.marketPackPrice{
+  font-family:var(--font-display);
+  font-size:42px;
+  line-height:.9;
+  color:var(--gold-light);
+  letter-spacing:.03em;
+}
+
+.marketPackSubPrice{
+  color:var(--text-secondary);
+  font-size:13px;
+}
+
+.marketPackBtn{
+  width:100%;
+}
+
+.marketOddsLink{
+  padding:0;
+  border:none;
+  background:transparent;
+  color:var(--gold-light);
+  font-family:var(--font-ui);
+  font-size:15px;
+  font-weight:800;
+  letter-spacing:.05em;
+  text-transform:uppercase;
+  text-align:left;
+  cursor:pointer;
+  text-decoration:underline;
+  text-decoration-color:rgba(232,184,75,.45);
+  text-underline-offset:4px;
+}
+
+.marketOddsLink:hover{
+  color:#fff;
+  text-decoration-color:var(--gold-light);
+}
+
+.marketPackCard--resale{
+  border-color:rgba(255,61,90,.22);
+  box-shadow:0 0 18px rgba(255,61,90,.06);
+}
+
+/* COIN EXCHANGE */
+.coinExchangeShell{
+  width:100%;
+  max-width:600px;
+  margin:0 auto;
+  padding:18px;
+  border:1px solid rgba(255,255,255,.08);
+  background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(0,0,0,.16));
+  clip-path:polygon(14px 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%,0 14px);
+}
+
+.coinExchangeList{
+  display:grid;
+  gap:12px;
+}
+
+.coinExchangeRow{
+  position:relative;
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:16px;
+  align-items:center;
+  min-height:92px;
+  padding:14px 16px;
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(0,0,0,.16);
+  clip-path:polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px);
+  transition:border-color .18s ease, transform .18s ease, box-shadow .18s ease;
+  cursor:pointer;
+}
+
+.coinExchangeRow:hover{
+  transform:translateY(-2px);
+  border-color:var(--border-bright);
+}
+
+.coinExchangeRow.is-selected{
+  border-color:var(--border-bright);
+  box-shadow:0 0 18px rgba(232,184,75,.16);
+  background:linear-gradient(180deg, rgba(232,184,75,.09), rgba(0,0,0,.18));
+}
+
+.coinExchangeRow--best{
+  min-height:104px;
+  border-color:rgba(232,184,75,.22);
+}
+
+.coinExchangeBestBadge{
+  position:absolute;
+  top:10px;
+  right:12px;
+  min-height:22px;
+  padding:4px 8px;
+  border:1px solid rgba(232,184,75,.28);
+  background:rgba(232,184,75,.10);
+  color:var(--gold-light);
+  font-family:var(--font-ui);
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px);
+}
+
+.coinExchangeLeft{
+  min-width:0;
+}
+
+.coinExchangeBundleName{
+  font-family:var(--font-ui);
+  font-size:24px;
+  font-weight:900;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  color:var(--gold-light);
+}
+
+.coinExchangeBundleMeta{
+  margin-top:6px;
+  color:var(--text-secondary);
+  font-size:14px;
+  line-height:1.3;
+}
+
+.coinExchangeRight{
+  display:grid;
+  gap:8px;
+  justify-items:end;
+  align-items:center;
+}
+
+.coinExchangeBundlePrice{
+  font-family:var(--font-display);
+  font-size:38px;
+  line-height:.9;
+  color:#fff;
+}
+
+.coinExchangeConfirmWrap{
   margin-top:16px;
+  display:flex;
+  justify-content:center;
 }
 
+.coinExchangeConfirmWrap .btn{
+  min-width:240px;
+}
+
+.coinExchangeFooter{
+  margin-top:14px;
+  text-align:center;
+}
+
+/* market form / listing common */
 .marketHeader{
   display:flex;
   align-items:flex-start;
@@ -2943,6 +3164,68 @@ select.inp{
 .rEpic{color:var(--purple-mid)}
 .rLegend{color:var(--gold-light)}
 
+/* PACK ODDS MODAL */
+.packOddsBody{
+  display:grid;
+  gap:14px;
+}
+
+.packOddsTable{
+  display:grid;
+  gap:8px;
+}
+
+.packOddsRow{
+  display:grid;
+  grid-template-columns:1fr 120px;
+  gap:12px;
+  align-items:center;
+  min-height:42px;
+  padding:10px 12px;
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(0,0,0,.14);
+  clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px);
+  font-family:var(--font-ui);
+  font-size:16px;
+  font-weight:800;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+}
+
+.packOddsHead{
+  color:var(--gold-light);
+  background:rgba(255,255,255,.03);
+}
+
+.packOddsPity{
+  padding:12px 14px;
+  border:1px solid rgba(232,184,75,.16);
+  background:rgba(232,184,75,.06);
+  color:var(--gold-light);
+  font-family:var(--font-ui);
+  font-size:15px;
+  font-weight:700;
+  letter-spacing:.03em;
+  clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px);
+}
+
+.packOddsDot{
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  display:inline-block;
+  margin-right:8px;
+  vertical-align:middle;
+}
+
+.packOddsDot.common{background:#A8B3AB}
+.packOddsDot.uncommon{background:#2D7A3A}
+.packOddsDot.rare{background:var(--blue-mid)}
+.packOddsDot.epic{background:var(--purple-mid)}
+.packOddsDot.legendary{background:var(--gold-light)}
+.packOddsDot.icon{background:#CC3333}
+
+/* animations */
 @keyframes rareShimmer{
   0%{background-position:0% 50%, 0 0}
   100%{background-position:100% 50%, 0 0}
@@ -2956,6 +3239,20 @@ select.inp{
 @keyframes legendaryPulse{
   0%,100%{box-shadow:0 0 14px rgba(232,184,75,.16), 0 10px 26px rgba(0,0,0,.34)}
   50%{box-shadow:0 0 30px rgba(232,184,75,.34), 0 10px 26px rgba(0,0,0,.34)}
+}
+
+@keyframes iconPulse{
+  0%,100%{
+    box-shadow:0 0 18px rgba(204,51,51,.28), 0 0 26px rgba(232,184,75,.16), 0 10px 26px rgba(0,0,0,.34);
+  }
+  50%{
+    box-shadow:0 0 30px rgba(204,51,51,.40), 0 0 42px rgba(232,184,75,.24), 0 10px 26px rgba(0,0,0,.34);
+  }
+}
+
+@keyframes iconStrip{
+  0%{background-position:0% 50%}
+  100%{background-position:200% 50%}
 }
 
 @media (max-width: 1180px){
@@ -3015,8 +3312,7 @@ select.inp{
   }
 
   .marketPlayerGrid,
-  .marketPackGrid,
-  .coinBundleGrid{
+  .marketPackGrid{
     grid-template-columns:repeat(3,1fr);
   }
 }
@@ -3139,8 +3435,7 @@ select.inp{
   }
 
   .marketPlayerGrid,
-  .marketPackGrid,
-  .coinBundleGrid{
+  .marketPackGrid{
     grid-template-columns:repeat(2,1fr);
   }
 }
@@ -3189,7 +3484,10 @@ select.inp{
   .appTab,
   .formationChip,
   .tacticMode,
-  .fixtureTab,
+  .fixtureTab{
+    font-size:15px;
+  }
+
   .marketTopTab{
     font-size:15px;
   }
@@ -3299,8 +3597,7 @@ select.inp{
   }
 
   .marketPlayerGrid,
-  .marketPackGrid,
-  .coinBundleGrid{
+  .marketPackGrid{
     grid-template-columns:1fr;
   }
 
@@ -3308,11 +3605,25 @@ select.inp{
     font-size:16px;
   }
 
-  .coinBundleValue{
-    font-size:42px;
+  .marketPackName{
+    font-size:24px;
   }
 
-  .marketPlaceholderTitle{
-    font-size:22px;
+  .marketPackPrice{
+    font-size:34px;
+  }
+
+  .coinExchangeRow{
+    grid-template-columns:1fr;
+    justify-items:start;
+  }
+
+  .coinExchangeRight{
+    justify-items:start;
+  }
+
+  .packOddsRow{
+    grid-template-columns:1fr 88px;
+    font-size:14px;
   }
 }
