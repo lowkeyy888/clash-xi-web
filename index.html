@@ -28,7 +28,7 @@
         <a href="#overview">Overview</a>
         <a href="#features">Features</a>
         <a href="#app-shell">App</a>
-        <a href="#market">Market</a>
+        <a href="#market-shell">Market</a>
         <a href="#progress">Progress</a>
       </nav>
 
@@ -166,7 +166,7 @@
           <div class="featureCard">
             <div class="featureIcon">📈</div>
             <div class="featureHead">Player Market</div>
-            <div class="featureText">List cards, buy undervalued assets, and react to real trade-driven movement.</div>
+            <div class="featureText">List cards, buy undervalued assets, and react to trade-driven movement.</div>
           </div>
 
           <div class="featureCard">
@@ -313,26 +313,6 @@
                     <div>Club</div>
                     <div>Pts</div>
                   </div>
-                  <div class="standingRow is-you">
-                    <div>3</div>
-                    <div>Your Club</div>
-                    <div>12</div>
-                  </div>
-                  <div class="standingRow">
-                    <div>1</div>
-                    <div>Topside FC</div>
-                    <div>16</div>
-                  </div>
-                  <div class="standingRow">
-                    <div>2</div>
-                    <div>North XI</div>
-                    <div>14</div>
-                  </div>
-                  <div class="standingRow">
-                    <div>4</div>
-                    <div>Iron Eleven</div>
-                    <div>10</div>
-                  </div>
                 </div>
 
                 <div class="muted tiny standingNote">Your row should be highlighted in emerald when real standings connect.</div>
@@ -359,23 +339,7 @@
                   <div class="tag">Pulse</div>
                 </div>
 
-                <div class="moversList" id="moversHome">
-                  <div class="moverRow">
-                    <div class="moverDot rare"></div>
-                    <div class="moverName">M. Velenz</div>
-                    <div class="moverPct up">+12%</div>
-                  </div>
-                  <div class="moverRow">
-                    <div class="moverDot epic"></div>
-                    <div class="moverName">R. Ibarra</div>
-                    <div class="moverPct up">+8%</div>
-                  </div>
-                  <div class="moverRow">
-                    <div class="moverDot common"></div>
-                    <div class="moverName">D. Kanez</div>
-                    <div class="moverPct down">-5%</div>
-                  </div>
-                </div>
+                <div class="moversList" id="moversHome"></div>
 
                 <div class="sparkWrap moversPulseWrap">
                   <div class="sparkLine">
@@ -485,8 +449,8 @@
                 </div>
 
                 <div class="formationRow">
-                  <button class="formationChip is-active" data-formation="343">3-4-3</button>
-                  <button class="formationChip" data-formation="433">4-3-3</button>
+                  <button class="formationChip" data-formation="343">3-4-3</button>
+                  <button class="formationChip is-active" data-formation="433">4-3-3</button>
                   <button class="formationChip" data-formation="442">4-4-2</button>
                   <button class="formationChip" data-formation="451">4-5-1</button>
                   <button class="formationChip" data-formation="4231">4-2-3-1</button>
@@ -592,7 +556,7 @@
                     <div class="row">
                       <div>
                         <div class="sectionTitle">Synergy</div>
-                        <div class="muted tiny">Real-time style fit and squad coherence.</div>
+                        <div class="muted tiny">Nation / Role / Rarity synergies.</div>
                       </div>
                       <div class="tag">Live</div>
                     </div>
@@ -701,54 +665,6 @@
                       <div>GD</div>
                       <div>Pts</div>
                     </div>
-
-                    <div class="leagueTableRow cup-zone">
-                      <div class="leaguePos top">1</div>
-                      <div class="leagueClub">Topside FC</div>
-                      <div>6</div>
-                      <div>+8</div>
-                      <div>16</div>
-                    </div>
-
-                    <div class="leagueTableRow cup-zone">
-                      <div class="leaguePos top">2</div>
-                      <div class="leagueClub">North XI <span class="botTag">BOT</span></div>
-                      <div>6</div>
-                      <div>+5</div>
-                      <div>14</div>
-                    </div>
-
-                    <div class="leagueTableRow your-row">
-                      <div class="leaguePos">3</div>
-                      <div class="leagueClub">Your Club</div>
-                      <div>6</div>
-                      <div>+2</div>
-                      <div>12</div>
-                    </div>
-
-                    <div class="leagueTableRow">
-                      <div class="leaguePos">4</div>
-                      <div class="leagueClub">Iron Eleven</div>
-                      <div>6</div>
-                      <div>0</div>
-                      <div>10</div>
-                    </div>
-
-                    <div class="leagueTableRow relegation-zone">
-                      <div class="leaguePos">9</div>
-                      <div class="leagueClub">Dockside SC</div>
-                      <div>6</div>
-                      <div>-6</div>
-                      <div>4</div>
-                    </div>
-
-                    <div class="leagueTableRow relegation-zone">
-                      <div class="leaguePos">10</div>
-                      <div class="leagueClub">East Borough <span class="botTag">BOT</span></div>
-                      <div>6</div>
-                      <div>-9</div>
-                      <div>2</div>
-                    </div>
                   </div>
                 </div>
 
@@ -761,40 +677,8 @@
                     <div class="tag">MD</div>
                   </div>
 
-                  <div class="fixtureTabs" id="leagueMatchdays">
-                    <button class="fixtureTab is-active" data-md="1">MD1</button>
-                    <button class="fixtureTab" data-md="2">MD2</button>
-                    <button class="fixtureTab" data-md="3">MD3</button>
-                    <button class="fixtureTab" data-md="4">MD4</button>
-                    <button class="fixtureTab" data-md="5">MD5</button>
-                    <button class="fixtureTab" data-md="6">MD6</button>
-                  </div>
-
-                  <div class="fixtureList" id="leagueFixtures">
-                    <div class="fixtureRow result-win">
-                      <div class="fixtureDate">12 MAR</div>
-                      <div class="fixtureTeams">Your Club vs Dockside SC</div>
-                      <div class="fixtureScore">2 - 0</div>
-                    </div>
-
-                    <div class="fixtureRow result-draw">
-                      <div class="fixtureDate">13 MAR</div>
-                      <div class="fixtureTeams">North XI vs Your Club</div>
-                      <div class="fixtureScore">1 - 1</div>
-                    </div>
-
-                    <div class="fixtureRow result-loss">
-                      <div class="fixtureDate">14 MAR</div>
-                      <div class="fixtureTeams">Topside FC vs Your Club</div>
-                      <div class="fixtureScore">3 - 1</div>
-                    </div>
-
-                    <div class="fixtureRow result-live">
-                      <div class="fixtureDate">TODAY</div>
-                      <div class="fixtureTeams">Your Club vs Iron Eleven</div>
-                      <div class="fixtureScore">20:00</div>
-                    </div>
-                  </div>
+                  <div class="fixtureTabs" id="leagueMatchdays"></div>
+                  <div class="fixtureList" id="leagueFixtures"></div>
                 </div>
               </div>
 
@@ -840,52 +724,240 @@
 
           <!-- MARKET -->
           <section class="appView" id="view-market" data-view="market">
-            <section class="marketShell" id="market">
-              <div class="marketHeader">
+            <section class="marketShell marketShell--rebuild" id="market-shell">
+              <div class="marketRebuildHeader">
                 <div>
-                  <div class="sectionTitle">Market</div>
-                  <div class="muted tiny">List cards for coins. Buy smart. Use market movement to improve your squad.</div>
+                  <div class="heroEyebrow">Forge Market</div>
+                  <div class="sectionTitle sectionTitleWide">Trade Hub</div>
+                  <div class="muted tiny">
+                    Player listings, pack trading, and coin exchange now live under one market structure.
+                  </div>
                 </div>
-                <div class="marketActions">
+
+                <div class="marketHeaderMeta">
+                  <div class="tag" id="market-tier-badge">LIVE</div>
                   <button class="btn ghost" id="btn-refresh-market">Refresh</button>
                 </div>
               </div>
 
-              <div class="marketBody">
-                <div class="marketCol">
-                  <div class="marketColTitle">List selected card</div>
-                  <div class="muted tiny">Pick a collection card, set the price, and put it on the market.</div>
+              <div class="marketTopNav">
+                <button class="marketTopTab is-active" data-market-tab="players">👤 Players</button>
+                <button class="marketTopTab" data-market-tab="packs">📦 Packs</button>
+                <button class="marketTopTab" data-market-tab="coins">🪙 Coins</button>
+              </div>
 
-                  <div class="listBox">
-                    <div class="listRow">
-                      <div class="muted tiny">Selected:</div>
-                      <div id="mk-selected" style="font-weight:900">None</div>
-                    </div>
-
-                    <div class="muted tiny" id="mk-min">Min: —</div>
-
-                    <div class="priceRow">
-                      <input id="mk-price" class="inp" type="number" min="1" step="1" placeholder="Price (coins)"/>
-                      <button class="btn primary" id="btn-list">List</button>
-                    </div>
-
-                    <div class="muted tiny" id="mk-status">Tip: listed cards can’t be equipped.</div>
+              <!-- PLAYERS MARKET -->
+              <section class="marketZone is-active" id="market-zone-players" data-market-zone="players">
+                <div class="marketFilterBar">
+                  <div class="marketSearchWrap">
+                    <input id="mk-search" class="inp marketSearchInput" type="text" placeholder="Search players, roles, rarities..."/>
                   </div>
 
-                  <div class="marketColTitle" style="margin-top:14px">My listings <span class="muted tiny" id="myCount"></span></div>
-                  <div class="myListings" id="myListings"></div>
+                  <div class="marketFilterControls">
+                    <select id="mk-rarity-filter" class="inp marketSelect">
+                      <option value="ALL">All Rarities</option>
+                      <option value="COMMON">Common</option>
+                      <option value="RARE">Rare</option>
+                      <option value="EPIC">Epic</option>
+                      <option value="LEGENDARY">Legendary</option>
+                    </select>
+
+                    <select id="mk-position-filter" class="inp marketSelect">
+                      <option value="ALL">All Positions</option>
+                      <option value="GK">GK</option>
+                      <option value="CB">CB</option>
+                      <option value="LB">LB</option>
+                      <option value="RB">RB</option>
+                      <option value="CDM">CDM</option>
+                      <option value="CM">CM</option>
+                      <option value="CAM">CAM</option>
+                      <option value="LW">LW</option>
+                      <option value="RW">RW</option>
+                      <option value="ST">ST</option>
+                    </select>
+
+                    <select id="mk-sort" class="inp marketSelect">
+                      <option value="PRICE_ASC">Price ↑</option>
+                      <option value="PRICE_DESC">Price ↓</option>
+                      <option value="RARITY_DESC">Rarity</option>
+                      <option value="OVR_DESC">OVR</option>
+                      <option value="NEWEST">Newest</option>
+                    </select>
+                  </div>
                 </div>
 
-                <div class="marketCol">
-                  <div class="marketColTitle">Open listings</div>
-                  <div class="muted tiny">Other users’ available cards.</div>
-                  <div class="openListings" id="openListings"></div>
-
-                  <div class="marketColTitle" style="margin-top:14px">Recent trades</div>
-                  <div class="muted tiny">Latest market transactions.</div>
-                  <div class="trades" id="tradeList"></div>
+                <div class="marketTickerBar">
+                  <div class="marketTickerTrack" id="marketTickerTrack">
+                    Most Expensive Sale Today: M. Velenz — 62,000 FC
+                  </div>
                 </div>
-              </div>
+
+                <div class="marketMainGrid">
+                  <div class="marketMainCol marketMainCol--left">
+                    <div class="marketPanel">
+                      <div class="row">
+                        <div>
+                          <div class="sectionTitle">Players</div>
+                          <div class="muted tiny">Live player listings, market intelligence, and trade signals.</div>
+                        </div>
+                        <div class="tag" id="market-player-count">0 LISTINGS</div>
+                      </div>
+
+                      <div class="marketPlayerGrid" id="marketPlayersGrid"></div>
+                    </div>
+                  </div>
+
+                  <aside class="marketMainCol marketMainCol--right">
+                    <div class="marketPanel">
+                      <div class="row">
+                        <div>
+                          <div class="sectionTitle">List Card</div>
+                          <div class="muted tiny">Select from Collection or Squad, then list here.</div>
+                        </div>
+                        <div class="tag">SELL</div>
+                      </div>
+
+                      <div class="listBox">
+                        <div class="listRow">
+                          <div class="muted tiny">Selected:</div>
+                          <div id="mk-selected" style="font-weight:900">None</div>
+                        </div>
+
+                        <div class="muted tiny" id="mk-min">Min: —</div>
+
+                        <div class="priceRow">
+                          <input id="mk-price" class="inp" type="number" min="1" step="1" placeholder="Price (coins)"/>
+                          <button class="btn primary" id="btn-list">List</button>
+                        </div>
+
+                        <div class="muted tiny" id="mk-status">Tip: listed cards can’t be equipped.</div>
+                      </div>
+
+                      <div class="marketSubSection">
+                        <div class="marketSubHead">
+                          <div class="sectionTitle">My Listings</div>
+                          <div class="muted tiny" id="myCount"></div>
+                        </div>
+                        <div class="myListings" id="myListings"></div>
+                      </div>
+                    </div>
+
+                    <div class="marketPanel">
+                      <div class="row">
+                        <div>
+                          <div class="sectionTitle">Market Intel</div>
+                          <div class="muted tiny">Rising Stars, Movers, and Most Traded.</div>
+                        </div>
+                        <div class="tag">LIVE</div>
+                      </div>
+
+                      <div class="marketIntelBlock">
+                        <div class="marketIntelSection">
+                          <div class="marketIntelTitle">30-Day Price Chart</div>
+                          <div class="marketChartCard">
+                            <svg id="marketChartSvg" viewBox="0 0 360 150" preserveAspectRatio="none"></svg>
+                          </div>
+                        </div>
+
+                        <div class="marketIntelSection">
+                          <div class="marketIntelTitle">Rising Stars</div>
+                          <div class="intelList" id="marketRisingStars"></div>
+                        </div>
+
+                        <div class="marketIntelSection">
+                          <div class="marketIntelTitle">Market Movers</div>
+                          <div class="intelList" id="marketMoversFeed"></div>
+                        </div>
+
+                        <div class="marketIntelSection">
+                          <div class="marketIntelTitle">Most Traded</div>
+                          <div class="intelList" id="marketMostTraded"></div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="marketPanel">
+                      <div class="row">
+                        <div>
+                          <div class="sectionTitle">Recent Trades</div>
+                          <div class="muted tiny">Latest market transactions.</div>
+                        </div>
+                        <div class="tag">FEED</div>
+                      </div>
+                      <div class="trades" id="tradeList"></div>
+                    </div>
+                  </aside>
+                </div>
+              </section>
+
+              <!-- PACK MARKET -->
+              <section class="marketZone" id="market-zone-packs" data-market-zone="packs">
+                <div class="marketZoneIntro">
+                  <div>
+                    <div class="sectionTitle">Pack Market</div>
+                    <div class="muted tiny">Sealed packs resellable for Forge Coins. Platform fee applied later in app logic.</div>
+                  </div>
+                  <div class="tag">PHASE 7 READY</div>
+                </div>
+
+                <div class="marketPackGrid" id="packMarketGrid">
+                  <div class="marketPlaceholderCard">
+                    <div class="marketPlaceholderTitle">Kickoff Pack</div>
+                    <div class="marketPlaceholderMeta">500 FC base • sealed resale zone</div>
+                  </div>
+                  <div class="marketPlaceholderCard">
+                    <div class="marketPlaceholderTitle">Pro Pack</div>
+                    <div class="marketPlaceholderMeta">$2.99 live pack lane</div>
+                  </div>
+                  <div class="marketPlaceholderCard">
+                    <div class="marketPlaceholderTitle">Legendary Chest</div>
+                    <div class="marketPlaceholderMeta">premium sealed inventory lane</div>
+                  </div>
+                  <div class="marketPlaceholderCard">
+                    <div class="marketPlaceholderTitle">Icon Capsule</div>
+                    <div class="marketPlaceholderMeta">highest-value pack market item</div>
+                  </div>
+                </div>
+              </section>
+
+              <!-- COIN MARKET -->
+              <section class="marketZone" id="market-zone-coins" data-market-zone="coins">
+                <div class="marketZoneIntro">
+                  <div>
+                    <div class="sectionTitle">Coin Exchange</div>
+                    <div class="muted tiny">Real-money FC bundles and later Stripe exchange flow.</div>
+                  </div>
+                  <div class="tag">PHASE 7 READY</div>
+                </div>
+
+                <div class="coinBundleGrid" id="coinExchangeGrid">
+                  <div class="coinBundleCard">
+                    <div class="coinBundleValue">1,000 FC</div>
+                    <div class="coinBundlePrice">$0.99</div>
+                  </div>
+                  <div class="coinBundleCard">
+                    <div class="coinBundleValue">5,500 FC</div>
+                    <div class="coinBundlePrice">$4.99</div>
+                  </div>
+                  <div class="coinBundleCard">
+                    <div class="coinBundleValue">12,000 FC</div>
+                    <div class="coinBundlePrice">$9.99</div>
+                  </div>
+                  <div class="coinBundleCard">
+                    <div class="coinBundleValue">100,000 FC</div>
+                    <div class="coinBundlePrice">$79.99</div>
+                  </div>
+                </div>
+
+                <div class="marketCoinNotes">
+                  <div class="marketPanel">
+                    <div class="sectionTitle">Coin Rules</div>
+                    <div class="muted tiny" style="margin-top:8px">
+                      No FC transfer between accounts. Real-money bundle grant and logging will be wired in the next market phase.
+                    </div>
+                  </div>
+                </div>
+              </section>
             </section>
           </section>
 
@@ -978,9 +1050,9 @@
 
           <div class="detailCard" style="margin-top:14px">
             <div class="muted tiny">Status</div>
-            <div style="font-weight:900;margin-top:6px">PRO League scaffold will be connected next.</div>
+            <div style="font-weight:900;margin-top:6px">League system now drives the Home and League views from one state model.</div>
             <div class="muted tiny" style="margin-top:6px">
-              This section will later show next match countdown, lock timer, standings, and division access.
+              This section remains informational while the internal hub handles the real League screen.
             </div>
           </div>
         </div>
