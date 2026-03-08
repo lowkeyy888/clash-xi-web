@@ -56,29 +56,6 @@ const RARITY_RANK = {
   ICON: 5
 };
 
-function loadBenchState() {
-  try {
-    const raw = JSON.parse(localStorage.getItem("kf_bench") || "[]");
-    if (!Array.isArray(raw)) return Array(7).fill(null);
-    return raw.slice(0, 7).concat(Array(Math.max(0, 7 - raw.length)).fill(null));
-  } catch {
-    return Array(7).fill(null);
-  }
-}
-
-function loadRoleOverrides() {
-  try {
-    const raw = JSON.parse(localStorage.getItem("kf_role_overrides") || "{}");
-    return raw && typeof raw === "object" ? raw : {};
-  } catch {
-    return {};
-  }
-}
-
-function saveRoleOverrides() {
-  localStorage.setItem("kf_role_overrides", JSON.stringify(state.roleOverrides || {}));
-}
-
 const FORMATION_ROLE_MAP = {
   "433": {
     GK:  { role: TACTICAL_ROLES.GOALKEEPER, allowed: ["GK"] },
@@ -93,7 +70,6 @@ const FORMATION_ROLE_MAP = {
     ST:  { role: TACTICAL_ROLES.STRIKER, allowed: ["ST"] },
     RW:  { role: TACTICAL_ROLES.WIDE_FORWARD, allowed: ["RW"] }
   },
-
   "442": {
     GK:  { role: TACTICAL_ROLES.GOALKEEPER, allowed: ["GK"] },
     LB:  { role: TACTICAL_ROLES.FULLBACK_WINGBACK, allowed: ["LB"] },
@@ -107,7 +83,6 @@ const FORMATION_ROLE_MAP = {
     CAM: { role: TACTICAL_ROLES.STRIKER, allowed: ["ST", "CF"] },
     ST:  { role: TACTICAL_ROLES.STRIKER, allowed: ["ST", "CF"] }
   },
-
   "451": {
     GK:  { role: TACTICAL_ROLES.GOALKEEPER, allowed: ["GK"] },
     LB:  { role: TACTICAL_ROLES.FULLBACK_WINGBACK, allowed: ["LB"] },
@@ -121,7 +96,6 @@ const FORMATION_ROLE_MAP = {
     RW:  { role: TACTICAL_ROLES.WIDE_FORWARD, allowed: ["RW", "RM"] },
     ST:  { role: TACTICAL_ROLES.STRIKER, allowed: ["ST"] }
   },
-
   "4231": {
     GK:  { role: TACTICAL_ROLES.GOALKEEPER, allowed: ["GK"] },
     LB:  { role: TACTICAL_ROLES.FULLBACK_WINGBACK, allowed: ["LB"] },
@@ -135,7 +109,6 @@ const FORMATION_ROLE_MAP = {
     RW:  { role: TACTICAL_ROLES.WIDE_FORWARD, allowed: ["RW", "RM"] },
     ST:  { role: TACTICAL_ROLES.STRIKER, allowed: ["ST"] }
   },
-
   "343": {
     GK:  { role: TACTICAL_ROLES.GOALKEEPER, allowed: ["GK"] },
     CB1: { role: TACTICAL_ROLES.CENTER_BACK, allowed: ["CB"] },
@@ -149,7 +122,6 @@ const FORMATION_ROLE_MAP = {
     ST:  { role: TACTICAL_ROLES.STRIKER, allowed: ["ST"] },
     RW:  { role: TACTICAL_ROLES.WIDE_FORWARD, allowed: ["RW"] }
   },
-
   "352": {
     GK:  { role: TACTICAL_ROLES.GOALKEEPER, allowed: ["GK"] },
     CB1: { role: TACTICAL_ROLES.CENTER_BACK, allowed: ["CB"] },
@@ -246,38 +218,68 @@ const FORMATION_LAYOUTS = {
   }
 };
 
-const LEAGUE_FIXTURES = {
-  1: [
-    { date: "12 MAR", home: "Your Club", away: "Dockside SC", score: "2 - 0", cls: "result-win" },
-    { date: "12 MAR", home: "North XI", away: "East Borough", score: "1 - 1", cls: "result-draw" },
-    { date: "12 MAR", home: "Topside FC", away: "Iron Eleven", score: "3 - 1", cls: "result-win" }
-  ],
-  2: [
-    { date: "13 MAR", home: "North XI", away: "Your Club", score: "1 - 1", cls: "result-draw" },
-    { date: "13 MAR", home: "Iron Eleven", away: "Dockside SC", score: "2 - 0", cls: "result-win" },
-    { date: "13 MAR", home: "Topside FC", away: "East Borough", score: "4 - 0", cls: "result-win" }
-  ],
-  3: [
-    { date: "14 MAR", home: "Topside FC", away: "Your Club", score: "3 - 1", cls: "result-loss" },
-    { date: "14 MAR", home: "North XI", away: "Dockside SC", score: "2 - 0", cls: "result-win" },
-    { date: "14 MAR", home: "East Borough", away: "Iron Eleven", score: "0 - 2", cls: "result-loss" }
-  ],
-  4: [
-    { date: "15 MAR", home: "Your Club", away: "Iron Eleven", score: "20:00", cls: "result-live" },
-    { date: "15 MAR", home: "Topside FC", away: "Dockside SC", score: "20:00", cls: "result-live" },
-    { date: "15 MAR", home: "North XI", away: "East Borough", score: "20:00", cls: "result-live" }
-  ],
-  5: [
-    { date: "16 MAR", home: "Your Club", away: "East Borough", score: "20:00", cls: "result-live" },
-    { date: "16 MAR", home: "Dockside SC", away: "Iron Eleven", score: "20:00", cls: "result-live" },
-    { date: "16 MAR", home: "Topside FC", away: "North XI", score: "20:00", cls: "result-live" }
-  ],
-  6: [
-    { date: "17 MAR", home: "Dockside SC", away: "Your Club", score: "20:00", cls: "result-live" },
-    { date: "17 MAR", home: "North XI", away: "Iron Eleven", score: "20:00", cls: "result-live" },
-    { date: "17 MAR", home: "Topside FC", away: "East Borough", score: "20:00", cls: "result-live" }
-  ]
-};
+const LEAGUE_TEAM_POOL = [
+  { id: "you", name: "Your Club", bot: false, base: 0 },
+  { id: "topside", name: "Topside FC", bot: false, base: 84 },
+  { id: "northxi", name: "North XI", bot: true, base: 82 },
+  { id: "ironeleven", name: "Iron Eleven", bot: false, base: 80 },
+  { id: "dockside", name: "Dockside SC", bot: true, base: 76 },
+  { id: "eastborough", name: "East Borough", bot: true, base: 74 },
+  { id: "harborcity", name: "Harbor City", bot: false, base: 79 },
+  { id: "royalforge", name: "Royal Forge", bot: true, base: 81 },
+  { id: "stormathletic", name: "Storm Athletic", bot: true, base: 77 },
+  { id: "capitalrover", name: "Capital Rovers", bot: true, base: 75 }
+];
+
+function loadBenchState() {
+  try {
+    const raw = JSON.parse(localStorage.getItem("kf_bench") || "[]");
+    if (!Array.isArray(raw)) return Array(7).fill(null);
+    return raw.slice(0, 7).concat(Array(Math.max(0, 7 - raw.length)).fill(null));
+  } catch {
+    return Array(7).fill(null);
+  }
+}
+
+function loadRoleOverrides() {
+  try {
+    const raw = JSON.parse(localStorage.getItem("kf_role_overrides") || "{}");
+    return raw && typeof raw === "object" ? raw : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveRoleOverrides() {
+  localStorage.setItem("kf_role_overrides", JSON.stringify(state.roleOverrides || {}));
+}
+
+function defaultLeagueState() {
+  return {
+    joined: false,
+    seasonNumber: 4,
+    tier: "OPEN",
+    seasonStartIso: null,
+    userSelectedMd: false
+  };
+}
+
+function loadLeagueState() {
+  try {
+    const raw = JSON.parse(localStorage.getItem("kf_league_state") || "null");
+    if (!raw || typeof raw !== "object") return defaultLeagueState();
+    return {
+      ...defaultLeagueState(),
+      ...raw
+    };
+  } catch {
+    return defaultLeagueState();
+  }
+}
+
+function saveLeagueState() {
+  localStorage.setItem("kf_league_state", JSON.stringify(state.league));
+}
 
 const state = {
   token: localStorage.getItem("cx_token") || null,
@@ -313,10 +315,10 @@ const state = {
   formation: localStorage.getItem("kf_formation") || "433",
   tacticMode: localStorage.getItem("kf_tactic_mode") || "balanced",
   tacticsLocked: false,
-  activeMatchday: 4,
-  leagueRegistered: false,
+  activeMatchday: Number(localStorage.getItem("kf_active_md") || 0) || 0,
   teamValidation: null,
-  dragPayload: null
+  dragPayload: null,
+  league: loadLeagueState()
 };
 
 function normalizeCard(raw) {
@@ -355,11 +357,8 @@ function getSlotRoleOverride(slotKey) {
 
 function setSlotRoleOverride(slotKey, roleName) {
   if (!slotKey) return;
-  if (!roleName) {
-    delete state.roleOverrides[slotKey];
-  } else {
-    state.roleOverrides[slotKey] = roleName;
-  }
+  if (!roleName) delete state.roleOverrides[slotKey];
+  else state.roleOverrides[slotKey] = roleName;
   saveRoleOverrides();
 }
 
@@ -427,6 +426,146 @@ function reconcileBenchWithState() {
   saveBenchState();
 }
 
+function canEquipSelected() {
+  return !!state.selectedCardId && !state.market.listedSet.has(state.selectedCardId);
+}
+
+function hashString(str) {
+  let h = 2166136261;
+  for (let i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
+function mulberry32(a) {
+  return function () {
+    let t = a += 0x6D2B79F5;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function randIntSeed(rnd, min, max) {
+  return Math.floor(rnd() * (max - min + 1)) + min;
+}
+
+function clampStat(n) {
+  return Math.max(35, Math.min(99, n));
+}
+
+function clamp(num, min, max) {
+  return Math.max(min, Math.min(max, num));
+}
+
+function roleStyle(role) {
+  const r = (role || "").toLowerCase();
+  if (r.includes("press") || r.includes("ball winner") || r.includes("aggressive") || r.includes("overlap")) return "PRESS";
+  if (r.includes("playmaking") || r.includes("tempo") || r.includes("ball-playing")) return "POSSESSION";
+  if (r.includes("poacher") || r.includes("direct") || r.includes("ghost")) return "COUNTER";
+  return "PRESS";
+}
+
+function cardVisualModel(card) {
+  const seed = hashString(`${card.id}|${card.display_name}|${card.position}|${card.role}|${card.rarity}`);
+  const rnd = mulberry32(seed);
+
+  const rarityBase = {
+    COMMON: 62,
+    RARE: 72,
+    EPIC: 82,
+    LEGENDARY: 91,
+    ICON: 95
+  }[card.rarity] ?? 62;
+
+  const posBoost = {
+    GK: { pace: -10, pass: 0, attack: -18, defense: 18 },
+    CB: { pace: -4, pass: 1, attack: -10, defense: 15 },
+    LB: { pace: 6, pass: 4, attack: -2, defense: 8 },
+    RB: { pace: 6, pass: 4, attack: -2, defense: 8 },
+    CDM: { pace: 0, pass: 8, attack: -5, defense: 12 },
+    CM: { pace: 1, pass: 10, attack: 3, defense: 5 },
+    CAM: { pace: 3, pass: 12, attack: 10, defense: -6 },
+    LW: { pace: 12, pass: 4, attack: 12, defense: -10 },
+    RW: { pace: 12, pass: 4, attack: 12, defense: -10 },
+    ST: { pace: 10, pass: 0, attack: 16, defense: -14 }
+  }[card.position] || { pace: 0, pass: 0, attack: 0, defense: 0 };
+
+  const boost = roleStyle(card.role);
+  const mods = { pace: 0, pass: 0, attack: 0, defense: 0 };
+  if (boost === "PRESS") { mods.pace += 3; mods.defense += 4; }
+  if (boost === "POSSESSION") { mods.pass += 5; mods.attack += 2; }
+  if (boost === "COUNTER") { mods.pace += 5; mods.attack += 5; }
+
+  if (state.tacticMode === "highpress") { mods.pace += 2; mods.defense += 2; }
+  if (state.tacticMode === "counter") { mods.pace += 3; mods.attack += 2; }
+  if (state.tacticMode === "control") { mods.pass += 4; }
+
+  const pace = clampStat(rarityBase + posBoost.pace + mods.pace + randIntSeed(rnd, -4, 6));
+  const pass = clampStat(rarityBase + posBoost.pass + mods.pass + randIntSeed(rnd, -4, 6));
+  const attack = clampStat(rarityBase + posBoost.attack + mods.attack + randIntSeed(rnd, -4, 6));
+  const defense = clampStat(rarityBase + posBoost.defense + mods.defense + randIntSeed(rnd, -4, 6));
+
+  const ovr = clampStat(Math.round((pace + pass + attack + defense) / 4));
+  return { ovr, pace, pass, attack, defense };
+}
+
+function getDetailedStats(card) {
+  const vm = cardVisualModel(card);
+  const seed = hashString(`${card.id}|detail|${card.rarity}|${card.position}`);
+  const rnd = mulberry32(seed);
+
+  const drb = clampStat(Math.round((vm.pace * 0.35) + (vm.attack * 0.35) + (vm.pass * 0.30)) + randIntSeed(rnd, -3, 3));
+  const stm = clampStat(Math.round((vm.pace * 0.30) + (vm.defense * 0.30) + (vm.pass * 0.20) + (vm.attack * 0.20)) + randIntSeed(rnd, -3, 3));
+
+  return [
+    { key: "PAC", label: "Pace", value: vm.pace },
+    { key: "SHT", label: "Shot", value: vm.attack },
+    { key: "PAS", label: "Pass", value: vm.pass },
+    { key: "DEF", label: "Defense", value: vm.defense },
+    { key: "DRB", label: "Dribble", value: drb },
+    { key: "STM", label: "Stamina", value: stm }
+  ];
+}
+
+function generateCardTraits(card) {
+  const rarity = String(card?.rarity || "COMMON").toUpperCase();
+  const count = rarity === "LEGENDARY" || rarity === "ICON" ? 3 : rarity === "EPIC" ? 3 : rarity === "RARE" ? 2 : 1;
+  const position = normalizePosition(card?.position);
+  const seed = hashString(`${card?.id}|traits|${rarity}|${position}|${card?.role || ""}`);
+  const rnd = mulberry32(seed);
+
+  const filtered = TRAIT_LIBRARY.filter((t) => {
+    const req = RARITY_RANK[t.minRarity] || 1;
+    const have = RARITY_RANK[rarity] || 1;
+    return have >= req && t.tags.includes(position);
+  });
+
+  const fallback = TRAIT_LIBRARY.filter((t) => (RARITY_RANK[rarity] || 1) >= (RARITY_RANK[t.minRarity] || 1));
+  const pool = filtered.length ? filtered.slice() : fallback.slice();
+  const picked = [];
+
+  while (pool.length && picked.length < count) {
+    const idx = Math.floor(rnd() * pool.length);
+    picked.push(pool.splice(idx, 1)[0]);
+  }
+
+  return picked;
+}
+
+function getSerialText(card) {
+  const base = Math.abs(hashString(`${card.id}|serial`)) % 99999;
+  const serial = String(base + 1).padStart(5, "0");
+  if (String(card.rarity).toUpperCase() === "ICON") {
+    const cap = "5,000";
+    const current = String((base % 5000) + 1).padStart(2, "0");
+    return `#${current} / ${cap}`;
+  }
+  return `#${serial}`;
+}
+
 function buildTeamModel() {
   const roleMap = getFormationRoleMap(state.formation);
   const slots = SLOT_KEYS.map((slotKey) => {
@@ -481,35 +620,18 @@ function validateTeamModel(team = buildTeamModel()) {
       return;
     }
 
-    if (seenCardIds.has(slot.cardId)) {
-      duplicateCards.push(slot.cardId);
-    } else {
-      seenCardIds.add(slot.cardId);
-    }
+    if (seenCardIds.has(slot.cardId)) duplicateCards.push(slot.cardId);
+    else seenCardIds.add(slot.cardId);
 
-    if (state.market.listedSet.has(slot.cardId)) {
-      listedConflicts.push(slot.slotKey);
-    }
-
-    if (!slot.isNaturalFit) {
-      offPositionAssignments.push(slot.slotKey);
-    }
+    if (state.market.listedSet.has(slot.cardId)) listedConflicts.push(slot.slotKey);
+    if (!slot.isNaturalFit) offPositionAssignments.push(slot.slotKey);
   });
 
-  if (rolelessSlots.length) {
-    warnings.push(`Missing tactical role mapping for: ${rolelessSlots.join(", ")}`);
-  }
-
-  if (offPositionAssignments.length) {
-    warnings.push(`Off-position assignments: ${offPositionAssignments.join(", ")}`);
-  }
+  if (rolelessSlots.length) warnings.push(`Missing tactical role mapping for: ${rolelessSlots.join(", ")}`);
+  if (offPositionAssignments.length) warnings.push(`Off-position assignments: ${offPositionAssignments.join(", ")}`);
 
   const isComplete = missingSlots.length === 0;
-  const isReady =
-    isComplete &&
-    duplicateCards.length === 0 &&
-    listedConflicts.length === 0 &&
-    rolelessSlots.length === 0;
+  const isReady = isComplete && duplicateCards.length === 0 && listedConflicts.length === 0 && rolelessSlots.length === 0;
 
   return {
     isComplete,
@@ -519,32 +641,6 @@ function validateTeamModel(team = buildTeamModel()) {
     listedConflicts,
     offPositionAssignments,
     warnings
-  };
-}
-
-function exportTeamForSimulation() {
-  const team = buildTeamModel();
-  const validation = validateTeamModel(team);
-
-  return {
-    formation: team.formation,
-    tacticMode: team.tacticMode,
-    style: team.style,
-    locked: team.locked,
-    equippedCount: team.equippedCount,
-    avgOvr: team.avgOvr,
-    validation,
-    bench: [...state.bench],
-    slots: team.slots.map((slot) => ({
-      slotKey: slot.slotKey,
-      tacticalRole: slot.tacticalRole,
-      roleOverride: slot.roleOverride,
-      allowedPositions: slot.allowedPositions,
-      cardId: slot.cardId,
-      cardPosition: slot.cardPosition,
-      isNaturalFit: slot.isNaturalFit,
-      traits: slot.card ? generateCardTraits(slot.card).map((t) => t.key) : []
-    }))
   };
 }
 
@@ -573,25 +669,21 @@ function getTopGroup(values = []) {
 
 function getBandStatus(kind, pct, available = true) {
   if (!available) return "INACTIVE";
-
   if (kind === "role") {
     if (pct >= 100) return "ACTIVE";
     if (pct >= 70) return "PARTIAL";
     return "INACTIVE";
   }
-
   if (kind === "rarity") {
     if (pct >= 55) return "ACTIVE";
     if (pct >= 35) return "PARTIAL";
     return "INACTIVE";
   }
-
   if (kind === "nation") {
     if (pct >= 55) return "ACTIVE";
     if (pct >= 35) return "PARTIAL";
     return "INACTIVE";
   }
-
   return "INACTIVE";
 }
 
@@ -624,97 +716,60 @@ function buildSynergyModel(team = buildTeamModel()) {
     equippedCount === 11 &&
     equippedSlots.every((slot) => String(slot.card?.rarity || "").toUpperCase() === "COMMON");
 
-  let overall = Math.round(
-    (rolePct * 0.55) +
-    (rarityPct * 0.25) +
-    (hasNationData ? nationPct * 0.20 : 0)
-  );
-
+  let overall = Math.round((rolePct * 0.55) + (rarityPct * 0.25) + (hasNationData ? nationPct * 0.20 : 0));
   if (streetKingsActive) overall = Math.max(overall, 85);
-  overall = Math.max(0, Math.min(100, overall));
 
   return {
-    overall,
-    role: {
-      status: getBandStatus("role", rolePct, true),
-      count: roleFitCount,
-      pct: rolePct
-    },
-    rarity: {
-      status: getBandStatus("rarity", rarityPct, true),
-      count: rarityTop.count,
-      pct: rarityPct,
-      value: rarityTop.value
-    },
-    nation: {
-      status: getBandStatus("nation", nationPct, hasNationData),
-      count: nationTop.count,
-      pct: nationPct,
-      value: nationTop.value,
-      available: hasNationData
-    },
-    streetKings: {
-      active: streetKingsActive
-    }
+    overall: clamp(overall, 0, 100),
+    role: { status: getBandStatus("role", rolePct, true), count: roleFitCount, pct: rolePct },
+    rarity: { status: getBandStatus("rarity", rarityPct, true), count: rarityTop.count, pct: rarityPct, value: rarityTop.value },
+    nation: { status: getBandStatus("nation", nationPct, hasNationData), count: nationTop.count, pct: nationPct, value: nationTop.value, available: hasNationData },
+    streetKings: { active: streetKingsActive }
   };
 }
 
-function slotLabel(k) {
-  return String(k).replace("1", "").replace("2", "");
-}
+function cardHTML(card, opts = {}) {
+  const c = normalizeCard(card);
+  const vm = cardVisualModel(c);
+  const selected = !!opts.selected;
+  const listed = !!opts.listed;
+  const compact = !!opts.compact;
+  const selectable = opts.selectable !== false;
+  const draggable = !!opts.draggable;
 
-function shortName(name) {
-  if (!name) return "Unknown";
-  const parts = String(name).trim().split(/\s+/);
-  if (parts.length === 1) return parts[0];
-  return `${parts[0]} ${parts[parts.length - 1]}`;
-}
+  return `
+    <div
+      class="kfCard ${rarityFrame(c.rarity)} ${selected ? "is-selected" : ""} ${listed ? "is-listed" : ""} ${compact ? "is-compact" : ""}"
+      ${selectable ? `data-card-id="${c.id}"` : ""}
+      ${draggable ? `draggable="true"` : ""}
+    >
+      <div class="kfCard__shine"></div>
+      <div class="kfCard__top">
+        <div class="kfCard__ovr">${vm.ovr}</div>
+        <div class="kfCard__metaRight">
+          <div class="kfCard__pos">${c.position}</div>
+          <div class="kfCard__rarity">${rarityShort(c.rarity)}</div>
+        </div>
+      </div>
 
-function formatFormationLabel(code) {
-  return String(code || "433").split("").join("-");
-}
+      <div class="kfCard__body">
+        <div class="kfCard__name">${c.display_name}</div>
+        <div class="kfCard__role">${c.role}</div>
+      </div>
 
-function tacticModeLabel(mode) {
-  if (mode === "highpress") return "High Press";
-  if (mode === "counter") return "Counter";
-  if (mode === "control") return "Control";
-  return "Balanced";
-}
+      <div class="kfCard__stats">
+        <div class="kfStat"><span>PAC</span><strong>${vm.pace}</strong></div>
+        <div class="kfStat"><span>PAS</span><strong>${vm.pass}</strong></div>
+        <div class="kfStat"><span>ATT</span><strong>${vm.attack}</strong></div>
+        <div class="kfStat"><span>DEF</span><strong>${vm.defense}</strong></div>
+      </div>
 
-function savedTemplateLabel() {
-  if (state.tacticMode === "highpress") return "Aggressive Press";
-  if (state.tacticMode === "counter") return "Fast Break";
-  if (state.tacticMode === "control") return "Possession Control";
-  return "Balanced Press";
-}
-
-function tacticDescriptors(mode) {
-  if (mode === "highpress") {
-    return {
-      front: "Front Foot Press",
-      mid: "Ball Winning Core",
-      def: "High Line Trap"
-    };
-  }
-  if (mode === "counter") {
-    return {
-      front: "Direct Runs",
-      mid: "Vertical Outlet",
-      def: "Compact Block"
-    };
-  }
-  if (mode === "control") {
-    return {
-      front: "False Width",
-      mid: "Tempo Control",
-      def: "Patient Build"
-    };
-  }
-  return {
-    front: "Wide Forwards",
-    mid: "Progressive Build",
-    def: "Medium Block"
-  };
+      <div class="kfCard__footer">
+        <div class="kfCard__badge ${rarityFrame(c.rarity)}">${c.rarity}</div>
+        ${listed ? `<div class="kfCard__listed">LISTED</div>` : ``}
+      </div>
+    </div>
+  `;
 }
 
 function rarityClass(r) {
@@ -826,201 +881,6 @@ async function ensureSession() {
   setUserLabel();
 }
 
-function canEquipSelected() {
-  return !!state.selectedCardId && !state.market.listedSet.has(state.selectedCardId);
-}
-
-function hashString(str) {
-  let h = 2166136261;
-  for (let i = 0; i < str.length; i++) {
-    h ^= str.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return h >>> 0;
-}
-
-function mulberry32(a) {
-  return function () {
-    let t = a += 0x6D2B79F5;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
-function randIntSeed(rnd, min, max) {
-  return Math.floor(rnd() * (max - min + 1)) + min;
-}
-
-function clampStat(n) {
-  return Math.max(35, Math.min(99, n));
-}
-
-function roleStyle(role) {
-  const r = (role || "").toLowerCase();
-  if (r.includes("press") || r.includes("ball winner") || r.includes("aggressive") || r.includes("overlap")) return "PRESS";
-  if (r.includes("playmaking") || r.includes("tempo") || r.includes("ball-playing")) return "POSSESSION";
-  if (r.includes("poacher") || r.includes("direct") || r.includes("ghost")) return "COUNTER";
-  return "PRESS";
-}
-
-function cardVisualModel(card) {
-  const seed = hashString(`${card.id}|${card.display_name}|${card.position}|${card.role}|${card.rarity}`);
-  const rnd = mulberry32(seed);
-
-  const rarityBase = {
-    COMMON: 62,
-    RARE: 72,
-    EPIC: 82,
-    LEGENDARY: 91,
-    ICON: 95
-  }[card.rarity] ?? 62;
-
-  const posBoost = {
-    GK: { pace: -10, pass: 0, attack: -18, defense: 18 },
-    CB: { pace: -4, pass: 1, attack: -10, defense: 15 },
-    LB: { pace: 6, pass: 4, attack: -2, defense: 8 },
-    RB: { pace: 6, pass: 4, attack: -2, defense: 8 },
-    CDM: { pace: 0, pass: 8, attack: -5, defense: 12 },
-    CM: { pace: 1, pass: 10, attack: 3, defense: 5 },
-    CAM: { pace: 3, pass: 12, attack: 10, defense: -6 },
-    LW: { pace: 12, pass: 4, attack: 12, defense: -10 },
-    RW: { pace: 12, pass: 4, attack: 12, defense: -10 },
-    ST: { pace: 10, pass: 0, attack: 16, defense: -14 }
-  }[card.position] || { pace: 0, pass: 0, attack: 0, defense: 0 };
-
-  const boost = roleStyle(card.role);
-  const mods = { pace: 0, pass: 0, attack: 0, defense: 0 };
-  if (boost === "PRESS") { mods.pace += 3; mods.defense += 4; }
-  if (boost === "POSSESSION") { mods.pass += 5; mods.attack += 2; }
-  if (boost === "COUNTER") { mods.pace += 5; mods.attack += 5; }
-
-  if (state.tacticMode === "highpress") { mods.pace += 2; mods.defense += 2; }
-  if (state.tacticMode === "counter") { mods.pace += 3; mods.attack += 2; }
-  if (state.tacticMode === "control") { mods.pass += 4; }
-
-  const pace = clampStat(rarityBase + posBoost.pace + mods.pace + randIntSeed(rnd, -4, 6));
-  const pass = clampStat(rarityBase + posBoost.pass + mods.pass + randIntSeed(rnd, -4, 6));
-  const attack = clampStat(rarityBase + posBoost.attack + mods.attack + randIntSeed(rnd, -4, 6));
-  const defense = clampStat(rarityBase + posBoost.defense + mods.defense + randIntSeed(rnd, -4, 6));
-
-  const ovr = clampStat(Math.round((pace + pass + attack + defense) / 4));
-  return { ovr, pace, pass, attack, defense };
-}
-
-function getDetailedStats(card) {
-  const vm = cardVisualModel(card);
-  const seed = hashString(`${card.id}|detail|${card.rarity}|${card.position}`);
-  const rnd = mulberry32(seed);
-
-  const drb = clampStat(Math.round((vm.pace * 0.35) + (vm.attack * 0.35) + (vm.pass * 0.30)) + randIntSeed(rnd, -3, 3));
-  const stm = clampStat(Math.round((vm.pace * 0.30) + (vm.defense * 0.30) + (vm.pass * 0.20) + (vm.attack * 0.20)) + randIntSeed(rnd, -3, 3));
-
-  return [
-    { key: "PAC", label: "Pace", value: vm.pace },
-    { key: "SHT", label: "Shot", value: vm.attack },
-    { key: "PAS", label: "Pass", value: vm.pass },
-    { key: "DEF", label: "Defense", value: vm.defense },
-    { key: "DRB", label: "Dribble", value: drb },
-    { key: "STM", label: "Stamina", value: stm }
-  ];
-}
-
-function generateCardTraits(card) {
-  const rarity = String(card?.rarity || "COMMON").toUpperCase();
-  const count = rarity === "LEGENDARY" || rarity === "ICON" ? 3 : rarity === "EPIC" ? 3 : rarity === "RARE" ? 2 : 1;
-  const position = normalizePosition(card?.position);
-  const seed = hashString(`${card?.id}|traits|${rarity}|${position}|${card?.role || ""}`);
-  const rnd = mulberry32(seed);
-
-  const filtered = TRAIT_LIBRARY.filter((t) => {
-    const req = RARITY_RANK[t.minRarity] || 1;
-    const have = RARITY_RANK[rarity] || 1;
-    return have >= req && t.tags.includes(position);
-  });
-
-  const fallback = TRAIT_LIBRARY.filter((t) => (RARITY_RANK[rarity] || 1) >= (RARITY_RANK[t.minRarity] || 1));
-
-  const pool = filtered.length ? filtered.slice() : fallback.slice();
-  const picked = [];
-
-  while (pool.length && picked.length < count) {
-    const idx = Math.floor(rnd() * pool.length);
-    picked.push(pool.splice(idx, 1)[0]);
-  }
-
-  return picked;
-}
-
-function getSerialText(card) {
-  const base = Math.abs(hashString(`${card.id}|serial`)) % 99999;
-  const serial = String(base + 1).padStart(5, "0");
-  if (String(card.rarity).toUpperCase() === "ICON") {
-    const cap = "5,000";
-    const current = String((base % 5000) + 1).padStart(2, "0");
-    return `#${current} / ${cap}`;
-  }
-  return `#${serial}`;
-}
-
-function cardHTML(card, opts = {}) {
-  const c = normalizeCard(card);
-  const vm = cardVisualModel(c);
-  const selected = !!opts.selected;
-  const listed = !!opts.listed;
-  const compact = !!opts.compact;
-  const selectable = opts.selectable !== false;
-  const draggable = !!opts.draggable;
-
-  return `
-    <div
-      class="kfCard ${rarityFrame(c.rarity)} ${selected ? "is-selected" : ""} ${listed ? "is-listed" : ""} ${compact ? "is-compact" : ""}"
-      ${selectable ? `data-card-id="${c.id}"` : ""}
-      ${draggable ? `draggable="true"` : ""}
-    >
-      <div class="kfCard__shine"></div>
-      <div class="kfCard__top">
-        <div class="kfCard__ovr">${vm.ovr}</div>
-        <div class="kfCard__metaRight">
-          <div class="kfCard__pos">${c.position}</div>
-          <div class="kfCard__rarity">${rarityShort(c.rarity)}</div>
-        </div>
-      </div>
-
-      <div class="kfCard__body">
-        <div class="kfCard__name">${c.display_name}</div>
-        <div class="kfCard__role">${c.role}</div>
-      </div>
-
-      <div class="kfCard__stats">
-        <div class="kfStat"><span>PAC</span><strong>${vm.pace}</strong></div>
-        <div class="kfStat"><span>PAS</span><strong>${vm.pass}</strong></div>
-        <div class="kfStat"><span>ATT</span><strong>${vm.attack}</strong></div>
-        <div class="kfStat"><span>DEF</span><strong>${vm.defense}</strong></div>
-      </div>
-
-      <div class="kfCard__footer">
-        <div class="kfCard__badge ${rarityFrame(c.rarity)}">${c.rarity}</div>
-        ${listed ? `<div class="kfCard__listed">LISTED</div>` : ``}
-      </div>
-    </div>
-  `;
-}
-
-function syncSquadPdfCopy() {
-  const synergyRowText = document.querySelector(".synergyPanel .row .muted.tiny");
-  if (synergyRowText) synergyRowText.textContent = "Nation / Role / Rarity synergies.";
-
-  const chipRow = document.querySelector(".squadChipRow");
-  if (chipRow) chipRow.style.display = "none";
-
-  const benchTiny = document.querySelector(".benchShell .row .muted.tiny");
-  if (benchTiny) benchTiny.textContent = "Drag between bench and pitch. Collection and Latest Pack cards can be selected first, then placed.";
-
-  const pitchFooter = document.querySelector(".pitchFooter .muted.tiny");
-  if (pitchFooter) pitchFooter.textContent = "Drag compatible players between bench and pitch. Clicking a pitch token opens the detailed player panel.";
-}
-
 function clearDropNodeStyle(node) {
   if (!node) return;
   node.style.borderColor = "";
@@ -1060,13 +920,10 @@ function clearDragPayload() {
 
 function resolveDragPayload(payload) {
   if (!payload?.cardId) return null;
-
   const squadSlot = getSquadSlotOfCard(payload.cardId);
   if (squadSlot) return { source: "pitch", slotKey: squadSlot, cardId: payload.cardId };
-
   const benchIndex = findBenchIndexByCardId(payload.cardId);
   if (benchIndex !== -1) return { source: "bench", benchIndex, cardId: payload.cardId };
-
   return { source: "inventory", cardId: payload.cardId };
 }
 
@@ -1084,7 +941,6 @@ function canDropOnBench(targetIndex, payload) {
   const resolved = resolveDragPayload(payload);
   if (!resolved?.cardId) return false;
   const currentOccupant = state.bench[targetIndex] || null;
-
   if (resolved.source === "bench" && resolved.benchIndex === targetIndex) return true;
   if (currentOccupant) return false;
   return true;
@@ -1092,7 +948,6 @@ function canDropOnBench(targetIndex, payload) {
 
 function canDropOnPitch(slotKey, payload) {
   if (state.tacticsLocked) return false;
-
   const resolved = resolveDragPayload(payload);
   if (!resolved?.cardId) return false;
 
@@ -1108,13 +963,8 @@ function canDropOnPitch(slotKey, payload) {
     const displaced = getCardById(targetCardId);
     return !!displaced && isCardCompatibleForSlot(displaced, resolved.slotKey);
   }
-
-  if (resolved.source === "bench") {
-    return true;
-  }
-
-  const emptyBench = firstEmptyBenchIndex();
-  return emptyBench !== -1;
+  if (resolved.source === "bench") return true;
+  return firstEmptyBenchIndex() !== -1;
 }
 
 function findFirstCompatibleEmptySlot(cardId) {
@@ -1224,10 +1074,8 @@ async function moveCardToPitch(cardId, targetSlotKey, hintedPayload = null) {
 
         await api("/v1/squad/unequip", { method: "POST", body: JSON.stringify({ slot: targetSlotKey }) });
         delete state.squad[targetSlotKey];
-
         await api("/v1/squad/equip", { method: "POST", body: JSON.stringify({ slot: targetSlotKey, cardId }) });
         state.squad[targetSlotKey] = cardId;
-
         await api("/v1/squad/equip", { method: "POST", body: JSON.stringify({ slot: resolved.slotKey, cardId: targetCardId }) });
         state.squad[resolved.slotKey] = targetCardId;
       } else {
@@ -1239,10 +1087,8 @@ async function moveCardToPitch(cardId, targetSlotKey, hintedPayload = null) {
       if (targetCardId && targetCardId !== cardId) {
         await api("/v1/squad/unequip", { method: "POST", body: JSON.stringify({ slot: targetSlotKey }) });
         delete state.squad[targetSlotKey];
-
         await api("/v1/squad/equip", { method: "POST", body: JSON.stringify({ slot: targetSlotKey, cardId }) });
         state.squad[targetSlotKey] = cardId;
-
         state.bench[resolved.benchIndex] = targetCardId;
       } else {
         await api("/v1/squad/equip", { method: "POST", body: JSON.stringify({ slot: targetSlotKey, cardId }) });
@@ -1259,10 +1105,8 @@ async function moveCardToPitch(cardId, targetSlotKey, hintedPayload = null) {
 
         await api("/v1/squad/unequip", { method: "POST", body: JSON.stringify({ slot: targetSlotKey }) });
         delete state.squad[targetSlotKey];
-
         await api("/v1/squad/equip", { method: "POST", body: JSON.stringify({ slot: targetSlotKey, cardId }) });
         state.squad[targetSlotKey] = cardId;
-
         removeCardFromBench(targetCardId);
         state.bench[emptyBench] = targetCardId;
       } else {
@@ -1303,6 +1147,7 @@ function bindSourceCardInteractions(rootSelector, opts = {}) {
       }
 
       state.selectedCardId = state.selectedCardId === id ? null : id;
+      state.compareBench = false;
       renderSelectedCard();
       renderInventory();
       renderPackResults(state.revealCards);
@@ -1378,35 +1223,35 @@ function renderBench() {
       node.innerHTML = benchCardHTML(card, idx);
       node.draggable = !state.tacticsLocked;
       node.style.cursor = state.tacticsLocked ? "default" : "grab";
-
-      node.addEventListener("dragstart", (e) => {
-        if (state.tacticsLocked) {
-          e.preventDefault();
-          return;
-        }
-        setDragPayload({ source: "bench", benchIndex: idx, cardId: card.id });
-        e.dataTransfer.effectAllowed = "move";
-        e.dataTransfer.setData("text/plain", card.id);
-      });
-
-      node.addEventListener("dragend", () => {
-        clearDragPayload();
-      });
     }
 
-    node.addEventListener("dragover", (e) => {
+    node.ondragstart = card ? (e) => {
+      if (state.tacticsLocked) {
+        e.preventDefault();
+        return;
+      }
+      setDragPayload({ source: "bench", benchIndex: idx, cardId: card.id });
+      e.dataTransfer.effectAllowed = "move";
+      e.dataTransfer.setData("text/plain", card.id);
+    } : null;
+
+    node.ondragend = () => {
+      clearDragPayload();
+    };
+
+    node.ondragover = (e) => {
       if (!state.dragPayload) return;
       e.preventDefault();
       const ok = canDropOnBench(idx, state.dragPayload);
       paintDropNode(node, ok ? "ok" : "bad");
       e.dataTransfer.dropEffect = ok ? "move" : "none";
-    });
+    };
 
-    node.addEventListener("dragleave", () => {
+    node.ondragleave = () => {
       clearDropNodeStyle(node);
-    });
+    };
 
-    node.addEventListener("drop", async (e) => {
+    node.ondrop = async (e) => {
       e.preventDefault();
       clearAllDropStates();
       const payload = state.dragPayload;
@@ -1414,8 +1259,23 @@ function renderBench() {
       if (!payload) return;
       if (!canDropOnBench(idx, payload)) return;
       await moveCardToBench(payload.cardId, idx, payload);
-    });
+    };
   });
+}
+
+function slotLabel(k) {
+  return String(k).replace("1", "").replace("2", "");
+}
+
+function shortName(name) {
+  if (!name) return "Unknown";
+  const parts = String(name).trim().split(/\s+/);
+  if (parts.length === 1) return parts[0];
+  return `${parts[0]} ${parts[parts.length - 1]}`;
+}
+
+function formatFormationLabel(code) {
+  return String(code || "433").split("").join("-");
 }
 
 function seedXI() {
@@ -1428,7 +1288,7 @@ function seedXI() {
     d.className = "slot";
     d.dataset.slot = slotKey;
     d.innerHTML = `<div class="p">${slotLabel(slotKey)}</div><div class="n muted">Empty</div>`;
-    d.addEventListener("click", () => onSlotClick(slotKey));
+    d.onclick = () => onSlotClick(slotKey);
     grid.appendChild(d);
   });
 
@@ -1448,9 +1308,8 @@ function applyFormationLayout() {
     node.style.top = `${pos.y}%`;
     node.style.right = "auto";
     node.style.transform = "translateX(-50%)";
-
     const cardId = state.squad[slot];
-    node.classList.toggle("slot-selected", cardId && cardId === state.selectedCardId);
+    node.classList.toggle("slot-selected", !!cardId && cardId === state.selectedCardId);
   });
 }
 
@@ -1477,41 +1336,33 @@ function attachPitchDragListeners() {
     const slotKey = node.dataset.slot;
     const cardId = state.squad[slotKey] || null;
 
-    node.ondragstart = null;
-    node.ondragend = null;
-    node.ondragover = null;
-    node.ondragleave = null;
-    node.ondrop = null;
+    node.ondragstart = cardId ? (e) => {
+      if (state.tacticsLocked) {
+        e.preventDefault();
+        return;
+      }
+      setDragPayload({ source: "pitch", slotKey, cardId });
+      e.dataTransfer.effectAllowed = "move";
+      e.dataTransfer.setData("text/plain", cardId);
+    } : null;
 
-    if (cardId) {
-      node.addEventListener("dragstart", (e) => {
-        if (state.tacticsLocked) {
-          e.preventDefault();
-          return;
-        }
-        setDragPayload({ source: "pitch", slotKey, cardId });
-        e.dataTransfer.effectAllowed = "move";
-        e.dataTransfer.setData("text/plain", cardId);
-      });
+    node.ondragend = () => {
+      clearDragPayload();
+    };
 
-      node.addEventListener("dragend", () => {
-        clearDragPayload();
-      });
-    }
-
-    node.addEventListener("dragover", (e) => {
+    node.ondragover = (e) => {
       if (!state.dragPayload) return;
       e.preventDefault();
       const ok = canDropOnPitch(slotKey, state.dragPayload);
       paintDropNode(node, ok ? "ok" : "bad");
       e.dataTransfer.dropEffect = ok ? "move" : "none";
-    });
+    };
 
-    node.addEventListener("dragleave", () => {
+    node.ondragleave = () => {
       clearDropNodeStyle(node);
-    });
+    };
 
-    node.addEventListener("drop", async (e) => {
+    node.ondrop = async (e) => {
       e.preventDefault();
       clearAllDropStates();
       const payload = state.dragPayload;
@@ -1519,7 +1370,7 @@ function attachPitchDragListeners() {
       if (!payload) return;
       if (!canDropOnPitch(slotKey, payload)) return;
       await moveCardToPitch(payload.cardId, slotKey, payload);
-    });
+    };
   });
 }
 
@@ -1657,7 +1508,7 @@ function animateStatBars() {
     const to = Number(fill.getAttribute("data-fill-to") || 0);
     setTimeout(() => {
       fill.style.width = `${Math.max(0, Math.min(100, to))}%`;
-    }, 30 + idx * 45);
+    }, 20 + idx * 45);
   });
 }
 
@@ -1717,19 +1568,14 @@ function renderSelectedCard() {
             </div>
           </div>
 
-          <div style="margin-top:12px">
-            ${buildStatsRowsHTML(detailStats, "main")}
-          </div>
+          <div style="margin-top:12px">${buildStatsRowsHTML(detailStats, "main")}</div>
 
           <div style="margin-top:14px">
             <div style="font-family:var(--font-ui);font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--text-secondary)">Traits</div>
             <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
               ${traits.length
                 ? traits.map((t) => `
-                  <div
-                    title="${t.desc}"
-                    style="padding:6px 8px;border:1px solid rgba(232,184,75,.28);background:rgba(232,184,75,.10);color:var(--gold-light);font-family:var(--font-ui);font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px)"
-                  >
+                  <div title="${t.desc}" style="padding:6px 8px;border:1px solid rgba(232,184,75,.28);background:rgba(232,184,75,.10);color:var(--gold-light);font-family:var(--font-ui);font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px)">
                     ${t.key}
                   </div>
                 `).join("")
@@ -1749,9 +1595,7 @@ function renderSelectedCard() {
         <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap">
           <div>
             <div style="font-family:var(--font-ui);font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--text-secondary)">Role Selector</div>
-            <div class="muted tiny" style="margin-top:4px">
-              ${squadSlot ? "Changes the role label saved for this pitch token." : "Place the player in the XI to enable role override."}
-            </div>
+            <div class="muted tiny" style="margin-top:4px">${squadSlot ? "Changes the role label saved for this pitch token." : "Place the player in the XI to enable role override."}</div>
           </div>
           <div>
             <select id="selected-role-select" ${!squadSlot || state.tacticsLocked ? "disabled" : ""} style="min-height:40px;padding:8px 12px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.03);color:var(--text-primary);clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px)">
@@ -1870,14 +1714,8 @@ function updateSynergy() {
     : "Nation INACTIVE";
 
   const streetKingsText = synergy.streetKings.active ? "Street Kings ACTIVE" : "Street Kings OFF";
-
-  const missingText = validation.missingSlots.length
-    ? ` • Missing: ${validation.missingSlots.length}`
-    : "";
-
-  const offRoleText = validation.offPositionAssignments.length
-    ? ` • Off-role: ${validation.offPositionAssignments.length}`
-    : "";
+  const missingText = validation.missingSlots.length ? ` • Missing: ${validation.missingSlots.length}` : "";
+  const offRoleText = validation.offPositionAssignments.length ? ` • Off-role: ${validation.offPositionAssignments.length}` : "";
 
   safeText(
     note,
@@ -1905,70 +1743,715 @@ function renderPackResults(cards) {
   bindSourceCardInteractions("#cards", { jumpOnSelect: false });
 }
 
-function animateStatBars() {
-  const fills = [...document.querySelectorAll("[data-stat-fill]")];
-  fills.forEach((fill, idx) => {
-    fill.style.width = "0%";
-    const to = Number(fill.getAttribute("data-fill-to") || 0);
-    setTimeout(() => {
-      fill.style.width = `${Math.max(0, Math.min(100, to))}%`;
-    }, 20 + idx * 45);
+function syncSquadPdfCopy() {
+  const synergyRowText = document.querySelector(".synergyPanel .row .muted.tiny");
+  if (synergyRowText) synergyRowText.textContent = "Nation / Role / Rarity synergies.";
+
+  const chipRow = document.querySelector(".squadChipRow");
+  if (chipRow) chipRow.style.display = "none";
+
+  const benchTiny = document.querySelector(".benchShell .row .muted.tiny");
+  if (benchTiny) benchTiny.textContent = "Drag between bench and pitch. Collection and Latest Pack cards can be selected first, then placed.";
+
+  const pitchFooter = document.querySelector(".pitchFooter .muted.tiny");
+  if (pitchFooter) pitchFooter.textContent = "Drag compatible players between bench and pitch. Clicking a pitch token opens the detailed player panel.";
+}
+
+/* =========================
+   LEAGUE ENGINE
+========================= */
+
+function getRegistrationCountdownDate(now = new Date()) {
+  const d = new Date(now);
+  d.setUTCHours(20, 0, 0, 0);
+  if (now >= d) d.setUTCDate(d.getUTCDate() + 1);
+  d.setUTCDate(d.getUTCDate() + 3);
+  return d;
+}
+
+function getDefaultJoinedSeasonStart(now = new Date()) {
+  const d = new Date(now);
+  d.setUTCHours(20, 0, 0, 0);
+  if (now < d) d.setUTCDate(d.getUTCDate() - 4);
+  else d.setUTCDate(d.getUTCDate() - 5);
+  return d;
+}
+
+function getUserTeamStrength() {
+  const team = buildTeamModel();
+  const validation = validateTeamModel(team);
+  const synergy = buildSynergyModel(team);
+
+  let strength = team.avgOvr || 62;
+  strength += Math.round((synergy.overall - 50) / 12);
+  strength -= validation.missingSlots.length * 2.5;
+  strength -= validation.offPositionAssignments.length * 1.1;
+  if (team.equippedCount === 11) strength += 2;
+  if (state.isPro) strength += 1;
+
+  return clamp(Math.round(strength), 55, 93);
+}
+
+function getLeagueTeams() {
+  return LEAGUE_TEAM_POOL.map((team) => {
+    if (team.id === "you") {
+      return {
+        ...team,
+        base: getUserTeamStrength(),
+        bot: false
+      };
+    }
+
+    let bonus = 0;
+    if (state.isPro) bonus += 1;
+    return {
+      ...team,
+      base: clamp(team.base + bonus, 60, 92)
+    };
   });
 }
 
-function getNextLeagueKickoff(now = new Date()) {
-  const kickoff = new Date(now);
-  kickoff.setUTCHours(20, 0, 0, 0);
-  if (now >= kickoff) kickoff.setUTCDate(kickoff.getUTCDate() + 1);
-  return kickoff;
+function generateRoundRobinPairs(teamIds) {
+  const ids = teamIds.slice();
+  if (ids.length % 2 === 1) ids.push("BYE");
+
+  const rounds = [];
+  const fixed = ids[0];
+  let rotating = ids.slice(1);
+
+  for (let round = 0; round < ids.length - 1; round++) {
+    const left = [fixed, ...rotating.slice(0, (ids.length / 2) - 1)];
+    const right = rotating.slice((ids.length / 2) - 1).reverse();
+    const pairs = [];
+
+    for (let i = 0; i < left.length; i++) {
+      let home = left[i];
+      let away = right[i];
+
+      if (round % 2 === 1) [home, away] = [away, home];
+      if (i % 2 === 1) [home, away] = [away, home];
+
+      if (home !== "BYE" && away !== "BYE") {
+        pairs.push({ homeId: home, awayId: away });
+      }
+    }
+
+    rounds.push(pairs);
+    rotating = [rotating[rotating.length - 1], ...rotating.slice(0, rotating.length - 1)];
+  }
+
+  return rounds;
 }
 
-function getNextLockTime(now = new Date()) {
-  return new Date(getNextLeagueKickoff(now).getTime() - 3600000);
+function buildLeagueSchedule(teams, seasonStartIso) {
+  const firstLeg = generateRoundRobinPairs(teams.map((t) => t.id));
+  const secondLeg = firstLeg.map((round) => round.map((f) => ({ homeId: f.awayId, awayId: f.homeId })));
+  const allRounds = firstLeg.concat(secondLeg);
+  const start = new Date(seasonStartIso);
+
+  return allRounds.map((round, idx) => {
+    const kickoff = new Date(start);
+    kickoff.setUTCDate(start.getUTCDate() + idx);
+
+    return {
+      md: idx + 1,
+      kickoffIso: kickoff.toISOString(),
+      fixtures: round.map((f, fi) => ({
+        id: `md${idx + 1}-${fi + 1}-${f.homeId}-${f.awayId}`,
+        md: idx + 1,
+        kickoffIso: kickoff.toISOString(),
+        homeId: f.homeId,
+        awayId: f.awayId
+      }))
+    };
+  });
 }
 
-function formatTwo(n) {
-  return String(n).padStart(2, "0");
+function getLeagueTeamsById(teams) {
+  return Object.fromEntries(teams.map((t) => [t.id, t]));
 }
 
-function syncCountdownSet(prefix, targetDate) {
-  const now = new Date();
-  const diff = Math.max(0, targetDate.getTime() - now.getTime());
-  const days = Math.floor(diff / 86400000);
-  const hours = Math.floor((diff % 86400000) / 3600000);
-  const mins = Math.floor((diff % 3600000) / 60000);
-  safeText(el(`${prefix}-days`), formatTwo(days));
-  safeText(el(`${prefix}-hours`), formatTwo(hours));
-  safeText(el(`${prefix}-mins`), formatTwo(mins));
+function sampleGoals(expected, rnd) {
+  let goals = 0;
+  const c1 = clamp(expected / 2.2, 0.05, 0.82);
+  const c2 = clamp(expected / 3.0, 0.04, 0.70);
+  const c3 = clamp(expected / 4.0, 0.03, 0.55);
+  const c4 = clamp(expected / 5.2, 0.02, 0.42);
+  const c5 = clamp(expected / 6.4, 0.01, 0.28);
+
+  if (rnd() < c1) goals++;
+  if (rnd() < c2) goals++;
+  if (rnd() < c3) goals++;
+  if (rnd() < c4) goals++;
+  if (rnd() < c5) goals++;
+
+  return clamp(goals, 0, 5);
 }
 
-function currentLeagueContext() {
-  const fixtures = LEAGUE_FIXTURES[state.activeMatchday] || [];
-  const next = fixtures.find((f) => f.home === "Your Club" || f.away === "Your Club") || fixtures[0] || null;
-  return next;
+function simulateFixtureResult(fixture, teamsById) {
+  const seed = hashString(`league|${state.league.seasonNumber}|${fixture.md}|${fixture.homeId}|${fixture.awayId}`);
+  const rnd = mulberry32(seed);
+
+  const homeTeam = teamsById[fixture.homeId];
+  const awayTeam = teamsById[fixture.awayId];
+  const homeStrength = homeTeam.base + 3;
+  const awayStrength = awayTeam.base;
+
+  const expectedHome = clamp(1.12 + ((homeStrength - awayStrength) / 18) + (rnd() - 0.5) * 0.45, 0.25, 3.45);
+  const expectedAway = clamp(0.98 + ((awayStrength - homeStrength) / 18) + (rnd() - 0.5) * 0.45, 0.20, 3.20);
+
+  const homeGoals = sampleGoals(expectedHome, rnd);
+  const awayGoals = sampleGoals(expectedAway, rnd);
+
+  return { homeGoals, awayGoals };
+}
+
+function buildStandings(teams, playedFixtures) {
+  const map = new Map();
+
+  teams.forEach((team) => {
+    map.set(team.id, {
+      teamId: team.id,
+      name: team.name,
+      bot: team.bot,
+      played: 0,
+      won: 0,
+      drawn: 0,
+      lost: 0,
+      gf: 0,
+      ga: 0,
+      gd: 0,
+      pts: 0,
+      base: team.base
+    });
+  });
+
+  playedFixtures.forEach((f) => {
+    const home = map.get(f.homeId);
+    const away = map.get(f.awayId);
+    if (!home || !away) return;
+
+    home.played += 1;
+    away.played += 1;
+    home.gf += f.homeGoals;
+    home.ga += f.awayGoals;
+    away.gf += f.awayGoals;
+    away.ga += f.homeGoals;
+
+    if (f.homeGoals > f.awayGoals) {
+      home.won += 1;
+      home.pts += 3;
+      away.lost += 1;
+    } else if (f.homeGoals < f.awayGoals) {
+      away.won += 1;
+      away.pts += 3;
+      home.lost += 1;
+    } else {
+      home.drawn += 1;
+      away.drawn += 1;
+      home.pts += 1;
+      away.pts += 1;
+    }
+  });
+
+  const table = [...map.values()].map((row) => ({ ...row, gd: row.gf - row.ga }));
+
+  table.sort((a, b) => {
+    if (b.pts !== a.pts) return b.pts - a.pts;
+    if (b.gd !== a.gd) return b.gd - a.gd;
+    if (b.gf !== a.gf) return b.gf - a.gf;
+    return a.name.localeCompare(b.name);
+  });
+
+  return table.map((row, idx) => ({ ...row, pos: idx + 1 }));
+}
+
+function formatDateShortUTC(date) {
+  const d = new Date(date);
+  const month = d.toLocaleString("en-GB", { month: "short", timeZone: "UTC" }).toUpperCase();
+  const day = String(d.getUTCDate()).padStart(2, "0");
+  return `${day} ${month}`;
+}
+
+function formatTimeUtc(date) {
+  const d = new Date(date);
+  return `${String(d.getUTCHours()).padStart(2, "0")}:${String(d.getUTCMinutes()).padStart(2, "0")} UTC`;
+}
+
+function setLeagueActiveMd(md, userSelected = true) {
+  state.activeMatchday = md;
+  state.league.userSelectedMd = userSelected;
+  localStorage.setItem("kf_active_md", String(md));
+  saveLeagueState();
+}
+
+function getLeagueTierDescriptor(runtime) {
+  if (!runtime.registered) {
+    return {
+      badge: state.isPro ? "PRO" : "OPEN",
+      name: state.isPro ? "Pro Access Available" : "Open Division",
+      copy: state.isPro
+        ? "Battle Pass active • register to enter the current league ladder."
+        : "Free ladder access • register to enter the current season."
+    };
+  }
+
+  const yourRow = runtime.standings.find((x) => x.teamId === "you");
+  if (state.isPro && yourRow && yourRow.pos <= 2) {
+    return {
+      badge: "PRO",
+      name: "Pro Division",
+      copy: "Top 2 currently on Champions Cup qualification path."
+    };
+  }
+
+  if (state.isPro) {
+    return {
+      badge: "PRO",
+      name: "Pro Division",
+      copy: "Battle Pass access active • compete for Elite qualification and Champions Cup path."
+    };
+  }
+
+  return {
+    badge: "OPEN",
+    name: "Open Division",
+    copy: "Free ladder access • top performance pushes toward Pro and Elite competition."
+  };
+}
+
+function buildLeagueRuntime(now = new Date()) {
+  if (!state.league.joined || !state.league.seasonStartIso) {
+    return {
+      registered: false,
+      registrationDate: getRegistrationCountdownDate(now),
+      standings: [],
+      rounds: [],
+      nextFixture: null,
+      currentMd: 1,
+      activeMd: 1
+    };
+  }
+
+  const teams = getLeagueTeams();
+  const teamsById = getLeagueTeamsById(teams);
+  const rounds = buildLeagueSchedule(teams, state.league.seasonStartIso).map((round) => {
+    const kickoff = new Date(round.kickoffIso);
+    const played = now >= kickoff;
+
+    return {
+      ...round,
+      kickoff,
+      fixtures: round.fixtures.map((fixture) => {
+        const result = played ? simulateFixtureResult(fixture, teamsById) : null;
+        return {
+          ...fixture,
+          kickoff,
+          played,
+          ...(result || {})
+        };
+      })
+    };
+  });
+
+  const playedFixtures = rounds.flatMap((r) => r.fixtures.filter((f) => f.played));
+  const standings = buildStandings(teams, playedFixtures);
+
+  const nextFixture = rounds.flatMap((r) => r.fixtures).find((f) => (f.homeId === "you" || f.awayId === "you") && !f.played) || null;
+  const currentMd = nextFixture ? nextFixture.md : rounds.length;
+  const activeMd = state.activeMatchday > 0 ? clamp(state.activeMatchday, 1, rounds.length) : currentMd;
+
+  return {
+    registered: true,
+    teams,
+    teamsById,
+    rounds,
+    standings,
+    playedFixtures,
+    nextFixture,
+    currentMd,
+    activeMd
+  };
+}
+
+function getFixturePerspectiveClass(fixture) {
+  if (!fixture.played) return "result-live";
+  const involvesYou = fixture.homeId === "you" || fixture.awayId === "you";
+  if (!involvesYou) {
+    if (fixture.homeGoals === fixture.awayGoals) return "result-draw";
+    return "result-win";
+  }
+
+  const myGoals = fixture.homeId === "you" ? fixture.homeGoals : fixture.awayGoals;
+  const oppGoals = fixture.homeId === "you" ? fixture.awayGoals : fixture.homeGoals;
+
+  if (myGoals > oppGoals) return "result-win";
+  if (myGoals < oppGoals) return "result-loss";
+  return "result-draw";
+}
+
+function getFixtureDisplayScore(fixture) {
+  if (!fixture.played) return formatTimeUtc(fixture.kickoff);
+  return `${fixture.homeGoals} - ${fixture.awayGoals}`;
+}
+
+function renderHomeLeagueStanding(runtime) {
+  const wrap = el("standingsHome");
+  if (!wrap) return;
+
+  if (!runtime.registered) {
+    wrap.innerHTML = `
+      <div class="standingRow standingHead">
+        <div>#</div>
+        <div>Club</div>
+        <div>Pts</div>
+      </div>
+      <div class="standingRow is-you">
+        <div>—</div>
+        <div>Your Club</div>
+        <div>—</div>
+      </div>
+      <div class="standingRow">
+        <div>?</div>
+        <div>Register for Season 4</div>
+        <div>→</div>
+      </div>
+    `;
+    const note = document.querySelector(".standingNote");
+    if (note) note.textContent = "Join a league to see live standings.";
+    return;
+  }
+
+  const yourIndex = runtime.standings.findIndex((x) => x.teamId === "you");
+  const start = Math.max(0, Math.min(yourIndex - 1, runtime.standings.length - 4));
+  const rows = runtime.standings.slice(start, start + 4);
+
+  wrap.innerHTML = `
+    <div class="standingRow standingHead">
+      <div>#</div>
+      <div>Club</div>
+      <div>Pts</div>
+    </div>
+    ${rows.map((row) => `
+      <div class="standingRow ${row.teamId === "you" ? "is-you" : ""}">
+        <div>${row.pos}</div>
+        <div>${row.name}${row.bot ? " BOT" : ""}</div>
+        <div>${row.pts}</div>
+      </div>
+    `).join("")}
+  `;
+
+  const note = document.querySelector(".standingNote");
+  if (note) note.textContent = "League table now syncs with the League Hub state.";
+}
+
+function renderHomeMatchCard(runtime) {
+  const btnPrimary = el("btn-lock-tactics");
+  const btnSecondary = el("btn-home-arena");
+
+  if (!runtime.registered) {
+    safeText(el("home-match-title"), "Register for a League");
+    safeText(el("home-match-sub"), "Season 4 starts in 3 days. Join now to lock your place.");
+    safeText(el("cd-days"), "03");
+    safeText(el("cd-hours"), "00");
+    safeText(el("cd-mins"), "00");
+
+    if (btnPrimary) {
+      btnPrimary.textContent = "Register League";
+      btnPrimary.disabled = false;
+      btnPrimary.onclick = registerForLeague;
+    }
+    if (btnSecondary) {
+      btnSecondary.textContent = "Play Arena";
+      btnSecondary.disabled = false;
+      btnSecondary.onclick = async () => {
+        jumpToView("squad");
+        await playArena();
+      };
+    }
+    return;
+  }
+
+  if (!runtime.nextFixture) {
+    safeText(el("home-match-title"), "Season Complete");
+    safeText(el("home-match-sub"), "No more fixtures left in the current schedule.");
+    safeText(el("cd-days"), "00");
+    safeText(el("cd-hours"), "00");
+    safeText(el("cd-mins"), "00");
+  } else {
+    const oppId = runtime.nextFixture.homeId === "you" ? runtime.nextFixture.awayId : runtime.nextFixture.homeId;
+    const opp = runtime.teamsById[oppId];
+    const kickoff = runtime.nextFixture.kickoff;
+    const lockTime = new Date(kickoff.getTime() - 3600000);
+
+    safeText(el("home-match-title"), opp?.name || "League Opponent");
+    safeText(el("home-match-sub"), `Kickoff ${kickoff.toUTCString().replace("GMT", "UTC")} • lock ${formatTimeUtc(lockTime)}`);
+
+    const diff = Math.max(0, kickoff.getTime() - Date.now());
+    safeText(el("cd-days"), String(Math.floor(diff / 86400000)).padStart(2, "0"));
+    safeText(el("cd-hours"), String(Math.floor((diff % 86400000) / 3600000)).padStart(2, "0"));
+    safeText(el("cd-mins"), String(Math.floor((diff % 3600000) / 60000)).padStart(2, "0"));
+  }
+
+  if (btnPrimary) {
+    btnPrimary.textContent = state.tacticsLocked ? "Locked" : "Lock Tactics";
+    btnPrimary.disabled = state.tacticsLocked;
+    btnPrimary.onclick = handleLockTactics;
+  }
+  if (btnSecondary) {
+    btnSecondary.textContent = "Play Arena";
+    btnSecondary.disabled = false;
+    btnSecondary.onclick = async () => {
+      jumpToView("squad");
+      await playArena();
+    };
+  }
+}
+
+function renderLeagueMatchdayTabs(runtime) {
+  const wrap = el("leagueMatchdays");
+  if (!wrap) return;
+
+  if (!runtime.registered) {
+    wrap.innerHTML = `
+      <button class="fixtureTab is-active" type="button">MD1</button>
+    `;
+    return;
+  }
+
+  wrap.innerHTML = runtime.rounds.map((round) => `
+    <button class="fixtureTab ${round.md === runtime.activeMd ? "is-active" : ""}" data-md="${round.md}">
+      MD${round.md}
+    </button>
+  `).join("");
+
+  wrap.querySelectorAll("[data-md]").forEach((btn) => {
+    btn.onclick = () => {
+      setLeagueActiveMd(Number(btn.dataset.md), true);
+      renderLeagueShell();
+      renderHomeCountdown();
+    };
+  });
+}
+
+function renderLeagueFixtures(runtime) {
+  const wrap = el("leagueFixtures");
+  if (!wrap) return;
+
+  if (!runtime.registered) {
+    const regDate = getRegistrationCountdownDate();
+    wrap.innerHTML = `
+      <div class="fixtureRow result-live">
+        <div class="fixtureDate">${formatDateShortUTC(regDate)}</div>
+        <div class="fixtureTeams">Season 4 registration window</div>
+        <div class="fixtureScore">20:00</div>
+      </div>
+    `;
+    return;
+  }
+
+  const round = runtime.rounds.find((r) => r.md === runtime.activeMd);
+  if (!round) {
+    wrap.innerHTML = `<div class="muted tiny">No fixtures.</div>`;
+    return;
+  }
+
+  wrap.innerHTML = round.fixtures.map((fixture) => {
+    const home = runtime.teamsById[fixture.homeId];
+    const away = runtime.teamsById[fixture.awayId];
+    return `
+      <div class="fixtureRow ${getFixturePerspectiveClass(fixture)}">
+        <div class="fixtureDate">${formatDateShortUTC(fixture.kickoff)}</div>
+        <div class="fixtureTeams">${home.name} vs ${away.name}</div>
+        <div class="fixtureScore">${getFixtureDisplayScore(fixture)}</div>
+      </div>
+    `;
+  }).join("");
+}
+
+function renderLeagueTable(runtime) {
+  const wrap = el("leagueTable");
+  if (!wrap) return;
+
+  if (!runtime.registered) {
+    wrap.innerHTML = `
+      <div class="leagueTableHead">
+        <div>#</div>
+        <div>Club</div>
+        <div>P</div>
+        <div>GD</div>
+        <div>Pts</div>
+      </div>
+      <div class="leagueTableRow your-row">
+        <div class="leaguePos">—</div>
+        <div class="leagueClub">Your Club</div>
+        <div>0</div>
+        <div>0</div>
+        <div>0</div>
+      </div>
+    `;
+    return;
+  }
+
+  wrap.innerHTML = `
+    <div class="leagueTableHead">
+      <div>#</div>
+      <div>Club</div>
+      <div>P</div>
+      <div>GD</div>
+      <div>Pts</div>
+    </div>
+    ${runtime.standings.map((row) => `
+      <div class="leagueTableRow ${row.teamId === "you" ? "your-row" : ""} ${row.pos <= 2 ? "cup-zone" : ""} ${row.pos > runtime.standings.length - 3 ? "relegation-zone" : ""}">
+        <div class="leaguePos ${row.pos <= 2 ? "top" : ""}">${row.pos}</div>
+        <div class="leagueClub">${row.name}${row.bot ? ` <span class="botTag">BOT</span>` : ""}</div>
+        <div>${row.played}</div>
+        <div>${row.gd >= 0 ? `+${row.gd}` : row.gd}</div>
+        <div>${row.pts}</div>
+      </div>
+    `).join("")}
+  `;
+}
+
+function renderLeagueRegistrationPanel(runtime) {
+  const panel = el("leagueRegisterEmpty");
+  if (!panel) return;
+
+  if (!runtime.registered) {
+    const regDate = runtime.registrationDate;
+    panel.innerHTML = `
+      <div class="muted tiny">League Registration</div>
+      <div class="sectionTitle">Season ${state.league.seasonNumber} Starts In 3 Days</div>
+      <div class="muted tiny">Register now to secure your place before the fixture calendar opens.</div>
+      <div class="muted tiny">Opening kickoff: ${regDate.toUTCString().replace("GMT", "UTC")}</div>
+      <button class="btn primary" id="btn-register-league">Register Now</button>
+    `;
+    el("btn-register-league")?.addEventListener("click", registerForLeague);
+    return;
+  }
+
+  const yourRow = runtime.standings.find((x) => x.teamId === "you");
+  panel.innerHTML = `
+    <div class="muted tiny">League Registration</div>
+    <div class="sectionTitle">Registered For Season ${state.league.seasonNumber}</div>
+    <div class="muted tiny">Current rank: ${yourRow ? `#${yourRow.pos}` : "—"} • Played: ${yourRow ? yourRow.played : 0} • Points: ${yourRow ? yourRow.pts : 0}</div>
+    <button class="btn ghost" id="btn-league-jump-home">Open Dashboard</button>
+  `;
+  el("btn-league-jump-home")?.addEventListener("click", () => {
+    jumpToView("home");
+  });
+}
+
+function renderLeagueRules(runtime) {
+  const list = document.querySelector(".leagueRulesList");
+  if (!list) return;
+
+  const tier = getLeagueTierDescriptor(runtime);
+
+  list.innerHTML = `
+    <div class="leagueRuleItem">
+      <span>Tier Stack</span>
+      <strong>Open → Pro → Elite → Champions Cup</strong>
+    </div>
+    <div class="leagueRuleItem">
+      <span>Cadence</span>
+      <strong>1 Match / Day • 20:00 UTC</strong>
+    </div>
+    <div class="leagueRuleItem">
+      <span>Lock Rule</span>
+      <strong>1 Hour Before Kickoff</strong>
+    </div>
+    <div class="leagueRuleItem">
+      <span>Division</span>
+      <strong>${tier.name}</strong>
+    </div>
+  `;
+}
+
+function renderLeagueShell() {
+  const runtime = buildLeagueRuntime(new Date());
+  const tier = getLeagueTierDescriptor(runtime);
+
+  safeText(el("league-tier-badge"), tier.badge);
+  safeText(el("league-tier-name"), tier.name);
+  safeText(el("league-tier-copy"), tier.copy);
+  safeText(el("league-status-badge"), !runtime.registered ? "NOT REGISTERED" : state.tacticsLocked ? "LOCK WINDOW" : "SEASON LIVE");
+
+  const lockBtn = el("btn-league-lock");
+
+  if (!runtime.registered) {
+    const regDate = runtime.registrationDate;
+    safeText(el("league-next-opponent"), "Register for Season 4");
+    safeText(el("league-next-kickoff"), `Registration closes near first kickoff • ${regDate.toUTCString().replace("GMT", "UTC")}`);
+    safeText(el("league-lock-status"), "Waiting");
+    safeText(el("league-lock-clock"), "Join a league to unlock the daily fixture calendar.");
+    safeText(el("league-cd-days"), "03");
+    safeText(el("league-cd-hours"), "00");
+    safeText(el("league-cd-mins"), "00");
+
+    if (lockBtn) {
+      lockBtn.textContent = "Register League";
+      lockBtn.disabled = false;
+      lockBtn.onclick = registerForLeague;
+    }
+  } else if (!runtime.nextFixture) {
+    safeText(el("league-next-opponent"), "Season Complete");
+    safeText(el("league-next-kickoff"), "All scheduled fixtures have been played.");
+    safeText(el("league-lock-status"), "Closed");
+    safeText(el("league-lock-clock"), "No remaining fixtures this season.");
+    safeText(el("league-cd-days"), "00");
+    safeText(el("league-cd-hours"), "00");
+    safeText(el("league-cd-mins"), "00");
+
+    if (lockBtn) {
+      lockBtn.textContent = "Open Tactics Room";
+      lockBtn.disabled = false;
+      lockBtn.onclick = handleLockTactics;
+    }
+  } else {
+    const oppId = runtime.nextFixture.homeId === "you" ? runtime.nextFixture.awayId : runtime.nextFixture.homeId;
+    const opp = runtime.teamsById[oppId];
+    const kickoff = runtime.nextFixture.kickoff;
+    const lockTime = new Date(kickoff.getTime() - 3600000);
+    const diff = Math.max(0, kickoff.getTime() - Date.now());
+
+    safeText(el("league-next-opponent"), `${runtime.teamsById[runtime.nextFixture.homeId].name} vs ${runtime.teamsById[runtime.nextFixture.awayId].name}`);
+    safeText(el("league-next-kickoff"), `Kickoff ${kickoff.toUTCString().replace("GMT", "UTC")}`);
+    safeText(el("league-lock-status"), state.tacticsLocked ? "Locked" : "Open");
+    safeText(el("league-lock-clock"), state.tacticsLocked ? `Locked until ${kickoff.toUTCString().replace("GMT", "UTC")}` : `Open now • lock at ${formatTimeUtc(lockTime)}`);
+
+    safeText(el("league-cd-days"), String(Math.floor(diff / 86400000)).padStart(2, "0"));
+    safeText(el("league-cd-hours"), String(Math.floor((diff % 86400000) / 3600000)).padStart(2, "0"));
+    safeText(el("league-cd-mins"), String(Math.floor((diff % 3600000) / 60000)).padStart(2, "0"));
+
+    if (lockBtn) {
+      lockBtn.textContent = "Open Tactics Room";
+      lockBtn.disabled = false;
+      lockBtn.onclick = handleLockTactics;
+    }
+  }
+
+  if (runtime.registered && !state.league.userSelectedMd) {
+    setLeagueActiveMd(runtime.currentMd, false);
+  }
+
+  renderLeagueTable(runtime);
+  renderLeagueMatchdayTabs(runtime);
+  renderLeagueFixtures(runtime);
+  renderLeagueRegistrationPanel(runtime);
+  renderLeagueRules(runtime);
 }
 
 function renderHomeCountdown() {
-  const nextKickoff = getNextLeagueKickoff(new Date());
-  const lockTime = getNextLockTime(new Date());
-  syncCountdownSet("cd", nextKickoff);
-  syncCountdownSet("league-cd", nextKickoff);
-
-  const sub = `Next kickoff ${nextKickoff.toUTCString().replace("GMT", "UTC")} • lock ${formatTwo(lockTime.getUTCHours())}:00 UTC`;
-  safeText(el("home-match-sub"), sub);
-  safeText(el("league-next-kickoff"), sub);
-
-  const ctx = currentLeagueContext();
-  if (ctx) {
-    const opponent = ctx.home === "Your Club" ? ctx.away : ctx.home;
-    safeText(el("home-match-title"), opponent);
-    safeText(el("league-next-opponent"), `${ctx.home} vs ${ctx.away}`);
-  }
+  const runtime = buildLeagueRuntime(new Date());
+  renderHomeMatchCard(runtime);
+  renderHomeLeagueStanding(runtime);
 }
 
 function startHomeCountdown() {
   if (state.countdownTimer) clearInterval(state.countdownTimer);
   renderHomeCountdown();
+  renderLeagueShell();
   state.countdownTimer = setInterval(() => {
     renderHomeCountdown();
     renderTacticsShell();
@@ -1976,110 +2459,21 @@ function startHomeCountdown() {
   }, 1000);
 }
 
-function renderTacticsShell() {
-  const now = new Date();
-  const lockTime = getNextLockTime(now);
-  state.tacticsLocked = now >= lockTime && now < getNextLeagueKickoff(now);
-
-  document.querySelectorAll("[data-formation]").forEach((btn) => {
-    btn.classList.toggle("is-active", btn.dataset.formation === state.formation);
-  });
-
-  document.querySelectorAll("[data-tactic-mode]").forEach((btn) => {
-    btn.classList.toggle("is-active", btn.dataset.tacticMode === state.tacticMode);
-  });
-
-  const cards = document.querySelectorAll(".tacticsTopStrip .tacticsTopCard");
-  safeText(cards[0]?.querySelector(".sectionTitle"), formatFormationLabel(state.formation));
-  safeText(cards[1]?.querySelector(".sectionTitle"), savedTemplateLabel());
-
-  const validation = validateTeamModel(buildTeamModel());
-  const statusLabel = state.tacticsLocked ? "Locked" : validation.isReady ? "Ready" : validation.isComplete ? "Open" : "Incomplete";
-  safeText(cards[2]?.querySelector(".sectionTitle"), statusLabel);
-  safeText(
-    cards[2]?.querySelector(".muted.tiny:last-child"),
-    state.tacticsLocked
-      ? "Current window locked until next daily cycle."
-      : validation.isReady
-        ? "Squad is valid and ready for the next lock window."
-        : "Complete the XI and fix conflicts before the next fixture."
-  );
-
-  const desc = tacticDescriptors(state.tacticMode);
-  safeText(el("tactic-front-shape"), desc.front);
-  safeText(el("tactic-mid-core"), desc.mid);
-  safeText(el("tactic-def-line"), desc.def);
-
-  [el("btn-lock-tactics"), el("btn-lock-tactics-side")].forEach((btn) => {
-    if (!btn) return;
-    btn.textContent = state.tacticsLocked ? "Locked" : "Lock Tactics";
-    btn.disabled = state.tacticsLocked;
-  });
-
-  state.teamValidation = validation;
-  syncSquadPdfCopy();
-  applyFormationLayout();
-  refreshSlotStates();
-  renderSelectedCard();
-  updateSynergy();
+function registerForLeague() {
+  state.league.joined = true;
+  state.league.tier = state.isPro ? "PRO" : "OPEN";
+  state.league.seasonStartIso = getDefaultJoinedSeasonStart().toISOString();
+  state.league.userSelectedMd = false;
+  saveLeagueState();
+  setLeagueActiveMd(1, false);
+  renderHomeCountdown();
+  renderLeagueShell();
+  setStatus("League registration confirmed.");
 }
 
-function renderLeagueFixtures() {
-  const wrap = el("leagueFixtures");
-  if (!wrap) return;
-  const rows = LEAGUE_FIXTURES[state.activeMatchday] || [];
-  wrap.innerHTML = rows.map((f) => `
-    <div class="fixtureRow ${f.cls}">
-      <div class="fixtureDate">${f.date}</div>
-      <div class="fixtureTeams">${f.home} vs ${f.away}</div>
-      <div class="fixtureScore">${f.score}</div>
-    </div>
-  `).join("");
-}
-
-function renderLeagueShell() {
-  const nextKickoff = getNextLeagueKickoff(new Date());
-  const lockTime = getNextLockTime(new Date());
-  const tier = state.isPro ? "PRO" : "OPEN";
-  const tierName = state.isPro ? "Pro Division" : "Open Division";
-  const tierCopy = state.isPro
-    ? "Battle Pass access active • compete for Elite qualification and Champions Cup path."
-    : "Free ladder access • top performance pushes toward Pro and Elite competition.";
-
-  safeText(el("league-tier-badge"), tier);
-  safeText(el("league-status-badge"), state.tacticsLocked ? "LOCK WINDOW" : "SEASON LIVE");
-  safeText(el("league-tier-name"), tierName);
-  safeText(el("league-tier-copy"), tierCopy);
-  safeText(el("league-lock-status"), state.tacticsLocked ? "Locked" : "Open");
-  safeText(el("league-lock-clock"), state.tacticsLocked ? `Locked until ${nextKickoff.toUTCString().replace("GMT", "UTC")}` : `Open now • lock at ${formatTwo(lockTime.getUTCHours())}:00 UTC`);
-
-  document.querySelectorAll("[data-md]").forEach((btn) => {
-    btn.classList.toggle("is-active", Number(btn.dataset.md) === state.activeMatchday);
-  });
-
-  const ctx = currentLeagueContext();
-  if (ctx) {
-    safeText(el("league-next-opponent"), `${ctx.home} vs ${ctx.away}`);
-  }
-
-  const registerPanel = el("leagueRegisterEmpty");
-  const registerBtn = el("btn-register-league");
-  if (registerPanel && registerBtn) {
-    if (state.leagueRegistered) {
-      registerPanel.querySelector(".muted.tiny")?.replaceChildren(document.createTextNode("League Registration"));
-      registerPanel.querySelector(".sectionTitle")?.replaceChildren(document.createTextNode("Registered For Season 4"));
-      const texts = registerPanel.querySelectorAll(".muted.tiny");
-      if (texts[1]) texts[1].textContent = "Your club is queued for the next season draw.";
-      registerBtn.textContent = "Registered";
-      registerBtn.disabled = true;
-    } else {
-      registerBtn.textContent = "Register Now";
-      registerBtn.disabled = false;
-    }
-  }
-
-  renderLeagueFixtures();
-}
+/* =========================
+   OVERLAY / PACKS
+========================= */
 
 function showOverlay() {
   const o = el("revealOverlay");
@@ -2264,6 +2658,10 @@ async function openPack() {
   }
 }
 
+/* =========================
+   DAILY / PASS / COSMETICS / MARKET
+========================= */
+
 function updateBattlePassUI(bp) {
   if (!bp) return;
   state.battlepass = bp;
@@ -2391,15 +2789,9 @@ function renderDaily(d) {
   if (chestBtn) chestBtn.disabled = !(d.chest?.available) || d.chest?.opened;
 
   if (chestStatus) {
-    if (d.chest?.opened) {
-      chestStatus.textContent = d.chest.duplicate
-        ? "Chest opened — duplicate converted into coins."
-        : "Chest opened — new cosmetic unlocked.";
-    } else if (d.chest?.available) {
-      chestStatus.textContent = "All challenges complete. Open your daily chest.";
-    } else {
-      chestStatus.textContent = "Complete + claim all 3 to unlock.";
-    }
+    if (d.chest?.opened) chestStatus.textContent = d.chest.duplicate ? "Chest opened — duplicate converted into coins." : "Chest opened — new cosmetic unlocked.";
+    else if (d.chest?.available) chestStatus.textContent = "All challenges complete. Open your daily chest.";
+    else chestStatus.textContent = "Complete + claim all 3 to unlock.";
   }
 
   if (chestBtn) {
@@ -2477,7 +2869,6 @@ function renderMarketSelected() {
   const n = el("mk-selected");
   const min = el("mk-min");
   const btn = el("btn-list");
-
   const c = state.selectedCardId ? getCardById(state.selectedCardId) : null;
 
   if (!c) {
@@ -2492,7 +2883,6 @@ function renderMarketSelected() {
 
   safeText(n, `${c.display_name} (${c.rarity})`);
   safeText(min, `Min: ${minP} coins`);
-
   if (btn) btn.disabled = isListed;
 }
 
@@ -2767,6 +3157,59 @@ async function loadSquad() {
   renderSquad();
 }
 
+/* =========================
+   UI WIRES
+========================= */
+
+function renderTacticsShell() {
+  const runtime = buildLeagueRuntime(new Date());
+  const nextKickoff = runtime.registered && runtime.nextFixture ? runtime.nextFixture.kickoff : null;
+  const lockTime = nextKickoff ? new Date(nextKickoff.getTime() - 3600000) : null;
+  state.tacticsLocked = !!(lockTime && Date.now() >= lockTime.getTime() && Date.now() < nextKickoff.getTime());
+
+  document.querySelectorAll("[data-formation]").forEach((btn) => {
+    btn.classList.toggle("is-active", btn.dataset.formation === state.formation);
+  });
+
+  document.querySelectorAll("[data-tactic-mode]").forEach((btn) => {
+    btn.classList.toggle("is-active", btn.dataset.tacticMode === state.tacticMode);
+  });
+
+  const cards = document.querySelectorAll(".tacticsTopStrip .tacticsTopCard");
+  safeText(cards[0]?.querySelector(".sectionTitle"), formatFormationLabel(state.formation));
+  safeText(cards[1]?.querySelector(".sectionTitle"), savedTemplateLabel());
+
+  const validation = validateTeamModel(buildTeamModel());
+  const statusLabel = state.tacticsLocked ? "Locked" : validation.isReady ? "Ready" : validation.isComplete ? "Open" : "Incomplete";
+  safeText(cards[2]?.querySelector(".sectionTitle"), statusLabel);
+  safeText(
+    cards[2]?.querySelector(".muted.tiny:last-child"),
+    state.tacticsLocked
+      ? "Current window locked until kickoff."
+      : validation.isReady
+        ? "Squad is valid and ready for the next lock window."
+        : "Complete the XI and fix conflicts before the next fixture."
+  );
+
+  const desc = tacticDescriptors(state.tacticMode);
+  safeText(el("tactic-front-shape"), desc.front);
+  safeText(el("tactic-mid-core"), desc.mid);
+  safeText(el("tactic-def-line"), desc.def);
+
+  [el("btn-lock-tactics"), el("btn-lock-tactics-side")].forEach((btn) => {
+    if (!btn) return;
+    btn.textContent = state.tacticsLocked ? "Locked" : "Lock Tactics";
+    btn.disabled = state.tacticsLocked && runtime.registered;
+  });
+
+  state.teamValidation = validation;
+  syncSquadPdfCopy();
+  applyFormationLayout();
+  refreshSlotStates();
+  renderSelectedCard();
+  updateSynergy();
+}
+
 function initChips() {
   document.querySelectorAll("[data-filter]").forEach((b) => {
     b.addEventListener("click", () => {
@@ -2822,14 +3265,6 @@ function initChips() {
       renderSelectedCard();
     });
   });
-
-  document.querySelectorAll("[data-md]").forEach((b) => {
-    b.addEventListener("click", () => {
-      state.activeMatchday = Number(b.dataset.md) || 1;
-      renderLeagueShell();
-      renderHomeCountdown();
-    });
-  });
 }
 
 function initViewTabs() {
@@ -2849,11 +3284,6 @@ function initViewTabs() {
 function handleLockTactics() {
   jumpToView("squad");
   renderTacticsShell();
-  if (!state.tacticsLocked) {
-    const cards = document.querySelectorAll(".tacticsTopStrip .tacticsTopCard");
-    safeText(cards[2]?.querySelector(".sectionTitle"), "Ready");
-    safeText(cards[2]?.querySelector(".muted.tiny:last-child"), `Formation ${formatFormationLabel(state.formation)} • ${savedTemplateLabel()} saved for next lock window.`);
-  }
 }
 
 async function enterKickForge() {
@@ -2878,6 +3308,7 @@ async function enterKickForge() {
     ]);
     renderBench();
     renderTacticsShell();
+    renderHomeCountdown();
     renderLeagueShell();
     updateSynergy();
     setActiveView("home");
@@ -2917,11 +3348,6 @@ async function enterKickForge() {
   el("btn-lock-tactics-side")?.addEventListener("click", handleLockTactics);
   el("btn-league-lock")?.addEventListener("click", handleLockTactics);
 
-  el("btn-register-league")?.addEventListener("click", () => {
-    state.leagueRegistered = true;
-    renderLeagueShell();
-  });
-
   el("btn-list")?.addEventListener("click", listSelected);
 
   el("btn-refresh-market")?.addEventListener("click", async () => {
@@ -2948,6 +3374,7 @@ async function enterKickForge() {
       ]);
       renderBench();
       renderTacticsShell();
+      renderHomeCountdown();
       renderLeagueShell();
     } catch (e) {
       alert(e.message);
@@ -2966,7 +3393,7 @@ async function enterKickForge() {
     buildTeamModel,
     validateTeamModel,
     buildSynergyModel,
-    exportTeamForSimulation,
+    buildLeagueRuntime,
     renderBench,
     generateCardTraits
   };
