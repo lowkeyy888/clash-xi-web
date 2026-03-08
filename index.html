@@ -389,9 +389,11 @@
                 <div class="filterRow">
                   <button class="chip active" data-filter="ALL">All</button>
                   <button class="chip" data-filter="COMMON">Common</button>
+                  <button class="chip" data-filter="UNCOMMON">Uncommon</button>
                   <button class="chip" data-filter="RARE">Rare</button>
                   <button class="chip" data-filter="EPIC">Epic</button>
                   <button class="chip" data-filter="LEGENDARY">Legendary</button>
+                  <button class="chip" data-filter="ICON">Icon</button>
                 </div>
               </div>
 
@@ -730,7 +732,7 @@
                   <div class="heroEyebrow">Forge Market</div>
                   <div class="sectionTitle sectionTitleWide">Trade Hub</div>
                   <div class="muted tiny">
-                    Player listings, pack trading, and coin exchange now live under one market structure.
+                    Player listings, sealed pack resale, and Forge Coin purchase now live under one market structure.
                   </div>
                 </div>
 
@@ -757,9 +759,11 @@
                     <select id="mk-rarity-filter" class="inp marketSelect">
                       <option value="ALL">All Rarities</option>
                       <option value="COMMON">Common</option>
+                      <option value="UNCOMMON">Uncommon</option>
                       <option value="RARE">Rare</option>
                       <option value="EPIC">Epic</option>
                       <option value="LEGENDARY">Legendary</option>
+                      <option value="ICON">Icon</option>
                     </select>
 
                     <select id="mk-position-filter" class="inp marketSelect">
@@ -895,66 +899,141 @@
                 <div class="marketZoneIntro">
                   <div>
                     <div class="sectionTitle">Pack Market</div>
-                    <div class="muted tiny">Sealed packs resellable for Forge Coins. Platform fee applied later in app logic.</div>
+                    <div class="muted tiny">
+                      Platform-direct packs and sealed resale packs share one trading lane.
+                    </div>
                   </div>
-                  <div class="tag">PHASE 7 READY</div>
+                  <div class="tag">PHASE 7</div>
                 </div>
 
                 <div class="marketPackGrid" id="packMarketGrid">
-                  <div class="marketPlaceholderCard">
-                    <div class="marketPlaceholderTitle">Kickoff Pack</div>
-                    <div class="marketPlaceholderMeta">500 FC base • sealed resale zone</div>
-                  </div>
-                  <div class="marketPlaceholderCard">
-                    <div class="marketPlaceholderTitle">Pro Pack</div>
-                    <div class="marketPlaceholderMeta">$2.99 live pack lane</div>
-                  </div>
-                  <div class="marketPlaceholderCard">
-                    <div class="marketPlaceholderTitle">Legendary Chest</div>
-                    <div class="marketPlaceholderMeta">premium sealed inventory lane</div>
-                  </div>
-                  <div class="marketPlaceholderCard">
-                    <div class="marketPlaceholderTitle">Icon Capsule</div>
-                    <div class="marketPlaceholderMeta">highest-value pack market item</div>
-                  </div>
+                  <article class="marketPackCard">
+                    <div class="marketPackTop">
+                      <div class="marketPackIcon">🎴</div>
+                      <div class="marketPackBadge marketPackBadge--common">Common+</div>
+                    </div>
+                    <div class="marketPackName">Kickoff Pack</div>
+                    <div class="marketPackMeta">Starter lane • base entry pack</div>
+                    <div class="marketPackPriceRow">
+                      <div class="marketPackPrice">500 FC</div>
+                    </div>
+                    <button class="btn primary marketPackBtn">Open Pack</button>
+                    <button class="marketOddsLink" data-pack-odds="kickoff">View Odds →</button>
+                  </article>
+
+                  <article class="marketPackCard">
+                    <div class="marketPackTop">
+                      <div class="marketPackIcon">⚡</div>
+                      <div class="marketPackBadge marketPackBadge--rare">Rare+</div>
+                    </div>
+                    <div class="marketPackName">Pro Pack</div>
+                    <div class="marketPackMeta">Premium direct pack</div>
+                    <div class="marketPackPriceRow">
+                      <div class="marketPackPrice">$2.99</div>
+                      <div class="marketPackSubPrice">or 2,200 FC</div>
+                    </div>
+                    <button class="btn primary marketPackBtn">Open Pack</button>
+                    <button class="marketOddsLink" data-pack-odds="pro">View Odds →</button>
+                  </article>
+
+                  <article class="marketPackCard">
+                    <div class="marketPackTop">
+                      <div class="marketPackIcon">👑</div>
+                      <div class="marketPackBadge marketPackBadge--legendary">Legendary</div>
+                    </div>
+                    <div class="marketPackName">Legendary Chest</div>
+                    <div class="marketPackMeta">High-tier premium pull lane</div>
+                    <div class="marketPackPriceRow">
+                      <div class="marketPackPrice">$14.99</div>
+                      <div class="marketPackSubPrice">or 18,000 FC</div>
+                    </div>
+                    <button class="btn primary marketPackBtn">Open Pack</button>
+                    <button class="marketOddsLink" data-pack-odds="legendary">View Odds →</button>
+                  </article>
+
+                  <article class="marketPackCard marketPackCard--resale">
+                    <div class="marketPackTop">
+                      <div class="marketPackIcon">🔥</div>
+                      <div class="marketPackResaleTag">RESALE</div>
+                    </div>
+                    <div class="marketPackName">Icon Capsule</div>
+                    <div class="marketPackMeta">Listed by lowkeyy9191 • 2h ago</div>
+                    <div class="marketPackPriceRow">
+                      <div class="marketPackPrice">61,500 FC</div>
+                      <div class="marketPackSubPrice">$39.99 direct equivalent</div>
+                    </div>
+                    <button class="btn primary marketPackBtn">Buy Pack</button>
+                    <button class="marketOddsLink" data-pack-odds="icon">View Odds →</button>
+                  </article>
                 </div>
               </section>
 
               <!-- COIN MARKET -->
               <section class="marketZone" id="market-zone-coins" data-market-zone="coins">
-                <div class="marketZoneIntro">
+                <div class="marketZoneIntro marketZoneIntro--coins">
                   <div>
                     <div class="sectionTitle">Coin Exchange</div>
-                    <div class="muted tiny">Real-money FC bundles and later Stripe exchange flow.</div>
-                  </div>
-                  <div class="tag">PHASE 7 READY</div>
-                </div>
-
-                <div class="coinBundleGrid" id="coinExchangeGrid">
-                  <div class="coinBundleCard">
-                    <div class="coinBundleValue">1,000 FC</div>
-                    <div class="coinBundlePrice">$0.99</div>
-                  </div>
-                  <div class="coinBundleCard">
-                    <div class="coinBundleValue">5,500 FC</div>
-                    <div class="coinBundlePrice">$4.99</div>
-                  </div>
-                  <div class="coinBundleCard">
-                    <div class="coinBundleValue">12,000 FC</div>
-                    <div class="coinBundlePrice">$9.99</div>
-                  </div>
-                  <div class="coinBundleCard">
-                    <div class="coinBundleValue">100,000 FC</div>
-                    <div class="coinBundlePrice">$79.99</div>
-                  </div>
-                </div>
-
-                <div class="marketCoinNotes">
-                  <div class="marketPanel">
-                    <div class="sectionTitle">Coin Rules</div>
-                    <div class="muted tiny" style="margin-top:8px">
-                      No FC transfer between accounts. Real-money bundle grant and logging will be wired in the next market phase.
+                    <div class="muted tiny">
+                      Secure Forge Coin purchase flow via Stripe checkout.
                     </div>
+                  </div>
+                  <div class="tag">PHASE 7</div>
+                </div>
+
+                <div class="coinExchangeShell" id="coinExchangeShell">
+                  <div class="coinExchangeList" id="coinExchangeList">
+                    <div class="coinExchangeRow" data-coin-bundle="starter">
+                      <div class="coinExchangeLeft">
+                        <div class="coinExchangeBundleName">Starter Bundle</div>
+                        <div class="coinExchangeBundleMeta">1,000 FC • no bonus</div>
+                      </div>
+                      <div class="coinExchangeRight">
+                        <div class="coinExchangeBundlePrice">$0.99</div>
+                        <button class="smallBtn ghost coinBundleSelectBtn">Select</button>
+                      </div>
+                    </div>
+
+                    <div class="coinExchangeRow" data-coin-bundle="boost">
+                      <div class="coinExchangeLeft">
+                        <div class="coinExchangeBundleName">Boost Bundle</div>
+                        <div class="coinExchangeBundleMeta">5,500 FC • +500 bonus</div>
+                      </div>
+                      <div class="coinExchangeRight">
+                        <div class="coinExchangeBundlePrice">$4.99</div>
+                        <button class="smallBtn ghost coinBundleSelectBtn">Select</button>
+                      </div>
+                    </div>
+
+                    <div class="coinExchangeRow coinExchangeRow--best" data-coin-bundle="bestvalue">
+                      <div class="coinExchangeBestBadge">★ Best Value</div>
+                      <div class="coinExchangeLeft">
+                        <div class="coinExchangeBundleName">Best Value Bundle</div>
+                        <div class="coinExchangeBundleMeta">12,000 FC • +2,000 bonus</div>
+                      </div>
+                      <div class="coinExchangeRight">
+                        <div class="coinExchangeBundlePrice">$9.99</div>
+                        <button class="smallBtn ghost coinBundleSelectBtn">Select</button>
+                      </div>
+                    </div>
+
+                    <div class="coinExchangeRow" data-coin-bundle="whale">
+                      <div class="coinExchangeLeft">
+                        <div class="coinExchangeBundleName">Founders Vault</div>
+                        <div class="coinExchangeBundleMeta">100,000 FC • premium top-up</div>
+                      </div>
+                      <div class="coinExchangeRight">
+                        <div class="coinExchangeBundlePrice">$79.99</div>
+                        <button class="smallBtn ghost coinBundleSelectBtn">Select</button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="coinExchangeConfirmWrap">
+                    <button class="btn primary" id="btn-confirm-coin-purchase" disabled>Confirm Purchase</button>
+                  </div>
+
+                  <div class="coinExchangeFooter muted tiny" id="coinExchangeSpendCap">
+                    Monthly spend: $4.99 / $200 cap
                   </div>
                 </div>
               </section>
@@ -1105,6 +1184,31 @@
 
       <div class="overlayFooter">
         <button class="btn primary" id="btn-claim" type="button" disabled>Claim</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay hidden" id="packOddsOverlay" aria-hidden="true">
+    <div class="overlayInner card" id="packOddsInner">
+      <div class="overlayHeader">
+        <div>
+          <div class="overlayTitle" id="packOddsTitle">Pack Odds</div>
+          <div class="muted tiny" id="packOddsSub">Probability table and pity tracker</div>
+        </div>
+        <button class="btn ghost" id="btn-close-pack-odds" type="button">Close</button>
+      </div>
+
+      <div class="packOddsBody">
+        <div class="packOddsTable" id="packOddsTable">
+          <div class="packOddsRow packOddsHead">
+            <div>Rarity</div>
+            <div>Chance</div>
+          </div>
+        </div>
+
+        <div class="packOddsPity" id="packOddsPity">
+          You have opened 0 / 10 Kickoff Packs — pity activates at 11.
+        </div>
       </div>
     </div>
   </div>
