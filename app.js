@@ -278,6 +278,32 @@ const FORMATION_ROLE_MAP = {
     LW: { role: TACTICAL_ROLES.WIDE_FORWARD, allowed: ["LW", "LM"] },
     CM1: { role: TACTICAL_ROLES.CENTRAL_MID, allowed: ["CM", "CDM"] },
     CAM: { role: TACTICAL_ROLES.ATTACKING_MID, allowed: ["CAM", "CM"] },
+      LW: { role: TACTICAL_ROLES.WIDE_FORWARD, allowed: ["LW"] },
+    ST: { role: TACTICAL_ROLES.STRIKER, allowed: ["ST"] },
+    RW: { role: TACTICAL_ROLES.WIDE_FORWARD, allowed: ["RW"] },
+  },
+  442: {
+    GK: { role: TACTICAL_ROLES.GOALKEEPER, allowed: ["GK"] },
+    LB: { role: TACTICAL_ROLES.FULLBACK_WINGBACK, allowed: ["LB"] },
+    CB1: { role: TACTICAL_ROLES.CENTER_BACK, allowed: ["CB"] },
+    CB2: { role: TACTICAL_ROLES.CENTER_BACK, allowed: ["CB"] },
+    RB: { role: TACTICAL_ROLES.FULLBACK_WINGBACK, allowed: ["RB"] },
+    LW: { role: TACTICAL_ROLES.WIDE_FORWARD, allowed: ["LW", "LM"] },
+    CM1: { role: TACTICAL_ROLES.CENTRAL_MID, allowed: ["CM", "CDM"] },
+    CM2: { role: TACTICAL_ROLES.CENTRAL_MID, allowed: ["CM", "CDM"] },
+    RW: { role: TACTICAL_ROLES.WIDE_FORWARD, allowed: ["RW", "RM"] },
+    CAM: { role: TACTICAL_ROLES.STRIKER, allowed: ["ST", "CF"] },
+    ST: { role: TACTICAL_ROLES.STRIKER, allowed: ["ST", "CF"] },
+  },
+  451: {
+    GK: { role: TACTICAL_ROLES.GOALKEEPER, allowed: ["GK"] },
+    LB: { role: TACTICAL_ROLES.FULLBACK_WINGBACK, allowed: ["LB"] },
+    CB1: { role: TACTICAL_ROLES.CENTER_BACK, allowed: ["CB"] },
+    CB2: { role: TACTICAL_ROLES.CENTER_BACK, allowed: ["CB"] },
+    RB: { role: TACTICAL_ROLES.FULLBACK_WINGBACK, allowed: ["RB"] },
+    LW: { role: TACTICAL_ROLES.WIDE_FORWARD, allowed: ["LW", "LM"] },
+    CM1: { role: TACTICAL_ROLES.CENTRAL_MID, allowed: ["CM", "CDM"] },
+    CAM: { role: TACTICAL_ROLES.ATTACKING_MID, allowed: ["CAM", "CM"] },
     CM2: { role: TACTICAL_ROLES.CENTRAL_MID, allowed: ["CM", "CDM"] },
     RW: { role: TACTICAL_ROLES.WIDE_FORWARD, allowed: ["RW", "RM"] },
     ST: { role: TACTICAL_ROLES.STRIKER, allowed: ["ST"] },
@@ -320,7 +346,10 @@ const FORMATION_ROLE_MAP = {
     CM1: { role: TACTICAL_ROLES.CENTRAL_MID, allowed: ["CM", "CDM"] },
     CAM: { role: TACTICAL_ROLES.ATTACKING_MID, allowed: ["CAM", "CM"] },
     CM2: { role: TACTICAL_ROLES.CENTRAL_MID, allowed: ["CM", "CDM"] },
-    RW: { role: TACTICAL_ROLES.FULLBACK_WINGBACK, allowed: ["RM", "RW", "RB"] },
+    RW: {
+      role: TACTICAL_ROLES.FULLBACK_WINGBACK,
+      allowed: ["RM", "RW", "RB"],
+    },
     LW: { role: TACTICAL_ROLES.STRIKER, allowed: ["ST", "CF"] },
     ST: { role: TACTICAL_ROLES.STRIKER, allowed: ["ST", "CF"] },
   },
@@ -694,7 +723,7 @@ function getSlotRoleDisplay(slotKey) {
 }
 function getShortRoleDisplay(slotKey) {
   const label = getSlotRoleDisplay(slotKey);
-  return label.length > 14 ? `${label.slice(0, 12)}&` : label;
+  return label.length > 14 ? `${label.slice(0, 12)}…` : label;
 }
 function ensureBenchState() {
   if (!Array.isArray(state.bench)) state.bench = Array(7).fill(null);
@@ -926,7 +955,7 @@ function getSerialText(card) {
   if (normalizeRarity(c.rarity) === "ICON") {
     const cap = "5,000";
     const current = String((base % 5000) + 1).padStart(2, "0");
-    return `#${current},${String(base % 1000).padStart(3, "0")} / ${cap}`;
+    return `#${current} / ${cap}`;
   }
   return `#${serial}`;
 }
@@ -1163,8 +1192,8 @@ function setUserLabel() {
 }
 function setCoins(coins) {
   state.walletCoins = coins ?? null;
-  safeText(el("pill-coins"), `Coins: ${coins ?? "•"}`);
-  safeText(el("home-coins"), coins ?? "•");
+  safeText(el("pill-coins"), `Coins: ${coins ?? "—"}`);
+  safeText(el("home-coins"), coins ?? "—");
 }
 function pulseSelectedPanel() {
   const panel = el("selectedCard");
@@ -1532,7 +1561,36 @@ function cardHTML(card, opts = {}) {
   const compact = !!opts.compact;
   const selectable = opts.selectable !== false;
   const draggable = !!opts.draggable;
-  return `<divclass="kfCard ${rarityFrame(c.rarity)} ${selected ? "is-selected" : ""} ${listed ? "is-listed" : ""} ${compact ? "is-compact" : ""}"${selectable ? `data-card-id="${c.id}"` : ""}${draggable ? `draggable="true"` : ""}><div class="kfCard__shine"></div><div class="kfCard__top"><div class="kfCard__ovr">${vm.ovr}</div><div class="kfCard__metaRight"><div class="kfCard__pos">${c.position}</div><div class="kfCard__rarity">${rarityShort(c.rarity)}</div></div></div><div class="kfCard__body"><div class="kfCard__name">${c.display_name}</div><div class="kfCard__role">${c.role}</div></div><div class="kfCard__stats"><div class="kfStat"><span>PAC</span><strong>${vm.pace}</strong></div><div class="kfStat"><span>PAS</span><strong>${vm.pass}</strong></div><div class="kfStat"><span>ATT</span><strong>${vm.attack}</strong></div><div class="kfStat"><span>DEF</span><strong>${vm.defense}</strong></div></div><div class="kfCard__footer"><div class="kfCard__badge ${rarityFrame(c.rarity)}">${c.rarity}</div>${listed ? `<div class="kfCard__listed">LISTED</div>` : ``}</div></div>`;
+  return `
+    <div
+      class="kfCard ${rarityFrame(c.rarity)} ${selected ? "is-selected" : ""} ${listed ? "is-listed" : ""} ${compact ? "is-compact" : ""}"
+      ${selectable ? `data-card-id="${c.id}"` : ""}
+      ${draggable ? `draggable="true"` : ""}
+    >
+      <div class="kfCard__shine"></div>
+      <div class="kfCard__top">
+        <div class="kfCard__ovr">${vm.ovr}</div>
+        <div class="kfCard__metaRight">
+          <div class="kfCard__pos">${c.position}</div>
+          <div class="kfCard__rarity">${rarityShort(c.rarity)}</div>
+        </div>
+      </div>
+      <div class="kfCard__body">
+        <div class="kfCard__name">${c.display_name}</div>
+        <div class="kfCard__role">${c.role}</div>
+      </div>
+      <div class="kfCard__stats">
+        <div class="kfStat"><span>PAC</span><strong>${vm.pace}</strong></div>
+        <div class="kfStat"><span>PAS</span><strong>${vm.pass}</strong></div>
+        <div class="kfStat"><span>ATT</span><strong>${vm.attack}</strong></div>
+        <div class="kfStat"><span>DEF</span><strong>${vm.defense}</strong></div>
+      </div>
+      <div class="kfCard__footer">
+        <div class="kfCard__badge ${rarityFrame(c.rarity)}">${c.rarity}</div>
+        ${listed ? `<div class="kfCard__listed">LISTED</div>` : ``}
+      </div>
+    </div>
+  `;
 }
 function bindSourceCardInteractions(rootSelector, opts = {}) {
   const jumpOnSelect = !!opts.jumpOnSelect;
@@ -1581,7 +1639,19 @@ function bindSourceCardInteractions(rootSelector, opts = {}) {
 function benchCardHTML(card, idx) {
   const vm = cardVisualModel(card);
   const listed = state.market.listedSet.has(card.id);
-  return `<div style="display:grid;gap:4px;justify-items:center;width:100%"><div style="font-family:var(--font-ui);font-size:10px;font-weight:900;letter-spacing:.05em;color:var(--gold-light);text-transform:uppercase">${shortName(card.display_name)}</div><div style="font-family:var(--font-ui);font-size:10px;color:var(--text-secondary)">${card.position} • OVR ${vm.ovr}</div><div style="font-family:var(--font-ui);font-size:9px;color:${listed ? "var(--alert-red)" : "var(--text-secondary)"};text-transform:uppercase">${listed ? "Listed" : `B${idx + 1}`}</div></div>`;
+  return `
+    <div style="display:grid;gap:4px;justify-items:center;width:100%">
+      <div style="font-family:var(--font-ui);font-size:10px;font-weight:900;letter-spacing:.05em;color:var(--gold-light);text-transform:uppercase">
+        ${shortName(card.display_name)}
+      </div>
+      <div style="font-family:var(--font-ui);font-size:10px;color:var(--text-secondary)">
+        ${card.position} • OVR ${vm.ovr}
+      </div>
+      <div style="font-family:var(--font-ui);font-size:9px;color:${listed ? "var(--alert-red)" : "var(--text-secondary)"};text-transform:uppercase">
+        ${listed ? "Listed" : `B${idx + 1}`}
+      </div>
+    </div>
+  `;
 }
 function renderBench() {
   ensureBenchState();
@@ -1622,7 +1692,9 @@ function renderBench() {
       paintDropNode(node, ok ? "ok" : "bad");
       e.dataTransfer.dropEffect = ok ? "move" : "none";
     };
-    node.ondragleave = () => clearDropNodeStyle(node);
+    node.ondragleave = () => {
+      clearDropNodeStyle(node);
+    };
     node.ondrop = async (e) => {
       e.preventDefault();
       clearAllDropStates();
@@ -1639,7 +1711,9 @@ function slotLabel(k) {
 }
 function shortName(name) {
   if (!name) return "Unknown";
-  const parts = String(name).trim().split(/\s+/);
+  const parts = String(name)
+    .trim()
+    .split(/\s+/);
   if (parts.length === 1) return parts[0];
   return `${parts[0]} ${parts[parts.length - 1]}`;
 }
@@ -1669,17 +1743,14 @@ function applyFormationLayout() {
   const layout = FORMATION_LAYOUTS[state.formation] || FORMATION_LAYOUTS["433"];
   [...grid.querySelectorAll(".slot")].forEach((node) => {
     const slot = node.dataset.slot;
-    const pos = layout[slot] ||
-      FORMATION_LAYOUTS["433"][slot] || { x: 50, y: 50 };
+    const pos =
+      layout[slot] || FORMATION_LAYOUTS["433"][slot] || { x: 50, y: 50 };
     node.style.left = `${pos.x}%`;
     node.style.top = `${pos.y}%`;
     node.style.right = "auto";
     node.style.transform = "translateX(-50%)";
     const cardId = state.squad[slot];
-    node.classList.toggle(
-      "slot-selected",
-      !!cardId && cardId === state.selectedCardId,
-    );
+    node.classList.toggle("slot-selected", !!cardId && cardId === state.selectedCardId);
   });
 }
 function refreshSlotStates() {
@@ -1712,7 +1783,9 @@ function attachPitchDragListeners() {
           e.dataTransfer.setData("text/plain", cardId);
         }
       : null;
-    node.ondragend = () => clearDragPayload();
+    node.ondragend = () => {
+      clearDragPayload();
+    };
     node.ondragover = (e) => {
       if (!state.dragPayload) return;
       e.preventDefault();
@@ -1720,7 +1793,9 @@ function attachPitchDragListeners() {
       paintDropNode(node, ok ? "ok" : "bad");
       e.dataTransfer.dropEffect = ok ? "move" : "none";
     };
-    node.ondragleave = () => clearDropNodeStyle(node);
+    node.ondragleave = () => {
+      clearDropNodeStyle(node);
+    };
     node.ondrop = async (e) => {
       e.preventDefault();
       clearAllDropStates();
@@ -1742,7 +1817,10 @@ function renderSquad() {
     const meta = getSlotMeta(k);
     const roleLine = getShortRoleDisplay(k);
     if (!cardId) {
-      node.innerHTML = `<div class="p">${slotLabel(k)}</div><div class="n muted">${getFriendlyTacticalRole(meta?.role)}</div>`;
+      node.innerHTML = `
+        <div class="p">${slotLabel(k)}</div>
+        <div class="n muted">${getFriendlyTacticalRole(meta?.role)}</div>
+      `;
       return;
     }
     const c = getCardById(cardId);
@@ -1751,7 +1829,12 @@ function renderSquad() {
       return;
     }
     const vm = cardVisualModel(c);
-    node.innerHTML = `<div class="p">${slotLabel(k)}</div><div class="n">${shortName(c.display_name)}</div><div class="muted tiny">${c.position} • OVR ${vm.ovr}</div><div class="muted tiny">${roleLine}</div>`;
+    node.innerHTML = `
+      <div class="p">${slotLabel(k)}</div>
+      <div class="n">${shortName(c.display_name)}</div>
+      <div class="muted tiny">${c.position} • OVR ${vm.ovr}</div>
+      <div class="muted tiny">${roleLine}</div>
+    `;
   });
   state.teamValidation = validateTeamModel(buildTeamModel());
   refreshSlotStates();
@@ -1808,34 +1891,52 @@ function renderInventory() {
   const list = el("invList");
   if (!list) return;
   const items = state.inventory.filter((c) =>
-    state.filter === "ALL" ? true : normalizeRarity(c.rarity) === state.filter,
+    state.filter === "ALL" ? true : c.rarity === state.filter,
   );
   if (!items.length) {
     list.innerHTML = `<div class="muted tiny">No cards yet. Open your first KickForge pack.</div>`;
     return;
   }
-  list.innerHTML = `<div class="kfCollectionGrid">${items.map((c) => cardHTML(c, { selected: state.selectedCardId === c.id, listed: state.market.listedSet.has(c.id), compact: false, selectable: true, draggable: !state.tacticsLocked })).join("")}</div>`;
+  list.innerHTML = `
+    <div class="kfCollectionGrid">
+      ${items
+        .map((c) =>
+          cardHTML(c, {
+            selected: state.selectedCardId === c.id,
+            listed: state.market.listedSet.has(c.id),
+            compact: false,
+            selectable: true,
+            draggable: !state.tacticsLocked,
+          }),
+        )
+        .join("")}
+    </div>
+  `;
   bindSourceCardInteractions("#invList", { jumpOnSelect: true });
 }
 function buildStatsRowsHTML(stats, prefix) {
   return stats
     .map(
-      (s) =>
-        `<div style="display:grid;grid-template-columns:44px 1fr 38px;gap:8px;align-items:center;margin-top:8px"><div style="font-family:var(--font-ui);font-size:12px;font-weight:800;letter-spacing:.05em;color:var(--text-secondary);text-transform:uppercase">${s.key}</div><div style="height:8px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);overflow:hidden;clip-path:polygon(8px 0,100% 0,100% 100%,0 100%,0 8px)"><div data-stat-fill="${prefix}-${s.key}" data-fill-to="${s.value}" style="height:100%;width:0%;background:linear-gradient(90deg,var(--emerald),var(--gold));transition:width .6s ease-out"></div></div><div style="font-family:var(--font-display);font-size:18px;line-height:1;color:#fff;text-align:right">${s.value}</div></div>`,
+      (s) => `
+    <div style="display:grid;grid-template-columns:44px 1fr 38px;gap:8px;align-items:center;margin-top:8px">
+      <div style="font-family:var(--font-ui);font-size:12px;font-weight:800;letter-spacing:.05em;color:var(--text-secondary);text-transform:uppercase">${s.key}</div>
+      <div style="height:8px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);overflow:hidden;clip-path:polygon(8px 0,100% 0,100% 100%,0 100%,0 8px)">
+        <div data-stat-fill="${prefix}-${s.key}" data-fill-to="${s.value}" style="height:100%;width:0%;background:linear-gradient(90deg,var(--emerald),var(--gold));transition:width .6s ease-out"></div>
+      </div>
+      <div style="font-family:var(--font-display);font-size:18px;line-height:1;color:#fff;text-align:right">${s.value}</div>
+    </div>
+  `,
     )
     .join("");
 }
 function animateStatBars() {
-  const fills = $$("[data-stat-fill]");
+  const fills = [...$$("[data-stat-fill]")];
   fills.forEach((fill, idx) => {
     fill.style.width = "0%";
     const to = Number(fill.getAttribute("data-fill-to") || 0);
-    setTimeout(
-      () => {
-        fill.style.width = `${Math.max(0, Math.min(100, to))}%`;
-      },
-      20 + idx * 45,
-    );
+    setTimeout(() => {
+      fill.style.width = `${Math.max(0, Math.min(100, to))}%`;
+    }, 20 + idx * 45);
   });
 }
 function renderSelectedCard() {
@@ -1843,7 +1944,13 @@ function renderSelectedCard() {
   if (!box) return;
   const c = state.selectedCardId ? getCardById(state.selectedCardId) : null;
   if (!c) {
-    box.innerHTML = `<div class="muted tiny">Selected Player</div><div style="font-weight:900;margin-top:6px">None</div><div class="muted tiny" style="margin-top:6px">${state.tacticsLocked ? "Tactics are locked. Wait for the next open window to edit your squad." : "Use Collection or Latest Pack. Click a card, then click a pitch slot or empty bench slot. You can also drag bench  pitch."}</div>`;
+    box.innerHTML = `
+      <div class="muted tiny">Selected Player</div>
+      <div style="font-weight:900;margin-top:6px">None</div>
+      <div class="muted tiny" style="margin-top:6px">
+        ${state.tacticsLocked ? "Tactics are locked. Wait for the next open window to edit your squad." : "Use Collection or Latest Pack. Click a card, then click a pitch slot or empty bench slot. You can also drag bench ↔ pitch."}
+      </div>
+    `;
     return;
   }
   const vm = cardVisualModel(c);
@@ -1853,7 +1960,7 @@ function renderSelectedCard() {
   const squadSlot = getSquadSlotOfCard(c.id);
   const benchIndex = findBenchIndexByCardId(c.id);
   const firstFit = findFirstCompatibleEmptySlot(c.id);
-  const nation = getCardNation(c) || "•";
+  const nation = getCardNation(c) || "—";
   const serial = getSerialText(c);
   const roleMeta = squadSlot ? getSlotMeta(squadSlot) : null;
   const roleOptions = roleMeta ? ROLE_OPTIONS[roleMeta.role] || [] : [];
@@ -1864,7 +1971,111 @@ function renderSelectedCard() {
   const benchLabel = bestBench
     ? `Best Bench: ${bestBench.card.display_name} (B${bestBench.idx + 1})`
     : "No compatible bench comparison";
-  box.innerHTML = `<div style="display:grid;gap:14px"><div class="muted tiny">Selected Player</div><div style="display:grid;grid-template-columns:210px 1fr;gap:14px;align-items:start"><div style="display:flex;justify-content:center">${cardHTML(c, { selected: true, listed: isListed, compact: true, selectable: false })}</div><div style="padding:12px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.02);clip-path:polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px)"><div style="font-family:var(--font-display);font-size:38px;line-height:.88;color:var(--gold-light);letter-spacing:.03em;text-transform:uppercase">${c.display_name}</div><div style="margin-top:8px;color:var(--text-secondary);font-size:14px;letter-spacing:.02em">${c.position} " ${nation} " ${c.rarity} " ${serial}</div><div style="display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:end;margin-top:10px"><div style="font-family:var(--font-display);font-size:54px;line-height:.85;color:#fff">OVR ${vm.ovr}</div><div style="font-family:var(--font-ui);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-secondary)">${squadSlot ? `Pitch Slot: ${slotLabel(squadSlot)}` : benchIndex !== -1 ? `Bench Slot: B${benchIndex + 1}` : "Collection / Latest Pack"}</div></div><div style="margin-top:12px">${buildStatsRowsHTML(detailStats, "main")}</div><div style="margin-top:14px"><div style="font-family:var(--font-ui);font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--text-secondary)">Traits</div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">${traits.length ? traits.map((t) => `<div title="${t.desc}" style="padding:6px 8px;border:1px solid rgba(232,184,75,.28);background:rgba(232,184,75,.10);color:var(--gold-light);font-family:var(--font-ui);font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px)">${t.key}</div>`).join("") : `<div class="muted tiny">No traits.</div>`}</div></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px"><button class="smallBtn primary" id="btn-selected-auto" ${state.tacticsLocked || isListed || !firstFit ? "disabled" : ""}>Auto Place</button><button class="smallBtn ghost" id="btn-selected-bench" ${state.tacticsLocked || isListed ? "disabled" : ""}>Send Bench</button><button class="smallBtn ghost" id="btn-selected-market" ${isListed ? "disabled" : ""}>List on Market</button></div></div></div><div style="padding:12px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.02);clip-path:polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px)"><div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap"><div><div style="font-family:var(--font-ui);font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--text-secondary)">Role Selector</div><div class="muted tiny" style="margin-top:4px">${squadSlot ? "Changes the role label saved for this pitch token." : "Place the player in the XI to enable role override."}</div></div><div><select id="selected-role-select" ${!squadSlot || state.tacticsLocked ? "disabled" : ""} style="min-height:40px;padding:8px 12px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.03);color:var(--text-primary);clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px)"><option value="">${roleMeta ? getFriendlyTacticalRole(roleMeta.role) : "No Slot"}</option>${roleOptions.map((r) => `<option value="${r}" ${roleOverride === r ? "selected" : ""}>${r}</option>`).join("")}</select></div></div></div><div style="padding:12px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.02);clip-path:polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px)"><div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap"><div><div style="font-family:var(--font-ui);font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--text-secondary)">Compare With Bench</div><div class="muted tiny" style="margin-top:4px">${benchLabel}</div></div><button class="smallBtn ${showCompare ? "primary" : "ghost"}" id="btn-toggle-compare" ${!bestBench ? "disabled" : ""}>${showCompare ? "Comparison On" : "Comparison Off"}</button></div>${showCompare ? `<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px"><div style="padding:10px;border:1px solid rgba(255,255,255,.08);background:rgba(0,0,0,.14);clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px)"><div style="font-family:var(--font-ui);font-size:13px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;color:var(--gold-light)">${shortName(c.display_name)}</div><div class="muted tiny" style="margin-top:4px">${c.position} • OVR ${vm.ovr}</div><div style="margin-top:8px">${buildStatsRowsHTML(detailStats, "cmp-a")}</div></div><div style="padding:10px;border:1px solid rgba(255,255,255,.08);background:rgba(0,0,0,.14);clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px)"><div style="font-family:var(--font-ui);font-size:13px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;color:var(--gold-light)">${shortName(bestBench.card.display_name)}</div><div class="muted tiny" style="margin-top:4px">B${bestBench.idx + 1} • ${bestBench.card.position} • OVR ${cardVisualModel(bestBench.card).ovr}</div><div style="margin-top:8px">${buildStatsRowsHTML(compareStats, "cmp-b")}</div></div></div>` : ""}</div><div class="muted tiny">${state.tacticsLocked ? "TACTICS LOCKED • changes are blocked until the next fixture window opens." : isListed ? "LISTED • cancel the market listing before using this card in your squad." : squadSlot ? `In Starting XI • ${slotLabel(squadSlot)}. Role saved as: ${getSlotRoleDisplay(squadSlot)}.` : benchIndex !== -1 ? `On Bench • B${benchIndex + 1}.` : `Quick sell reference: ${getQuickSellValue(c)} FC.`}</div></div>`;
+  box.innerHTML = `
+    <div style="display:grid;gap:14px">
+      <div class="muted tiny">Selected Player</div>
+      <div style="display:grid;grid-template-columns:210px 1fr;gap:14px;align-items:start">
+        <div style="display:flex;justify-content:center">
+          ${cardHTML(c, {
+            selected: true,
+            listed: isListed,
+            compact: true,
+            selectable: false,
+          })}
+        </div>
+        <div style="padding:12px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.02);clip-path:polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px)">
+          <div style="font-family:var(--font-display);font-size:38px;line-height:.88;color:var(--gold-light);letter-spacing:.03em;text-transform:uppercase">${c.display_name}</div>
+          <div style="margin-top:8px;color:var(--text-secondary);font-size:14px;letter-spacing:.02em">${c.position} • ${nation} • ${c.rarity} • ${serial}</div>
+          <div style="display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:end;margin-top:10px">
+            <div style="font-family:var(--font-display);font-size:54px;line-height:.85;color:#fff">OVR ${vm.ovr}</div>
+            <div style="font-family:var(--font-ui);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-secondary)">
+              ${squadSlot ? `Pitch Slot: ${slotLabel(squadSlot)}` : benchIndex !== -1 ? `Bench Slot: B${benchIndex + 1}` : "Collection / Latest Pack"}
+            </div>
+          </div>
+          <div style="margin-top:12px">${buildStatsRowsHTML(detailStats, "main")}</div>
+          <div style="margin-top:14px">
+            <div style="font-family:var(--font-ui);font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--text-secondary)">Traits</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+              ${
+                traits.length
+                  ? traits
+                      .map(
+                        (t) => `
+                  <div title="${t.desc}" style="padding:6px 8px;border:1px solid rgba(232,184,75,.28);background:rgba(232,184,75,.10);color:var(--gold-light);font-family:var(--font-ui);font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px)">
+                    ${t.key}
+                  </div>
+                `,
+                      )
+                      .join("")
+                  : `<div class="muted tiny">No traits.</div>`
+              }
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
+            <button class="smallBtn primary" id="btn-selected-auto" ${state.tacticsLocked || isListed || !firstFit ? "disabled" : ""}>Auto Place</button>
+            <button class="smallBtn ghost" id="btn-selected-bench" ${state.tacticsLocked || isListed ? "disabled" : ""}>Send Bench</button>
+            <button class="smallBtn ghost" id="btn-selected-market" ${isListed ? "disabled" : ""}>List on Market</button>
+          </div>
+        </div>
+      </div>
+      <div style="padding:12px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.02);clip-path:polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px)">
+        <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap">
+          <div>
+            <div style="font-family:var(--font-ui);font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--text-secondary)">Role Selector</div>
+            <div class="muted tiny" style="margin-top:4px">${squadSlot ? "Changes the role label saved for this pitch token." : "Place the player in the XI to enable role override."}</div>
+          </div>
+          <div>
+            <select id="selected-role-select" ${!squadSlot || state.tacticsLocked ? "disabled" : ""} style="min-height:40px;padding:8px 12px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.03);color:var(--text-primary);clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px)">
+              <option value="">${roleMeta ? getFriendlyTacticalRole(roleMeta.role) : "No Slot"}</option>
+              ${roleOptions.map((r) => `<option value="${r}" ${roleOverride === r ? "selected" : ""}>${r}</option>`).join("")}
+            </select>
+          </div>
+        </div>
+      </div>
+      <div style="padding:12px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.02);clip-path:polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px)">
+        <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap">
+          <div>
+            <div style="font-family:var(--font-ui);font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--text-secondary)">Compare With Bench</div>
+            <div class="muted tiny" style="margin-top:4px">${benchLabel}</div>
+          </div>
+          <button class="smallBtn ${showCompare ? "primary" : "ghost"}" id="btn-toggle-compare" ${!bestBench ? "disabled" : ""}>
+            ${showCompare ? "Comparison On" : "Comparison Off"}
+          </button>
+        </div>
+        ${
+          showCompare
+            ? `
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
+            <div style="padding:10px;border:1px solid rgba(255,255,255,.08);background:rgba(0,0,0,.14);clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px)">
+              <div style="font-family:var(--font-ui);font-size:13px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;color:var(--gold-light)">${shortName(c.display_name)}</div>
+              <div class="muted tiny" style="margin-top:4px">${c.position} • OVR ${vm.ovr}</div>
+              <div style="margin-top:8px">${buildStatsRowsHTML(detailStats, "cmp-a")}</div>
+            </div>
+            <div style="padding:10px;border:1px solid rgba(255,255,255,.08);background:rgba(0,0,0,.14);clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px)">
+              <div style="font-family:var(--font-ui);font-size:13px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;color:var(--gold-light)">${shortName(bestBench.card.display_name)}</div>
+              <div class="muted tiny" style="margin-top:4px">B${bestBench.idx + 1} • ${bestBench.card.position} • OVR ${cardVisualModel(bestBench.card).ovr}</div>
+              <div style="margin-top:8px">${buildStatsRowsHTML(compareStats, "cmp-b")}</div>
+            </div>
+          </div>
+        `
+            : ""
+        }
+      </div>
+      <div class="muted tiny">
+        ${
+          state.tacticsLocked
+            ? "TACTICS LOCKED — changes are blocked until the next fixture window opens."
+            : isListed
+              ? "LISTED — cancel the market listing before using this card in your squad."
+              : squadSlot
+                ? `In Starting XI — ${slotLabel(squadSlot)}. Role saved as: ${getSlotRoleDisplay(squadSlot)}.`
+                : benchIndex !== -1
+                  ? `On Bench — B${benchIndex + 1}.`
+                  : `Quick sell reference: ${getQuickSellValue(c)} FC.`
+        }
+      </div>
+    </div>
+  `;
   el("btn-selected-bench")?.addEventListener("click", async () => {
     const currentBench = findBenchIndexByCardId(c.id);
     if (currentBench !== -1) {
@@ -1893,7 +2104,6 @@ function renderSelectedCard() {
   });
   el("btn-selected-market")?.addEventListener("click", () => {
     jumpToView("market");
-    setMarketTab("players");
     renderMarketSelected();
     setStatus("Set a price and list the selected card.");
   });
@@ -1944,9 +2154,7 @@ function updateSynergy() {
     : "";
   safeText(
     note,
-    `Role ${synergy.role.status} ${synergy.role.count}/${team.equippedCount} " ` +
-      `Rarity ${synergy.rarity.status} ${synergy.rarity.count}/${team.equippedCount} " ` +
-      `${nationText} " ${streetKingsText}${missingText}${offRoleText}`,
+    `Role ${synergy.role.status} ${synergy.role.count}/${team.equippedCount} • Rarity ${synergy.rarity.status} ${synergy.rarity.count}/${team.equippedCount} • ${nationText} • ${streetKingsText}${missingText}${offRoleText}`,
   );
 }
 function renderPackResults(cards) {
@@ -1954,30 +2162,36 @@ function renderPackResults(cards) {
   if (!wrap) return;
   const normalized = (cards || []).map(normalizeCard).filter(Boolean);
   wrap.innerHTML = normalized.length
-    ? `<div class="kfPackGrid">${normalized.map((c) => cardHTML(c, { compact: true, selectable: true, draggable: !state.tacticsLocked, selected: state.selectedCardId === c.id, listed: state.market.listedSet.has(c.id) })).join("")}</div>`
+    ? `<div class="kfPackGrid">${normalized
+        .map((c) =>
+          cardHTML(c, {
+            compact: true,
+            selectable: true,
+            draggable: !state.tacticsLocked,
+            selected: state.selectedCardId === c.id,
+            listed: state.market.listedSet.has(c.id),
+          }),
+        )
+        .join("")}</div>`
     : "";
   bindSourceCardInteractions("#cards", { jumpOnSelect: false });
 }
 function syncSquadPdfCopy() {
-  const synergyRowText = document.querySelector(
-    ".synergyPanel .row .muted.tiny",
-  );
+  const synergyRowText = $(".synergyPanel .row .muted.tiny");
   if (synergyRowText)
     synergyRowText.textContent = "Nation / Role / Rarity synergies.";
-  const chipRow = document.querySelector(".squadChipRow");
+  const chipRow = $(".squadChipRow");
   if (chipRow) chipRow.style.display = "none";
-  const benchTiny = document.querySelector(".benchShell .row .muted.tiny");
+  const benchTiny = $(".benchShell .row .muted.tiny");
   if (benchTiny)
     benchTiny.textContent =
       "Drag between bench and pitch. Collection and Latest Pack cards can be selected first, then placed.";
-  const pitchFooter = document.querySelector(".pitchFooter .muted.tiny");
+  const pitchFooter = $(".pitchFooter .muted.tiny");
   if (pitchFooter)
     pitchFooter.textContent =
       "Drag compatible players between bench and pitch. Clicking a pitch token opens the detailed player panel.";
 }
-/* =========================LEAGUE ENGINE========================= */ function getRegistrationCountdownDate(
-  now = new Date(),
-) {
+function getRegistrationCountdownDate(now = new Date()) {
   const d = new Date(now);
   d.setUTCHours(20, 0, 0, 0);
   if (now >= d) d.setUTCDate(d.getUTCDate() + 1);
@@ -2013,9 +2227,6 @@ function getLeagueTeams() {
     return { ...team, base: clamp(team.base + bonus, 60, 92) };
   });
 }
-function getLeagueTeamsById(teams) {
-  return Object.fromEntries(teams.map((t) => [t.id, t]));
-}
 function generateRoundRobinPairs(teamIds) {
   const ids = teamIds.slice();
   if (ids.length % 2 === 1) ids.push("BYE");
@@ -2031,8 +2242,9 @@ function generateRoundRobinPairs(teamIds) {
       let away = right[i];
       if (round % 2 === 1) [home, away] = [away, home];
       if (i % 2 === 1) [home, away] = [away, home];
-      if (home !== "BYE" && away !== "BYE")
+      if (home !== "BYE" && away !== "BYE") {
         pairs.push({ homeId: home, awayId: away });
+      }
     }
     rounds.push(pairs);
     rotating = [
@@ -2064,6 +2276,9 @@ function buildLeagueSchedule(teams, seasonStartIso) {
       })),
     };
   });
+}
+function getLeagueTeamsById(teams) {
+  return Object.fromEntries(teams.map((t) => [t.id, t]));
 }
 function sampleGoals(expected, rnd) {
   let goals = 0;
@@ -2145,10 +2360,7 @@ function buildStandings(teams, playedFixtures) {
       away.pts += 1;
     }
   });
-  const table = [...map.values()].map((row) => ({
-    ...row,
-    gd: row.gf - row.ga,
-  }));
+  const table = [...map.values()].map((row) => ({ ...row, gd: row.gf - row.ga }));
   table.sort((a, b) => {
     if (b.pts !== a.pts) return b.pts - a.pts;
     if (b.gd !== a.gd) return b.gd - a.gd;
@@ -2236,15 +2448,14 @@ function buildLeagueRuntime(now = new Date()) {
       };
     },
   );
-  const playedFixtures = rounds.flatMap((r) =>
-    r.fixtures.filter((f) => f.played),
-  );
+  const playedFixtures = rounds.flatMap((r) => r.fixtures.filter((f) => f.played));
   const standings = buildStandings(teams, playedFixtures);
   const nextFixture =
     rounds
       .flatMap((r) => r.fixtures)
-      .find((f) => (f.homeId === "you" || f.awayId === "you") && !f.played) ||
-    null;
+      .find(
+        (f) => (f.homeId === "you" || f.awayId === "you") && !f.played,
+      ) || null;
   const currentMd = nextFixture ? nextFixture.md : rounds.length;
   const activeMd =
     state.activeMatchday > 0
@@ -2269,10 +2480,8 @@ function getFixturePerspectiveClass(fixture) {
     if (fixture.homeGoals === fixture.awayGoals) return "result-draw";
     return "result-win";
   }
-  const myGoals =
-    fixture.homeId === "you" ? fixture.homeGoals : fixture.awayGoals;
-  const oppGoals =
-    fixture.homeId === "you" ? fixture.awayGoals : fixture.homeGoals;
+  const myGoals = fixture.homeId === "you" ? fixture.homeGoals : fixture.awayGoals;
+  const oppGoals = fixture.homeId === "you" ? fixture.awayGoals : fixture.homeGoals;
   if (myGoals > oppGoals) return "result-win";
   if (myGoals < oppGoals) return "result-loss";
   return "result-draw";
@@ -2285,31 +2494,57 @@ function renderHomeLeagueStanding(runtime) {
   const wrap = el("standingsHome");
   if (!wrap) return;
   if (!runtime.registered) {
-    wrap.innerHTML = `<div class="standingRow standingHead"><div>#</div><div>Club</div><div>Pts</div></div><div class="standingRow is-you"><div>•</div><div>Your Club</div><div>•</div></div><div class="standingRow"><div>?</div><div>Register for Season 4</div><div></div></div>`;
-    const note = document.querySelector(".standingNote");
+    wrap.innerHTML = `
+      <div class="standingRow standingHead">
+        <div>#</div>
+        <div>Club</div>
+        <div>Pts</div>
+      </div>
+      <div class="standingRow is-you">
+        <div>—</div>
+        <div>Your Club</div>
+        <div>—</div>
+      </div>
+      <div class="standingRow">
+        <div>?</div>
+        <div>Register for Season 4</div>
+        <div>→</div>
+      </div>
+    `;
+    const note = $(".standingNote");
     if (note) note.textContent = "Join a league to see live standings.";
     return;
   }
   const yourIndex = runtime.standings.findIndex((x) => x.teamId === "you");
-  const start = Math.max(
-    0,
-    Math.min(yourIndex - 1, runtime.standings.length - 4),
-  );
+  const start = Math.max(0, Math.min(yourIndex - 1, runtime.standings.length - 4));
   const rows = runtime.standings.slice(start, start + 4);
-  wrap.innerHTML = `<div class="standingRow standingHead"><div>#</div><div>Club</div><div>Pts</div></div>${rows.map((row) => `<div class="standingRow ${row.teamId === "you" ? "is-you" : ""}"><div>${row.pos}</div><div>${row.name}${row.bot ? ` <span class="botTag">BOT</span>` : ""}</div><div>${row.pts}</div></div>`).join("")}`;
-  const note = document.querySelector(".standingNote");
-  if (note)
-    note.textContent = "League table now syncs with the League Hub state.";
+  wrap.innerHTML = `
+    <div class="standingRow standingHead">
+      <div>#</div>
+      <div>Club</div>
+      <div>Pts</div>
+    </div>
+    ${rows
+      .map(
+        (row) => `
+      <div class="standingRow ${row.teamId === "you" ? "is-you" : ""}">
+        <div>${row.pos}</div>
+        <div>${row.name}${row.bot ? " BOT" : ""}</div>
+        <div>${row.pts}</div>
+      </div>
+    `,
+      )
+      .join("")}
+  `;
+  const note = $(".standingNote");
+  if (note) note.textContent = "League table now syncs with the League Hub state.";
 }
 function renderHomeMatchCard(runtime) {
   const btnPrimary = el("btn-lock-tactics");
   const btnSecondary = el("btn-home-arena");
   if (!runtime.registered) {
     safeText(el("home-match-title"), "Register for a League");
-    safeText(
-      el("home-match-sub"),
-      "Season 4 starts in 3 days. Join now to lock your place.",
-    );
+    safeText(el("home-match-sub"), "Season 4 starts in 3 days. Join now to lock your place.");
     safeText(el("cd-days"), "03");
     safeText(el("cd-hours"), "00");
     safeText(el("cd-mins"), "00");
@@ -2330,10 +2565,7 @@ function renderHomeMatchCard(runtime) {
   }
   if (!runtime.nextFixture) {
     safeText(el("home-match-title"), "Season Complete");
-    safeText(
-      el("home-match-sub"),
-      "No more fixtures left in the current schedule.",
-    );
+    safeText(el("home-match-sub"), "No more fixtures left in the current schedule.");
     safeText(el("cd-days"), "00");
     safeText(el("cd-hours"), "00");
     safeText(el("cd-mins"), "00");
@@ -2351,18 +2583,9 @@ function renderHomeMatchCard(runtime) {
       `Kickoff ${kickoff.toUTCString().replace("GMT", "UTC")} • lock ${formatTimeUtc(lockTime)}`,
     );
     const diff = Math.max(0, kickoff.getTime() - Date.now());
-    safeText(
-      el("cd-days"),
-      String(Math.floor(diff / 86400000)).padStart(2, "0"),
-    );
-    safeText(
-      el("cd-hours"),
-      String(Math.floor((diff % 86400000) / 3600000)).padStart(2, "0"),
-    );
-    safeText(
-      el("cd-mins"),
-      String(Math.floor((diff % 3600000) / 60000)).padStart(2, "0"),
-    );
+    safeText(el("cd-days"), String(Math.floor(diff / 86400000)).padStart(2, "0"));
+    safeText(el("cd-hours"), String(Math.floor((diff % 86400000) / 3600000)).padStart(2, "0"));
+    safeText(el("cd-mins"), String(Math.floor((diff % 3600000) / 60000)).padStart(2, "0"));
   }
   if (btnPrimary) {
     btnPrimary.textContent = state.tacticsLocked ? "Locked" : "Lock Tactics";
@@ -2387,8 +2610,11 @@ function renderLeagueMatchdayTabs(runtime) {
   }
   wrap.innerHTML = runtime.rounds
     .map(
-      (round) =>
-        `<button class="fixtureTab ${round.md === runtime.activeMd ? "is-active" : ""}" data-md="${round.md}">MD${round.md}</button>`,
+      (round) => `
+    <button class="fixtureTab ${round.md === runtime.activeMd ? "is-active" : ""}" data-md="${round.md}">
+      MD${round.md}
+    </button>
+  `,
     )
     .join("");
   wrap.querySelectorAll("[data-md]").forEach((btn) => {
@@ -2404,7 +2630,13 @@ function renderLeagueFixtures(runtime) {
   if (!wrap) return;
   if (!runtime.registered) {
     const regDate = getRegistrationCountdownDate();
-    wrap.innerHTML = `<div class="fixtureRow result-live"><div class="fixtureDate">${formatDateShortUTC(regDate)}</div><div class="fixtureTeams">Season 4 registration window</div><div class="fixtureScore">20:00</div></div>`;
+    wrap.innerHTML = `
+      <div class="fixtureRow result-live">
+        <div class="fixtureDate">${formatDateShortUTC(regDate)}</div>
+        <div class="fixtureTeams">Season 4 registration window</div>
+        <div class="fixtureScore">20:00</div>
+      </div>
+    `;
     return;
   }
   const round = runtime.rounds.find((r) => r.md === runtime.activeMd);
@@ -2416,7 +2648,13 @@ function renderLeagueFixtures(runtime) {
     .map((fixture) => {
       const home = runtime.teamsById[fixture.homeId];
       const away = runtime.teamsById[fixture.awayId];
-      return `<div class="fixtureRow ${getFixturePerspectiveClass(fixture)}"><div class="fixtureDate">${formatDateShortUTC(fixture.kickoff)}</div><div class="fixtureTeams">${home.name} vs ${away.name}</div><div class="fixtureScore">${getFixtureDisplayScore(fixture)}</div></div>`;
+      return `
+        <div class="fixtureRow ${getFixturePerspectiveClass(fixture)}">
+          <div class="fixtureDate">${formatDateShortUTC(fixture.kickoff)}</div>
+          <div class="fixtureTeams">${home.name} vs ${away.name}</div>
+          <div class="fixtureScore">${getFixtureDisplayScore(fixture)}</div>
+        </div>
+      `;
     })
     .join("");
 }
@@ -2424,31 +2662,95 @@ function renderLeagueTable(runtime) {
   const wrap = el("leagueTable");
   if (!wrap) return;
   if (!runtime.registered) {
-    wrap.innerHTML = `<div class="leagueTableHead"><div>#</div><div>Club</div><div>P</div><div>GD</div><div>Pts</div></div><div class="leagueTableRow your-row"><div class="leaguePos">•</div><div class="leagueClub">Your Club</div><div>0</div><div>0</div><div>0</div></div>`;
+    wrap.innerHTML = `
+      <div class="leagueTableHead">
+        <div>#</div>
+        <div>Club</div>
+        <div>P</div>
+        <div>GD</div>
+        <div>Pts</div>
+      </div>
+      <div class="leagueTableRow your-row">
+        <div class="leaguePos">—</div>
+        <div class="leagueClub">Your Club</div>
+        <div>0</div>
+        <div>0</div>
+        <div>0</div>
+      </div>
+    `;
     return;
   }
-  wrap.innerHTML = `<div class="leagueTableHead"><div>#</div><div>Club</div><div>P</div><div>GD</div><div>Pts</div></div>${runtime.standings.map((row) => `<div class="leagueTableRow ${row.teamId === "you" ? "your-row" : ""} ${row.pos <= 2 ? "cup-zone" : ""} ${row.pos > runtime.standings.length - 3 ? "relegation-zone" : ""}"><div class="leaguePos ${row.pos <= 2 ? "top" : ""}">${row.pos}</div><div class="leagueClub">${row.name}${row.bot ? ` <span class="botTag">BOT</span>` : ""}</div><div>${row.played}</div><div>${row.gd >= 0 ? `+${row.gd}` : row.gd}</div><div>${row.pts}</div></div>`).join("")}`;
+  wrap.innerHTML = `
+    <div class="leagueTableHead">
+      <div>#</div>
+      <div>Club</div>
+      <div>P</div>
+      <div>GD</div>
+      <div>Pts</div>
+    </div>
+    ${runtime.standings
+      .map(
+        (row) => `
+      <div class="leagueTableRow ${row.teamId === "you" ? "your-row" : ""} ${row.pos <= 2 ? "cup-zone" : ""} ${row.pos > runtime.standings.length - 3 ? "relegation-zone" : ""}">
+        <div class="leaguePos ${row.pos <= 2 ? "top" : ""}">${row.pos}</div>
+        <div class="leagueClub">${row.name}${row.bot ? ` <span class="botTag">BOT</span>` : ""}</div>
+        <div>${row.played}</div>
+        <div>${row.gd >= 0 ? `+${row.gd}` : row.gd}</div>
+        <div>${row.pts}</div>
+      </div>
+    `,
+      )
+      .join("")}
+  `;
 }
 function renderLeagueRegistrationPanel(runtime) {
   const panel = el("leagueRegisterEmpty");
   if (!panel) return;
   if (!runtime.registered) {
     const regDate = runtime.registrationDate;
-    panel.innerHTML = `<div class="muted tiny">League Registration</div><div class="sectionTitle">Season ${state.league.seasonNumber} Starts In 3 Days</div><div class="muted tiny">Register now to secure your place before the fixture calendar opens.</div><div class="muted tiny">Opening kickoff: ${regDate.toUTCString().replace("GMT", "UTC")}</div><button class="btn primary" id="btn-register-league">Register Now</button>`;
+    panel.innerHTML = `
+      <div class="muted tiny">League Registration</div>
+      <div class="sectionTitle">Season ${state.league.seasonNumber} Starts In 3 Days</div>
+      <div class="muted tiny">Register now to secure your place before the fixture calendar opens.</div>
+      <div class="muted tiny">Opening kickoff: ${regDate.toUTCString().replace("GMT", "UTC")}</div>
+      <button class="btn primary" id="btn-register-league">Register Now</button>
+    `;
     el("btn-register-league")?.addEventListener("click", registerForLeague);
     return;
   }
   const yourRow = runtime.standings.find((x) => x.teamId === "you");
-  panel.innerHTML = `<div class="muted tiny">League Registration</div><div class="sectionTitle">Registered For Season ${state.league.seasonNumber}</div><div class="muted tiny">Current rank: ${yourRow ? `#${yourRow.pos}` : "—"} • Played: ${yourRow ? yourRow.played : 0} • Points: ${yourRow ? yourRow.pts : 0}</div><button class="btn ghost" id="btn-league-jump-home">Open Dashboard</button>`;
-  el("btn-league-jump-home")?.addEventListener("click", () =>
-    jumpToView("home"),
-  );
+  panel.innerHTML = `
+    <div class="muted tiny">League Registration</div>
+    <div class="sectionTitle">Registered For Season ${state.league.seasonNumber}</div>
+    <div class="muted tiny">Current rank: ${yourRow ? `#${yourRow.pos}` : "—"} • Played: ${yourRow ? yourRow.played : 0} • Points: ${yourRow ? yourRow.pts : 0}</div>
+    <button class="btn ghost" id="btn-league-jump-home">Open Dashboard</button>
+  `;
+  el("btn-league-jump-home")?.addEventListener("click", () => {
+    jumpToView("home");
+  });
 }
 function renderLeagueRules(runtime) {
-  const list = document.querySelector(".leagueRulesList");
+  const list = $(".leagueRulesList");
   if (!list) return;
   const tier = getLeagueTierDescriptor(runtime);
-  list.innerHTML = `<div class="leagueRuleItem"><span>Tier Stack</span><strong>Open  Pro  Elite  Champions Cup</strong></div><div class="leagueRuleItem"><span>Cadence</span><strong>1 Match / Day " 20:00 UTC</strong></div><div class="leagueRuleItem"><span>Lock Rule</span><strong>1 Hour Before Kickoff</strong></div><div class="leagueRuleItem"><span>Division</span><strong>${tier.name}</strong></div>`;
+  list.innerHTML = `
+    <div class="leagueRuleItem">
+      <span>Tier Stack</span>
+      <strong>Open → Pro → Elite → Champions Cup</strong>
+    </div>
+    <div class="leagueRuleItem">
+      <span>Cadence</span>
+      <strong>1 Match / Day • 20:00 UTC</strong>
+    </div>
+    <div class="leagueRuleItem">
+      <span>Lock Rule</span>
+      <strong>1 Hour Before Kickoff</strong>
+    </div>
+    <div class="leagueRuleItem">
+      <span>Division</span>
+      <strong>${tier.name}</strong>
+    </div>
+  `;
 }
 function renderLeagueShell() {
   const runtime = buildLeagueRuntime(new Date());
@@ -2458,11 +2760,7 @@ function renderLeagueShell() {
   safeText(el("league-tier-copy"), tier.copy);
   safeText(
     el("league-status-badge"),
-    !runtime.registered
-      ? "NOT REGISTERED"
-      : state.tacticsLocked
-        ? "LOCK WINDOW"
-        : "SEASON LIVE",
+    !runtime.registered ? "NOT REGISTERED" : state.tacticsLocked ? "LOCK WINDOW" : "SEASON LIVE",
   );
   const lockBtn = el("btn-league-lock");
   if (!runtime.registered) {
@@ -2470,13 +2768,10 @@ function renderLeagueShell() {
     safeText(el("league-next-opponent"), "Register for Season 4");
     safeText(
       el("league-next-kickoff"),
-      `Registration closes near first kickoff " ${regDate.toUTCString().replace("GMT", "UTC")}`,
+      `Registration closes near first kickoff • ${regDate.toUTCString().replace("GMT", "UTC")}`,
     );
     safeText(el("league-lock-status"), "Waiting");
-    safeText(
-      el("league-lock-clock"),
-      "Join a league to unlock the daily fixture calendar.",
-    );
+    safeText(el("league-lock-clock"), "Join a league to unlock the daily fixture calendar.");
     safeText(el("league-cd-days"), "03");
     safeText(el("league-cd-hours"), "00");
     safeText(el("league-cd-mins"), "00");
@@ -2487,10 +2782,7 @@ function renderLeagueShell() {
     }
   } else if (!runtime.nextFixture) {
     safeText(el("league-next-opponent"), "Season Complete");
-    safeText(
-      el("league-next-kickoff"),
-      "All scheduled fixtures have been played.",
-    );
+    safeText(el("league-next-kickoff"), "All scheduled fixtures have been played.");
     safeText(el("league-lock-status"), "Closed");
     safeText(el("league-lock-clock"), "No remaining fixtures this season.");
     safeText(el("league-cd-days"), "00");
@@ -2509,10 +2801,7 @@ function renderLeagueShell() {
       el("league-next-opponent"),
       `${runtime.teamsById[runtime.nextFixture.homeId].name} vs ${runtime.teamsById[runtime.nextFixture.awayId].name}`,
     );
-    safeText(
-      el("league-next-kickoff"),
-      `Kickoff ${kickoff.toUTCString().replace("GMT", "UTC")}`,
-    );
+    safeText(el("league-next-kickoff"), `Kickoff ${kickoff.toUTCString().replace("GMT", "UTC")}`);
     safeText(el("league-lock-status"), state.tacticsLocked ? "Locked" : "Open");
     safeText(
       el("league-lock-clock"),
@@ -2520,18 +2809,9 @@ function renderLeagueShell() {
         ? `Locked until ${kickoff.toUTCString().replace("GMT", "UTC")}`
         : `Open now • lock at ${formatTimeUtc(lockTime)}`,
     );
-    safeText(
-      el("league-cd-days"),
-      String(Math.floor(diff / 86400000)).padStart(2, "0"),
-    );
-    safeText(
-      el("league-cd-hours"),
-      String(Math.floor((diff % 86400000) / 3600000)).padStart(2, "0"),
-    );
-    safeText(
-      el("league-cd-mins"),
-      String(Math.floor((diff % 3600000) / 60000)).padStart(2, "0"),
-    );
+    safeText(el("league-cd-days"), String(Math.floor(diff / 86400000)).padStart(2, "0"));
+    safeText(el("league-cd-hours"), String(Math.floor((diff % 86400000) / 3600000)).padStart(2, "0"));
+    safeText(el("league-cd-mins"), String(Math.floor((diff % 3600000) / 60000)).padStart(2, "0"));
     if (lockBtn) {
       lockBtn.textContent = "Open Tactics Room";
       lockBtn.disabled = false;
@@ -2573,21 +2853,10 @@ function registerForLeague() {
   renderLeagueShell();
   setStatus("League registration confirmed.");
 }
-/* =========================OVERLAY / PACKS / DAILY / MARKET / BOOT========================= */ function getPackPityProgress(
-  packKey,
-) {
-  const product = PACK_MARKET_PRODUCTS[packKey] || PACK_MARKET_PRODUCTS.kickoff;
-  const current = Number(state.packPity?.[packKey] || 0);
-  return { current, base: product.pityBase, triggerAt: product.pityBase + 1 };
-}
-function bumpPackPity(packKey) {
-  if (!PACK_MARKET_PRODUCTS[packKey]) return;
-  const progress = getPackPityProgress(packKey);
-  const next =
-    progress.current + 1 >= progress.triggerAt ? 0 : progress.current + 1;
-  state.packPity[packKey] = next;
-  savePackPityState();
-}
+
+/* =========================
+   OVERLAY / PACKS
+========================= */
 function showOverlay() {
   const o = el("revealOverlay");
   if (!o) return;
@@ -2600,36 +2869,12 @@ function hideOverlay() {
   o.classList.add("hidden");
   o.setAttribute("aria-hidden", "true");
 }
-function showPackOddsOverlay(packKey) {
-  const overlay = el("packOddsOverlay");
-  const table = el("packOddsTable");
-  const pity = el("packOddsPity");
-  const title = el("packOddsTitle");
-  const sub = el("packOddsSub");
-  const product = PACK_MARKET_PRODUCTS[packKey] || PACK_MARKET_PRODUCTS.kickoff;
-  const progress = getPackPityProgress(packKey);
-  if (!overlay || !table || !pity || !title || !sub) return;
-  safeText(title, `${product.title} Odds`);
-  safeText(sub, "Probability table and pity tracker");
-  table.innerHTML = `<div class="packOddsRow packOddsHead"><div>Rarity</div><div>Chance</div></div>${product.odds.map((row) => `<div class="packOddsRow"><div><span class="packOddsDot ${normalizeRarity(row.rarity).toLowerCase()}"></span>${normalizeRarity(row.rarity)}</div><div>${row.chance}</div></div>`).join("")}`;
-  safeText(
-    pity,
-    `You have opened ${progress.current} / ${product.pityBase} ${product.title}s • pity activates at ${progress.triggerAt}.`,
-  );
-  overlay.classList.remove("hidden");
-  overlay.setAttribute("aria-hidden", "false");
-}
-function hidePackOddsOverlay() {
-  const overlay = el("packOddsOverlay");
-  if (!overlay) return;
-  overlay.classList.add("hidden");
-  overlay.setAttribute("aria-hidden", "true");
-}
 function setOverlaySub(t) {
   safeText(el("overlaySub"), t);
 }
 function resetRevealUI() {
   state.revealIndex = 0;
+  state.revealCards = [];
   state.revealing = false;
   const inner = el("overlayInner");
   if (inner) inner.classList.remove("legendaryBurst");
@@ -2648,7 +2893,30 @@ function resetRevealUI() {
     const card = document.createElement("div");
     card.className = "flipCard";
     card.dataset.i = String(i);
-    card.innerHTML = `<div class="flipInner"><div class="flipFace flipBack"><div class="q">?</div><div class="t">Reveal</div></div><div class="flipFace flipFront"><div class="cardTop"><div><div class="cardName">Unknown</div><div class="cardMeta">• " •</div></div><div class="badge">•</div></div><div class="kfRevealStats"><div class="kfStat"><span>PAC</span><strong>--</strong></div><div class="kfStat"><span>PAS</span><strong>--</strong></div><div class="kfStat"><span>ATT</span><strong>--</strong></div><div class="kfStat"><span>DEF</span><strong>--</strong></div></div><div class="cardFooter"><span class="muted">KICKFORGE</span><span class="muted">v1</span></div></div></div>`;
+    card.innerHTML = `
+      <div class="flipInner">
+        <div class="flipFace flipBack">
+          <div class="q">?</div>
+          <div class="t">Reveal</div>
+        </div>
+        <div class="flipFace flipFront">
+          <div class="cardTop">
+            <div>
+              <div class="cardName">Unknown</div>
+              <div class="cardMeta">— • —</div>
+            </div>
+            <div class="badge">—</div>
+          </div>
+          <div class="kfRevealStats">
+            <div class="kfStat"><span>PAC</span><strong>--</strong></div>
+            <div class="kfStat"><span>PAS</span><strong>--</strong></div>
+            <div class="kfStat"><span>ATT</span><strong>--</strong></div>
+            <div class="kfStat"><span>DEF</span><strong>--</strong></div>
+          </div>
+          <div class="cardFooter"><span class="muted">KICKFORGE</span><span class="muted">v1</span></div>
+        </div>
+      </div>
+    `;
     list.appendChild(card);
   }
 }
@@ -2667,9 +2935,14 @@ function injectRevealData(cards) {
     node.classList.add(rarityClass(c.rarity));
     if (badge) badge.textContent = c.rarity;
     if (name) name.textContent = c.display_name;
-    if (meta) meta.textContent = `${c.position} " ${c.role}`;
+    if (meta) meta.textContent = `${c.position} • ${c.role}`;
     if (statsWrap) {
-      statsWrap.innerHTML = `<div class="kfStat"><span>PAC</span><strong>${vm.pace}</strong></div><div class="kfStat"><span>PAS</span><strong>${vm.pass}</strong></div><div class="kfStat"><span>ATT</span><strong>${vm.attack}</strong></div><div class="kfStat"><span>DEF</span><strong>${vm.defense}</strong></div>`;
+      statsWrap.innerHTML = `
+        <div class="kfStat"><span>PAC</span><strong>${vm.pace}</strong></div>
+        <div class="kfStat"><span>PAS</span><strong>${vm.pass}</strong></div>
+        <div class="kfStat"><span>ATT</span><strong>${vm.attack}</strong></div>
+        <div class="kfStat"><span>DEF</span><strong>${vm.defense}</strong></div>
+      `;
     }
   });
 }
@@ -2688,19 +2961,13 @@ async function flipNext() {
   const card = normalizeCard(state.revealCards[i]);
   const node = el("revealCards")?.querySelector(`.flipCard[data-i="${i}"]`);
   if (node) node.classList.add("flipped");
-  const rr = normalizeRarity(card?.rarity);
-  if (rr === "ICON") {
-    legendaryBurst();
-    setOverlaySub("Icon pull.");
-  } else if (rr === "LEGENDARY") {
+  if (card?.rarity === "LEGENDARY" || card?.rarity === "ICON") {
     legendaryBurst();
     setOverlaySub("Legendary pull.");
-  } else if (rr === "EPIC") {
+  } else if (card?.rarity === "EPIC") {
     setOverlaySub("Epic pull.");
-  } else if (rr === "RARE") {
+  } else if (card?.rarity === "RARE" || card?.rarity === "UNCOMMON") {
     setOverlaySub("Rare pull.");
-  } else if (rr === "UNCOMMON") {
-    setOverlaySub("Uncommon pull.");
   } else {
     setOverlaySub("Common pull.");
   }
@@ -2716,18 +2983,18 @@ async function flipNext() {
     safeText(el("revealHint"), "Done");
   }
 }
-async function openPack(packKind = "kickoff") {
+async function openPack() {
   const btn = el("btn-pack");
   const btnHome = el("btn-home-pack");
   [btn, btnHome].forEach((b) => {
     if (b) {
       b.disabled = true;
-      b.textContent = "Opening&";
+      b.textContent = "Opening…";
     }
   });
   showOverlay();
   resetRevealUI();
-  setOverlaySub("Generating pack&");
+  setOverlaySub("Generating pack…");
   try {
     await ensureSession();
     const data = await api("/v1/packs/open", {
@@ -2737,7 +3004,6 @@ async function openPack(packKind = "kickoff") {
     state.revealCards = (data.cards || []).map(normalizeCard).filter(Boolean);
     injectRevealData(state.revealCards);
     renderPackResults(state.revealCards);
-    bumpPackPity(packKind);
     await loadDaily();
     jumpToView("squad");
   } catch (e) {
@@ -2752,6 +3018,10 @@ async function openPack(packKind = "kickoff") {
     });
   }
 }
+
+/* =========================
+   PASS / DAILY / COSMETICS
+========================= */
 function updateBattlePassUI(bp) {
   if (!bp) return;
   state.battlepass = bp;
@@ -2781,10 +3051,10 @@ async function playArena() {
   [btn, homeBtn].forEach((b) => {
     if (b) {
       b.disabled = true;
-      b.textContent = "Playing&";
+      b.textContent = "Playing…";
     }
   });
-  safeText(log, "Match starting&");
+  safeText(log, "Match starting…");
   try {
     const res = await api("/v1/arena/play", {
       method: "POST",
@@ -2800,14 +3070,12 @@ async function playArena() {
   } catch (e) {
     safeText(log, e.message);
   } finally {
-    if (btn) {
-      btn.disabled = false;
-      btn.textContent = "Play Match";
-    }
-    if (homeBtn) {
-      homeBtn.disabled = false;
-      homeBtn.textContent = "Play Arena";
-    }
+    [btn, homeBtn].forEach((b) => {
+      if (b) {
+        b.disabled = false;
+        b.textContent = "Play Arena";
+      }
+    });
   }
 }
 function attachDailyClaimHandlers(rootSelector, attrName) {
@@ -2829,40 +3097,45 @@ function attachDailyClaimHandlers(rootSelector, attrName) {
     });
   });
 }
-async function loadDaily() {
-  const d = await api("/v1/challenges/today", { method: "GET" });
-  state.daily = d;
-  renderDaily(d);
-  renderDailyHome(d);
-}
 function dailyRowHTML(t, attrName) {
   const done = t.completed;
   const canClaim = done && !t.claimed;
   const status = t.claimed ? "CLAIMED" : done ? "READY" : "IN PROGRESS";
-  return `<div class="dailyItem"><div><div style="font-weight:900">${t.title}</div><div class="dailyMeta">${t.desc}</div><div class="dailyMeta">Reward: +${t.rewardCoins}c " +${t.rewardBpXp} XP</div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px"><div class="dailyProg">${t.progress}/${t.target}</div><button class="smallBtn ${canClaim ? "primary" : "ghost"}" ${attrName}="${t.key}" ${canClaim ? "" : "disabled"}>${status}</button></div></div>`;
+  return `
+    <div class="dailyItem">
+      <div>
+        <div style="font-weight:900">${t.title}</div>
+        <div class="dailyMeta">${t.desc}</div>
+        <div class="dailyMeta">Reward: +${t.rewardCoins}c • +${t.rewardBpXp} XP</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
+        <div class="dailyProg">${t.progress}/${t.target}</div>
+        <button class="smallBtn ${canClaim ? "primary" : "ghost"}" ${attrName}="${t.key}" ${canClaim ? "" : "disabled"}>${status}</button>
+      </div>
+    </div>
+  `;
 }
 function renderDaily(d) {
   const date = el("daily-date");
   const list = el("dailyList");
   const chestBtn = el("btn-chest");
   const chestStatus = el("chestStatus");
-  safeText(date, d.date || "•");
+  safeText(date, d.date || "—");
   if (list) {
-    list.innerHTML = (d.tasks || [])
-      .map((t) => dailyRowHTML(t, "data-claim"))
-      .join("");
+    list.innerHTML = (d.tasks || []).map((t) => dailyRowHTML(t, "data-claim")).join("");
     attachDailyClaimHandlers("#view-progress", "data-claim");
   }
-  if (chestBtn) chestBtn.disabled = !d.chest?.available || d.chest?.opened;
+  if (chestBtn) chestBtn.disabled = !(d.chest?.available) || d.chest?.opened;
   if (chestStatus) {
-    if (d.chest?.opened)
+    if (d.chest?.opened) {
       chestStatus.textContent = d.chest.duplicate
-        ? "Chest opened • duplicate converted into coins."
-        : "Chest opened • new cosmetic unlocked.";
-    else if (d.chest?.available)
-      chestStatus.textContent =
-        "All challenges complete. Open your daily chest.";
-    else chestStatus.textContent = "Complete + claim all 3 to unlock.";
+        ? "Chest opened — duplicate converted into coins."
+        : "Chest opened — new cosmetic unlocked.";
+    } else if (d.chest?.available) {
+      chestStatus.textContent = "All challenges complete. Open your daily chest.";
+    } else {
+      chestStatus.textContent = "Complete + claim all 3 to unlock.";
+    }
   }
   if (chestBtn) {
     chestBtn.onclick = async () => {
@@ -2882,20 +3155,20 @@ function renderDaily(d) {
   }
 }
 function renderDailyHome(d) {
-  safeText(el("daily-date-home"), d.date || "•");
+  safeText(el("daily-date-home"), d.date || "—");
   const list = el("dailyListHome");
   if (!list) return;
-  list.innerHTML = (d.tasks || [])
-    .map((t) => dailyRowHTML(t, "data-claim-home"))
-    .join("");
+  list.innerHTML = (d.tasks || []).map((t) => dailyRowHTML(t, "data-claim-home")).join("");
   attachDailyClaimHandlers("#view-home", "data-claim-home");
 }
+async function loadDaily() {
+  const d = await api("/v1/challenges/today", { method: "GET" });
+  state.daily = d;
+  renderDaily(d);
+  renderDailyHome(d);
+}
 function applyTheme(themeKey) {
-  document.body.classList.remove(
-    "theme-obsidian",
-    "theme-neon",
-    "theme-emerald",
-  );
+  document.body.classList.remove("theme-obsidian", "theme-neon", "theme-emerald");
   document.body.classList.add(`theme-${themeKey || "obsidian"}`);
 }
 async function loadCosmetics() {
@@ -2912,7 +3185,17 @@ function renderCosmetics(items) {
     ? items
         .map((c) => {
           const eq = c.equipped;
-          return `<div class="cosItem"><div><div class="cosName">${c.name}</div><div class="cosMeta">${c.type} " ${c.rarity}</div></div><button class="smallBtn ${eq ? "ghost" : "primary"}" data-equip="${c.id}" ${eq ? "disabled" : ""}>${eq ? "EQUIPPED" : "EQUIP"}</button></div>`;
+          return `
+            <div class="cosItem">
+              <div>
+                <div class="cosName">${c.name}</div>
+                <div class="cosMeta">${c.type} • ${c.rarity}</div>
+              </div>
+              <button class="smallBtn ${eq ? "ghost" : "primary"}" data-equip="${c.id}" ${eq ? "disabled" : ""}>
+                ${eq ? "EQUIPPED" : "EQUIP"}
+              </button>
+            </div>
+          `;
         })
         .join("")
     : `<div class="muted tiny">No cosmetics yet.</div>`;
@@ -2932,6 +3215,10 @@ function renderCosmetics(items) {
     });
   });
 }
+
+/* =========================
+   MARKET / COIN EXCHANGE
+========================= */
 function renderMarketSelected() {
   const n = el("mk-selected");
   const min = el("mk-min");
@@ -2939,7 +3226,7 @@ function renderMarketSelected() {
   const c = state.selectedCardId ? getCardById(state.selectedCardId) : null;
   if (!c) {
     safeText(n, "None");
-    safeText(min, "Min: •");
+    safeText(min, "Min: —");
     if (btn) btn.disabled = false;
     return;
   }
@@ -2949,200 +3236,134 @@ function renderMarketSelected() {
   safeText(min, `Min: ${minP} coins`);
   if (btn) btn.disabled = isListed;
 }
-function synthesizePulseData() {
+function listingHTML(x, isMine = false) {
+  const right = isMine
+    ? `<button class="smallBtn danger" data-cancel="${x.listing_id}">Cancel</button>`
+    : `<button class="smallBtn primary" data-buy="${x.listing_id}">Buy</button>`;
+  return `
+    <div class="listing">
+      <div>
+        <div style="font-weight:900">${x.display_name || "Unknown"}</div>
+        <div class="listingMeta">${x.position} • ${x.role} • ${x.rarity}</div>
+      </div>
+      <div class="listingRight">
+        <div class="priceTag">${x.price}c</div>
+        ${right}
+      </div>
+    </div>
+  `;
+}
+function formatAgo(ts) {
+  const s = Math.max(1, Math.floor((Date.now() - ts) / 1000));
+  if (s < 60) return `${s}s ago`;
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  return `${h}h ago`;
+}
+function renderHomeMovers() {
+  const wrap = el("moversHome");
+  if (!wrap) return;
   const trades = state.market.trades || [];
-  const listings = state.market.listings || [];
-  const source = trades.length
-    ? trades.slice(0, 24).map((x) => Number(x.price || 0))
-    : listings.slice(0, 24).map((x) => Number(x.price || 0));
-  const base = source.length
-    ? Math.max(
-        20,
-        Math.round(source.reduce((a, b) => a + b, 0) / source.length),
-      )
-    : 1200;
-  const seed = hashString(
-    `pulse|${base}|${source.length}|${state.userId || "guest"}`,
-  );
-  const rnd = mulberry32(seed);
-  const points = [];
-  let current = base;
-  for (let i = 0; i < 24; i++) {
-    const drift = Math.round((rnd() - 0.46) * Math.max(8, base * 0.03));
-    current = Math.max(10, current + drift);
-    points.push({ price: current });
-  }
-  const first = points[0]?.price || base;
-  const last = points[points.length - 1]?.price || base;
-  const chg24h = first ? Math.round(((last - first) / first) * 100) : 0;
-  return { last, chg24h, points };
-}
-function ensurePulseData() {
-  const pulse = state.market.pulse || {};
-  const pts = Array.isArray(pulse.points) ? pulse.points : [];
-  if (!pts.length) {
-    state.market.pulse = synthesizePulseData();
+  if (!trades.length) {
+    wrap.innerHTML = `
+      <div class="moverRow"><div class="moverDot rare"></div><div class="moverName">M. Velenz</div><div class="moverPct up">+12%</div></div>
+      <div class="moverRow"><div class="moverDot epic"></div><div class="moverName">R. Ibarra</div><div class="moverPct up">+8%</div></div>
+      <div class="moverRow"><div class="moverDot common"></div><div class="moverName">D. Kanez</div><div class="moverPct down">-5%</div></div>
+    `;
     return;
   }
-  const last = pulse.last ?? pts[pts.length - 1]?.price ?? null;
-  const first = pts[0]?.price ?? null;
-  const chg24h =
-    pulse.chg24h ?? (first ? Math.round(((last - first) / first) * 100) : 0);
-  state.market.pulse = { last, chg24h, points: pts };
-}
-function renderLineChart(svgId, points, width = 300, height = 64) {
-  const svg = el(svgId);
-  if (!svg) return;
-  const vals = (points || [])
-    .map((p) => Number(p.price || p.value || 0))
-    .filter((n) => Number.isFinite(n));
-  if (!vals.length) {
-    svg.innerHTML = `<path d="M0 ${height - 8} L${width} ${height - 8}" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="2"/>`;
-    return;
-  }
-  const min = Math.min(...vals);
-  const max = Math.max(...vals);
-  const span = Math.max(1, max - min);
-  const yOf = (v) => height - 10 - ((v - min) / span) * (height - 18);
-  if (vals.length === 1) {
-    const y = yOf(vals[0]);
-    svg.innerHTML = `<path d="M0 ${y.toFixed(2)} L${width} ${y.toFixed(2)}" fill="none" stroke="rgba(232,184,75,.90)" stroke-width="2.2"/><path d="M0 ${y.toFixed(2)} L${width} ${y.toFixed(2)} L${width} ${height} L0 ${height} Z" fill="rgba(232,184,75,.10)"/><circle cx="${width - 8}" cy="${y.toFixed(2)}" r="3.4" fill="rgba(0,230,118,.90)"/>`;
-    return;
-  }
-  const step = width / (vals.length - 1);
-  const d = vals
-    .map((v, i) => {
-      const x = i * step;
-      const y = yOf(v);
-      return `${i === 0 ? "M" : "L"}${x.toFixed(2)} ${y.toFixed(2)}`;
+  const top = trades.slice(0, 3);
+  wrap.innerHTML = top
+    .map((x, i) => {
+      const change = i === 2 ? -5 : 6 + ((x.price || 0) % 9);
+      const cls = change >= 0 ? "up" : "down";
+      const sign = change >= 0 ? "+" : "";
+      const dotClass =
+        String(x.rarity || "COMMON").toLowerCase() === "rare"
+          ? "rare"
+          : String(x.rarity || "COMMON").toLowerCase() === "epic"
+            ? "epic"
+            : String(x.rarity || "COMMON").toLowerCase() === "legendary"
+              ? "legendary"
+              : "common";
+      return `
+        <div class="moverRow">
+          <div class="moverDot ${dotClass}"></div>
+          <div class="moverName">${shortName(x.display_name)}</div>
+          <div class="moverPct ${cls}">${sign}${change}%</div>
+        </div>
+      `;
     })
-    .join(" ");
-  svg.innerHTML = `<path d="${d}" fill="none" stroke="rgba(232,184,75,.90)" stroke-width="2.2"/><path d="${d} L${width} ${height} L0 ${height} Z" fill="rgba(232,184,75,.10)"/>`;
+    .join("");
 }
 function renderOnePulse(svgId, lastId, chgId) {
-  ensurePulseData();
-  safeText(
-    el(lastId),
-    state.market.pulse.last == null ? "•" : priceFmt(state.market.pulse.last),
-  );
+  safeText(el(lastId), state.market.pulse.last == null ? "—" : String(state.market.pulse.last));
   safeText(
     el(chgId),
     state.market.pulse.chg24h == null
-      ? "•"
-      : `${state.market.pulse.chg24h > 0 ? "+" : ""}${state.market.pulse.chg24h}%`,
+      ? "—"
+      : state.market.pulse.chg24h > 0
+        ? `+${state.market.pulse.chg24h}`
+        : `${state.market.pulse.chg24h}`,
   );
-  renderLineChart(svgId, state.market.pulse.points, 300, 64);
-}
-function renderMarketChart() {
-  ensurePulseData();
-  const points = (state.market.pulse.points || []).slice(-30);
-  renderLineChart(
-    "marketChartSvg",
-    points.length ? points : synthesizePulseData().points.slice(-30),
-    360,
-    150,
-  );
+  const pts = state.market.pulse.points || [];
+  const svg = el(svgId);
+  if (!svg) return;
+  const w = 300;
+  const h = 64;
+  if (!pts.length) {
+    svg.innerHTML = `<path d="M0 ${h - 8} L${w} ${h - 8}" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="2"/>`;
+    return;
+  }
+  const prices = pts.map((p) => p.price);
+  const min = Math.min(...prices);
+  const max = Math.max(...prices);
+  const span = Math.max(1, max - min);
+  const yOf = (price) => (h - 10) - ((price - min) / span) * (h - 18);
+  if (pts.length === 1) {
+    const y = yOf(pts[0].price);
+    svg.innerHTML = `
+      <path d="M0 ${y.toFixed(2)} L${w} ${y.toFixed(2)}" fill="none" stroke="rgba(232,184,75,.85)" stroke-width="2.2" />
+      <path d="M0 ${y.toFixed(2)} L${w} ${y.toFixed(2)} L${w} ${h} L0 ${h} Z" fill="rgba(232,184,75,.10)" />
+      <circle cx="${w - 8}" cy="${y.toFixed(2)}" r="3.4" fill="rgba(0,230,118,.90)" />
+    `;
+    return;
+  }
+  const step = w / (pts.length - 1);
+  const d = pts
+    .map((p, i) => {
+      const x = i * step;
+      const y = yOf(p.price);
+      return `${i === 0 ? "M" : "L"}${x.toFixed(2)} ${y.toFixed(2)}`;
+    })
+    .join(" ");
+  svg.innerHTML = `
+    <path d="${d}" fill="none" stroke="rgba(232,184,75,.90)" stroke-width="2.2" />
+    <path d="${d} L${w} ${h} L0 ${h} Z" fill="rgba(232,184,75,.10)" />
+  `;
 }
 function renderPulse() {
   renderOnePulse("sparkSvg", "m-last", "m-chg");
   renderOnePulse("sparkSvgHome", "m-last-home", "m-chg-home");
-  renderMarketChart();
 }
-function buildTickerText() {
-  const trades = state.market.trades || [];
-  if (trades.length) {
-    const top = trades
-      .slice()
-      .sort((a, b) => Number(b.price || 0) - Number(a.price || 0))
-      .slice(0, 3)
-      .map((x) => `${shortName(x.display_name)} • ${priceFmt(x.price)}`);
-    return `Most Expensive Sale Today: ${top.join(" • ")}`;
+function renderListings() {
+  const openWrap = el("openListings");
+  const myWrap = el("myListings");
+  if (openWrap) {
+    openWrap.innerHTML = state.market.listings.length
+      ? state.market.listings.map((x) => listingHTML(x, false)).join("")
+      : `<div class="muted tiny">No open listings.</div>`;
   }
-  const listings = state.market.listings || [];
-  if (listings.length) {
-    const top = listings
-      .slice()
-      .sort((a, b) => Number(b.price || 0) - Number(a.price || 0))
-      .slice(0, 3)
-      .map((x) => `${shortName(x.display_name)} ${priceFmt(x.price)}`);
-    return `Live Listings: ${top.join(" • ")}`;
+  const openMine = state.market.mine.filter((x) => x.status === "OPEN");
+  if (myWrap) {
+    myWrap.innerHTML = openMine.length
+      ? openMine.map((x) => listingHTML(x, true)).join("")
+      : `<div class="muted tiny">No active listings.</div>`;
   }
-  return "Most Expensive Sale Today: M. Velenz • 62,000 FC";
-}
-function renderTicker() {
-  safeText(el("marketTickerTrack"), buildTickerText());
-}
-function getFilteredMarketListings() {
-  const query = String(state.market.query || "")
-    .trim()
-    .toLowerCase();
-  const rarity = state.market.rarityFilter || "ALL";
-  const pos = state.market.positionFilter || "ALL";
-  const sort = state.market.sort || "PRICE_ASC";
-  const rows = (state.market.listings || []).filter((x) => {
-    const qOk =
-      !query ||
-      [x.display_name, x.position, x.role, x.rarity].some((v) =>
-        String(v || "")
-          .toLowerCase()
-          .includes(query),
-      );
-    const rOk = rarity === "ALL" || normalizeRarity(x.rarity) === rarity;
-    const pOk = pos === "ALL" || normalizePosition(x.position) === pos;
-    return qOk && rOk && pOk;
-  });
-  rows.sort((a, b) => {
-    if (sort === "PRICE_ASC")
-      return Number(a.price || 0) - Number(b.price || 0);
-    if (sort === "PRICE_DESC")
-      return Number(b.price || 0) - Number(a.price || 0);
-    if (sort === "RARITY_DESC")
-      return (
-        (RARITY_ORDER[normalizeRarity(b.rarity)] || 0) -
-        (RARITY_ORDER[normalizeRarity(a.rarity)] || 0)
-      );
-    if (sort === "OVR_DESC")
-      return cardVisualModel(b).ovr - cardVisualModel(a).ovr;
-    if (sort === "NEWEST")
-      return (
-        new Date(b.created_at || 0).getTime() -
-        new Date(a.created_at || 0).getTime()
-      );
-    return 0;
-  });
-  return rows;
-}
-function listingMomentum(listing, idx = 0) {
-  const seed = hashString(
-    `${listing.listing_id || listing.card_id || listing.id}|${listing.price}|${idx}`,
-  );
-  const rnd = mulberry32(seed);
-  const pct = Math.round((rnd() * 18 - 5) * 10) / 10;
-  return pct;
-}
-function marketListingCardHTML(x, idx = 0) {
-  const vm = cardVisualModel(x);
-  const momentum = listingMomentum(x, idx);
-  const up = momentum >= 0;
-  const trend = `${up ? "" : ""} ${up ? "+" : ""}${Math.abs(momentum)}% this week`;
-  return `<div class="marketListingCard"><div class="marketListingTop"><div><div class="marketListingName">${x.display_name}</div><div class="marketListingMeta">${x.position} " ${x.rarity}</div></div><div class="marketBidTag">${x.seller_user_id === state.userId ? "YOURS" : "BUY"}</div></div><div class="marketListingBody"><div class="marketListingStats"><div class="marketListingStat"><span>OVR</span><strong>${vm.ovr}</strong></div><div class="marketListingStat"><span>POS</span><strong>${x.position}</strong></div><div class="marketListingStat"><span>PAC</span><strong>${vm.pace}</strong></div><div class="marketListingStat"><span>ATT</span><strong>${vm.attack}</strong></div></div><div class="marketListingMeta" style="color:${up ? "var(--emerald)" : "var(--alert-red)"}">${trend}</div></div><div class="marketListingFooter"><div class="marketPrice">${Number(x.price || 0).toLocaleString("en-GB")}</div><button class="smallBtn primary" data-buy-market="${x.listing_id}">Buy</button></div></div>`;
-}
-function intelRowHTML(name, meta, value) {
-  return `<div class="intelRow"><div class="intelRowHead"><div class="intelRowName">${name}</div><div class="intelRowMeta">${meta}</div></div><div class="intelRowValue">${value}</div></div>`;
-}
-function renderMarketPlayersGrid() {
-  const wrap = el("marketPlayersGrid");
-  if (!wrap) return;
-  const rows = getFilteredMarketListings();
-  safeText(el("market-player-count"), `${rows.length} LISTINGS`);
-  if (!rows.length) {
-    wrap.innerHTML = `<div class="muted tiny">No player listings match your current filters.</div>`;
-    return;
-  }
-  wrap.innerHTML = rows.map((x, idx) => marketListingCardHTML(x, idx)).join("");
-  $$("[data-buy-market]", wrap).forEach((btn) => {
+  $$("[data-buy]").forEach((btn) => {
     btn.addEventListener("click", async () => {
-      const id = btn.getAttribute("data-buy-market");
+      const id = btn.getAttribute("data-buy");
       btn.disabled = true;
       try {
         const res = await api("/v1/market/buy", {
@@ -3161,24 +3382,9 @@ function renderMarketPlayersGrid() {
       }
     });
   });
-}
-function myListingHTML(x) {
-  return `<div class="listing"><div><div style="font-weight:900">${x.display_name || "Unknown"}</div><div class="listingMeta">${x.position} " ${x.role} " ${x.rarity}</div></div><div class="listingRight"><div class="priceTag">${Number(x.price || 0).toLocaleString("en-GB")}c</div><button class="smallBtn danger" data-cancel-market="${x.listing_id}">Cancel</button></div></div>`;
-}
-function renderMyListings() {
-  const wrap = el("myListings");
-  if (!wrap) return;
-  const mine = (state.market.mine || []).filter((x) => x.status === "OPEN");
-  safeText(
-    el("myCount"),
-    `(${mine.length}/${state.market.rules.maxOpenListings})`,
-  );
-  wrap.innerHTML = mine.length
-    ? mine.map(myListingHTML).join("")
-    : `<div class="muted tiny">No active listings.</div>`;
-  $$("[data-cancel-market]", wrap).forEach((btn) => {
+  $$("[data-cancel]").forEach((btn) => {
     btn.addEventListener("click", async () => {
-      const id = btn.getAttribute("data-cancel-market");
+      const id = btn.getAttribute("data-cancel");
       btn.disabled = true;
       try {
         await api("/v1/market/cancel", {
@@ -3198,350 +3404,22 @@ function renderMyListings() {
 function renderTrades() {
   const wrap = el("tradeList");
   if (!wrap) return;
-  const rows = state.market.trades || [];
-  wrap.innerHTML = rows.length
-    ? rows
+  const t = state.market.trades || [];
+  wrap.innerHTML = t.length
+    ? t
         .map(
-          (x) =>
-            `<div class="tradeRow"><div><div style="font-weight:900">${x.display_name}</div><div class="tradeMeta">${x.position} " ${x.role} " ${x.rarity} " ${formatAgo(x.created_at)}</div></div><div class="priceTag">${Number(x.price || 0).toLocaleString("en-GB")}c</div></div>`,
+          (x) => `
+      <div class="tradeRow">
+        <div>
+          <div style="font-weight:900">${x.display_name}</div>
+          <div class="tradeMeta">${x.position} • ${x.role} • ${x.rarity} • ${formatAgo(x.created_at)}</div>
+        </div>
+        <div class="priceTag">${x.price}c</div>
+      </div>
+    `,
         )
         .join("")
     : `<div class="muted tiny">No trades yet.</div>`;
-}
-function formatAgo(ts) {
-  const stamp =
-    typeof ts === "string" ? new Date(ts).getTime() : Number(ts || 0);
-  const s = Math.max(1, Math.floor((Date.now() - stamp) / 1000));
-  if (s < 60) return `${s}s ago`;
-  const m = Math.floor(s / 60);
-  if (m < 60) return `${m}m ago`;
-  const h = Math.floor(m / 60);
-  return `${h}h ago`;
-}
-function renderHomeMovers() {
-  const wrap = el("moversHome");
-  if (!wrap) return;
-  const source = getFilteredMarketListings().slice(0, 3);
-  if (!source.length) {
-    wrap.innerHTML = `<div class="moverRow"><div class="moverDot rare"></div><div class="moverName">M. Velenz</div><div class="moverPct up">+12%</div></div><div class="moverRow"><div class="moverDot epic"></div><div class="moverName">R. Ibarra</div><div class="moverPct up">+8%</div></div><div class="moverRow"><div class="moverDot common"></div><div class="moverName">D. Kanez</div><div class="moverPct down">-5%</div></div>`;
-    return;
-  }
-  wrap.innerHTML = source
-    .map((x, i) => {
-      const pct =
-        i === 2 ? -5 : Math.max(4, Math.round(listingMomentum(x, i) + 9));
-      const cls = pct >= 0 ? "up" : "down";
-      const sign = pct >= 0 ? "+" : "";
-      const rr = normalizeRarity(x.rarity);
-      const dotClass =
-        rr === "ICON" || rr === "LEGENDARY"
-          ? "legendary"
-          : rr === "EPIC"
-            ? "epic"
-            : rr === "RARE" || rr === "UNCOMMON"
-              ? "rare"
-              : "common";
-      return `<div class="moverRow"><div class="moverDot ${dotClass}"></div><div class="moverName">${shortName(x.display_name)}</div><div class="moverPct ${cls}">${sign}${pct}%</div></div>`;
-    })
-    .join("");
-}
-function renderMarketIntel() {
-  const listings = getFilteredMarketListings();
-  const trades = state.market.trades || [];
-  const risingWrap = el("marketRisingStars");
-  const moversWrap = el("marketMoversFeed");
-  const mostWrap = el("marketMostTraded");
-  if (risingWrap) {
-    const rising = listings
-      .slice()
-      .sort((a, b) => {
-        const aScore =
-          cardVisualModel(a).ovr / Math.max(1, Number(a.price || 1));
-        const bScore =
-          cardVisualModel(b).ovr / Math.max(1, Number(b.price || 1));
-        return bScore - aScore;
-      })
-      .slice(0, 4);
-    risingWrap.innerHTML = rising.length
-      ? rising
-          .map((x) =>
-            intelRowHTML(
-              shortName(x.display_name),
-              `${x.rarity} • OVR ${cardVisualModel(x).ovr}`,
-              priceFmt(x.price),
-            ),
-          )
-          .join("")
-      : `<div class="muted tiny">No rising stars yet.</div>`;
-  }
-  if (moversWrap) {
-    const movers = listings
-      .slice()
-      .sort(
-        (a, b) => Math.abs(listingMomentum(b)) - Math.abs(listingMomentum(a)),
-      )
-      .slice(0, 4);
-    moversWrap.innerHTML = movers.length
-      ? movers
-          .map((x, idx) => {
-            const mv = listingMomentum(x, idx);
-            return intelRowHTML(
-              shortName(x.display_name),
-              `${x.position} " ${x.rarity}`,
-              `${mv > 0 ? "+" : ""}${mv}%`,
-            );
-          })
-          .join("")
-      : `<div class="muted tiny">No mover data yet.</div>`;
-  }
-  if (mostWrap) {
-    const map = new Map();
-    trades.forEach((t) => {
-      const key = t.display_name || "Unknown";
-      map.set(key, (map.get(key) || 0) + 1);
-    });
-    const most = [...map.entries()].sort((a, b) => b[1] - a[1]).slice(0, 4);
-    mostWrap.innerHTML = most.length
-      ? most
-          .map(([name, count]) =>
-            intelRowHTML(shortName(name), "Trade volume", `${count}x`),
-          )
-          .join("")
-      : listings
-          .slice(0, 4)
-          .map((x) =>
-            intelRowHTML(shortName(x.display_name), "Open interest", "Live"),
-          )
-          .join("");
-  }
-}
-function setMarketTab(tab) {
-  const nextTab = MARKET_TABS.includes(tab) ? tab : "players";
-  state.market.activeTab = nextTab;
-  $$(".marketTopTab").forEach((btn) =>
-    btn.classList.toggle("is-active", btn.dataset.marketTab === nextTab),
-  );
-  $$(".marketZone").forEach((zone) =>
-    zone.classList.toggle("is-active", zone.dataset.marketZone === nextTab),
-  );
-  if (nextTab === "coins") {
-    renderCoinExchangeShell();
-    if (!state.market.coinLoading && !state.market.coinBundles?.length) {
-      loadCoinExchange().catch((e) =>
-        setStatus(e.message || "Coin Exchange unavailable."),
-      );
-    }
-  }
-}
-function initMarketTabs() {
-  $$(".marketTopTab").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      setMarketTab(btn.dataset.marketTab);
-    });
-  });
-}
-function initMarketControls() {
-  const q = el("mk-search");
-  const rarity = el("mk-rarity-filter");
-  const pos = el("mk-position-filter");
-  const sort = el("mk-sort");
-  if (q) q.value = state.market.query || "";
-  if (rarity) rarity.value = state.market.rarityFilter || "ALL";
-  if (pos) pos.value = state.market.positionFilter || "ALL";
-  if (sort) sort.value = state.market.sort || "PRICE_ASC";
-  const refreshPlayers = debounce(() => {
-    renderMarketPlayersGrid();
-    renderMarketIntel();
-    renderHomeMovers();
-  }, 300);
-  q?.addEventListener("input", () => {
-    state.market.query = q.value || "";
-    refreshPlayers();
-  });
-  rarity?.addEventListener("change", () => {
-    state.market.rarityFilter = rarity.value || "ALL";
-    renderMarketPlayersGrid();
-    renderMarketIntel();
-    renderHomeMovers();
-  });
-  pos?.addEventListener("change", () => {
-    state.market.positionFilter = pos.value || "ALL";
-    renderMarketPlayersGrid();
-    renderMarketIntel();
-    renderHomeMovers();
-  });
-  sort?.addEventListener("change", () => {
-    state.market.sort = sort.value || "PRICE_ASC";
-    renderMarketPlayersGrid();
-    renderMarketIntel();
-    renderHomeMovers();
-  });
-}
-function initPackMarketShell() {
-  $$(".marketOddsLink").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      showPackOddsOverlay(btn.dataset.packOdds || "kickoff");
-    });
-  });
-  $$(".marketPackBtn").forEach((btn) => {
-    btn.addEventListener("click", async () => {
-      const oddsBtn = btn.parentElement?.querySelector("[data-pack-odds]");
-      const packKey = oddsBtn?.dataset.packOdds || "kickoff";
-      if (packKey === "kickoff") {
-        await openPack("kickoff");
-        return;
-      }
-      showPackOddsOverlay(packKey);
-      setStatus(
-        `${PACK_MARKET_PRODUCTS[packKey]?.title || "Pack"} checkout/resale flow is shell-ready. Stripe/resale execution comes in the next integration pass.`,
-      );
-    });
-  });
-}
-function initCoinExchangeShell() {
-  const grid = el("coinExchangeGrid");
-  const confirmBtn = el("btn-confirm-coin-purchase");
-  if (grid) {
-    grid.onclick = (e) => {
-      const trigger = e.target?.closest?.(
-        "[data-coin-select], .coinBundleSelectBtn, [data-coin-bundle], .coinExchangeRow, .coinBundleCard",
-      );
-      if (!trigger) return;
-      const bundleId = getCoinBundleIdFromNode(trigger);
-      if (!bundleId) return;
-      e.preventDefault();
-      e.stopPropagation();
-      selectCoinBundle(bundleId);
-    };
-    grid.onpointerdown = (e) => {
-      const trigger = e.target?.closest?.(
-        "[data-coin-select], .coinBundleSelectBtn, [data-coin-bundle], .coinExchangeRow, .coinBundleCard",
-      );
-      if (!trigger) return;
-      trigger.dataset.coinPointerActive = "1";
-    };
-    grid.onkeyup = (e) => {
-      if (e.key !== "Enter" && e.key !== " ") return;
-      const trigger = e.target?.closest?.(
-        "[data-coin-select], .coinBundleSelectBtn, [data-coin-bundle], .coinExchangeRow, .coinBundleCard",
-      );
-      if (!trigger) return;
-      const bundleId = getCoinBundleIdFromNode(trigger);
-      if (!bundleId) return;
-      e.preventDefault();
-      selectCoinBundle(bundleId);
-    };
-  }
-  if (confirmBtn) {
-    confirmBtn.onclick = async () => {
-      await startCoinCheckout();
-    };
-  }
-}
-async function loadCoinExchange() {
-  state.market.coinLoading = true;
-  state.market.coinExchangeError = "";
-  try {
-    const data = await api("/v1/coin-exchange/bundles", { method: "GET" });
-    state.market.coinBundles = (data?.bundles || COIN_BUNDLE_FALLBACK).map(
-      normalizeCoinBundle,
-    );
-    state.market.monthlySpendCents = Number(data?.monthlySpendCents ?? 0);
-    state.market.spendCapCents = Number(data?.spendCapCents ?? 20000);
-  } catch (e) {
-    state.market.coinBundles = COIN_BUNDLE_FALLBACK.map(normalizeCoinBundle);
-    state.market.monthlySpendCents = 0;
-    state.market.spendCapCents = 20000;
-    state.market.coinExchangeError = e?.message || "Coin Exchange unavailable.";
-  } finally {
-    state.market.coinLoading = false;
-    renderCoinExchangeShell();
-  }
-}
-async function startCoinCheckout() {
-  const bundle = getCoinBundleById(state.market.selectedCoinBundle);
-  if (!bundle) {
-    setStatus("Select a Forge Coin bundle first.");
-    return;
-  }
-  state.market.coinCheckoutBusy = true;
-  renderCoinExchangeShell();
-  try {
-    const res = await api("/v1/stripe/create-checkout-session", {
-      method: "POST",
-      body: JSON.stringify({
-        bundleId: bundle.id,
-        appBaseUrl: window.location.origin,
-      }),
-    });
-    if (!res?.url) throw new Error("Stripe checkout URL missing.");
-    window.location.href = res.url;
-  } catch (e) {
-    state.market.coinCheckoutBusy = false;
-    renderCoinExchangeShell();
-    setStatus(e.message || "Unable to start Stripe checkout.");
-  }
-}
-function renderCoinExchangeShell() {
-  const grid = el("coinExchangeGrid");
-  const notesWrap = $(".marketCoinNotes");
-  if (!grid || !notesWrap) return;
-  const bundles = getCoinBundleList();
-  if (
-    state.market.selectedCoinBundle &&
-    !bundles.some((b) => b.id === state.market.selectedCoinBundle)
-  ) {
-    state.market.selectedCoinBundle = null;
-  }
-  grid.style.maxWidth = "600px";
-  grid.style.margin = "0 auto";
-  grid.style.gridTemplateColumns = "1fr";
-  grid.innerHTML = bundles
-    .map((bundle) => {
-      const selected = state.market.selectedCoinBundle === bundle.id;
-      return `<div class="coinBundleCard coinExchangeRow ${selected ? "is-selected" : ""}" data-coin-bundle="${bundle.id}" tabindex="0" role="button" aria-pressed="${selected ? "true" : "false"}" style="align-content:stretch;justify-items:stretch;gap:14px;cursor:pointer;${selected ? "border-color: var(--border-bright); box-shadow: 0 0 0 1px rgba(232,184,75,.20), 0 0 24px rgba(232,184,75,.12);" : ""}"><div style="display:flex;justify-content:space-between;gap:14px;align-items:flex-start;flex-wrap:wrap"><div style="display:grid;gap:6px;min-width:0"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><div class="marketPlaceholderTitle" style="font-size:24px">${bundle.name}</div>${bundle.bestValue ? '<div class="tag">Best Value</div>' : ""}</div><div class="muted tiny">${bundle.fcAmount.toLocaleString("en-GB")} FC${bundle.bonusLabel ? ` • ${bundle.bonusLabel}` : ""}</div></div><div style="display:grid;justify-items:end;gap:10px;min-width:120px"><div class="coinBundlePrice">${usdFmtFromCents(bundle.amountCents)}</div><button type="button" class="smallBtn ${selected ? "primary" : "ghost"} coinBundleSelectBtn" data-coin-select="${bundle.id}">${selected ? "Selected" : "Select"}</button></div></div></div>`;
-    })
-    .join("");
-  const selectedBundle = getCoinBundleById(state.market.selectedCoinBundle);
-  notesWrap.innerHTML = `<div class="marketPanel" style="max-width:600px;margin:0 auto;display:grid;gap:12px;"><div class="row"><div><div class="sectionTitle">Coin Exchange</div><div class="muted tiny">Stripe-hosted checkout for real-money Forge Coin purchases.</div></div><div class="tag">Sandbox</div></div><div class="listBox"><div class="listRow"><div class="muted tiny">Selected Bundle</div><div style="font-weight:900">${selectedBundle?.name || "None"}</div></div><div class="muted tiny" style="margin-top:8px">${selectedBundle ? `${selectedBundle.fcAmount.toLocaleString("en-GB")} FC • ${usdFmtFromCents(selectedBundle.amountCents)}` : "Choose one bundle to unlock checkout."}</div><button class="btn primary" id="btn-confirm-coin-purchase" ${state.market.selectedCoinBundle && !state.market.coinCheckoutBusy ? "" : "disabled"} style="width:100%;margin-top:12px">${state.market.coinCheckoutBusy ? "Redirecting…" : "Confirm Purchase"}</button></div><div class="muted tiny">Monthly spend: ${usdFmtFromCents(state.market.monthlySpendCents)} / ${usdFmtFromCents(state.market.spendCapCents)} cap</div>${state.market.coinExchangeError ? `<div class="muted tiny" style="color:var(--alert-red)">${state.market.coinExchangeError}</div>` : ""}</div>`;
-  initCoinExchangeShell();
-}
-async function handleCheckoutReturn() {
-  const current = new URL(window.location.href);
-  const checkoutState = current.searchParams.get("checkout");
-  if (!checkoutState) return;
-  const cleanup = () => {
-    current.searchParams.delete("checkout");
-    current.searchParams.delete("session_id");
-    const next = `${current.pathname}${current.searchParams.toString() ? `?${current.searchParams.toString()}` : ""}${current.hash || ""}`;
-    window.history.replaceState({}, "", next);
-  };
-  if (!state.token || !state.userId) {
-    cleanup();
-    return;
-  }
-  try {
-    await enterKickForge();
-    setMarketTab("coins");
-    jumpToView("market");
-    if (checkoutState === "success") {
-      setStatus(
-        "Stripe checkout completed. Refreshing Coin Exchange and wallet…",
-      );
-      await Promise.all([loadMe(), loadCoinExchange()]);
-      setTimeout(async () => {
-        try {
-          await Promise.all([loadMe(), loadCoinExchange()]);
-        } catch {}
-      }, 2200);
-    } else {
-      state.market.coinCheckoutBusy = false;
-      renderCoinExchangeShell();
-      setStatus("Stripe checkout cancelled.");
-    }
-  } finally {
-    cleanup();
-  }
 }
 async function listSelected() {
   const price = Number(el("mk-price")?.value || 0);
@@ -3572,41 +3450,168 @@ async function listSelected() {
     if (btn) btn.disabled = false;
   }
 }
+async function loadCoinExchange() {
+  state.market.coinLoading = true;
+  try {
+    const data = await api("/v1/stripe/bundles", { method: "GET" }).catch(() => ({
+      bundles: COIN_BUNDLE_FALLBACK,
+      monthlySpendCents: 0,
+      spendCapCents: 20000,
+    }));
+    state.market.coinBundles = (data.bundles || COIN_BUNDLE_FALLBACK).map(normalizeCoinBundle);
+    state.market.monthlySpendCents = Number(data.monthlySpendCents || 0);
+    state.market.spendCapCents = Number(data.spendCapCents || 20000);
+  } finally {
+    state.market.coinLoading = false;
+    renderCoinExchangeShell();
+  }
+}
+function renderCoinExchangeShell() {
+  const bundles = getCoinBundleList();
+  if (!state.market.selectedCoinBundle && bundles.length) {
+    state.market.selectedCoinBundle = bundles[0].id;
+  }
+  const selected = getCoinBundleById(state.market.selectedCoinBundle);
+  const grid =
+    el("coinExchangeGrid") ||
+    el("coinBundleGrid") ||
+    $(".coinExchangeGrid") ||
+    $(".coinBundleGrid");
+  if (grid) {
+    grid.innerHTML = bundles
+      .map(
+        (bundle) => `
+      <div class="coinExchangeRow card ${bundle.bestValue ? "is-best-value" : ""}" data-coin-bundle="${bundle.id}" style="padding:18px;border:1px solid rgba(255,255,255,.08);margin-bottom:14px;clip-path:polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px);${state.market.selectedCoinBundle === bundle.id ? "box-shadow:0 0 0 1px rgba(245,212,122,.22), 0 0 24px rgba(232,184,75,.14);" : ""}">
+        <div style="display:flex;justify-content:space-between;gap:16px;align-items:center;flex-wrap:wrap">
+          <div>
+            <div style="font-family:var(--font-ui);font-size:26px;font-weight:900;letter-spacing:.04em;text-transform:uppercase;color:var(--gold-light)">
+              ${bundle.name}
+            </div>
+            <div class="muted" style="margin-top:8px;font-size:16px">
+              ${priceFmt(bundle.fcAmount)}${bundle.bonusLabel ? ` • ${bundle.bonusLabel}` : ""}
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+            <div style="font-family:var(--font-display);font-size:58px;line-height:.9;color:#fff">
+              ${usdFmtFromCents(bundle.amountCents)}
+            </div>
+            <button
+              class="btn primary coinBundleSelectBtn"
+              type="button"
+              data-coin-select="${bundle.id}"
+              ${state.market.coinCheckoutBusy ? "disabled" : ""}
+            >
+              ${state.market.coinCheckoutBusy && state.market.selectedCoinBundle === bundle.id ? "Loading…" : "Select"}
+            </button>
+          </div>
+        </div>
+      </div>
+    `,
+      )
+      .join("");
+  }
+  safeText(el("coinSelectedName"), selected?.name || "No bundle selected");
+  safeText(el("coinSelectedAmount"), selected ? priceFmt(selected.fcAmount) : "—");
+  safeText(el("coinSelectedPrice"), selected ? usdFmtFromCents(selected.amountCents) : "—");
+  safeText(
+    el("coinSpendMeta"),
+    `Monthly spend: ${usdFmtFromCents(state.market.monthlySpendCents)} / ${usdFmtFromCents(state.market.spendCapCents)}`,
+  );
+  safeText(el("coinExchangeError"), state.market.coinExchangeError || "");
+  $$("[data-coin-bundle]").forEach((row) => {
+    row.classList.toggle("is-active", row.dataset.coinBundle === state.market.selectedCoinBundle);
+  });
+}
+async function beginCoinCheckout(bundleId) {
+  const bundle = getCoinBundleById(bundleId);
+  if (!bundle) {
+    setStatus("Bundle not found.");
+    return;
+  }
+  state.market.selectedCoinBundle = bundle.id;
+  state.market.coinCheckoutBusy = true;
+  state.market.coinExchangeError = "";
+  renderCoinExchangeShell();
+  setStatus(`Starting checkout for ${bundle.name}…`);
+  try {
+    await ensureSession();
+    const successUrl = `${window.location.origin}${window.location.pathname}?stripe=success`;
+    const cancelUrl = `${window.location.origin}${window.location.pathname}?stripe=cancel`;
+    let res = null;
+    try {
+      res = await api("/v1/stripe/create-checkout", {
+        method: "POST",
+        body: JSON.stringify({ bundleId: bundle.id, successUrl, cancelUrl }),
+      });
+    } catch (firstErr) {
+      try {
+        res = await api("/v1/stripe/checkout/create", {
+          method: "POST",
+          body: JSON.stringify({ bundleId: bundle.id, successUrl, cancelUrl }),
+        });
+      } catch {
+        throw firstErr;
+      }
+    }
+    const url = res?.url || res?.checkoutUrl || res?.sessionUrl || null;
+    if (!url) throw new Error("Checkout session was created without a redirect URL.");
+    window.location.href = url;
+  } catch (e) {
+    state.market.coinExchangeError = e.message || "Unable to start Stripe checkout.";
+    setStatus(state.market.coinExchangeError);
+    renderCoinExchangeShell();
+  } finally {
+    state.market.coinCheckoutBusy = false;
+    renderCoinExchangeShell();
+  }
+}
+const coinExchangeClickProxy = async (e) => {
+  const trigger = e.target.closest(
+    "[data-coin-select], .coinBundleSelectBtn, #coinExchangeGrid .btn, #coinExchangeGrid .smallBtn, .coinExchangeRow .btn, .coinExchangeRow .smallBtn",
+  );
+  if (!trigger) return;
+  const bundleId = getCoinBundleIdFromNode(trigger);
+  if (!bundleId) return;
+  e.preventDefault();
+  await beginCoinCheckout(bundleId);
+};
+function bindCoinExchangeActions() {
+  document.removeEventListener("click", coinExchangeClickProxy);
+  document.addEventListener("click", coinExchangeClickProxy);
+}
+function handleStripeReturn() {
+  const url = new URL(window.location.href);
+  const stripeStatus = url.searchParams.get("stripe");
+  if (!stripeStatus) return;
+  if (stripeStatus === "success") {
+    setStatus("Stripe checkout completed. Wallet will refresh after webhook confirmation.");
+  } else if (stripeStatus === "cancel") {
+    setStatus("Stripe checkout cancelled.");
+  }
+  url.searchParams.delete("stripe");
+  window.history.replaceState({}, "", url.toString());
+}
 async function loadMarket() {
   const [rules, pulse, open, mine, trades] = await Promise.all([
     api("/v1/market/rules", { method: "GET" }).catch(() => DEFAULT_RULES),
-    api("/v1/market/pulse?limit=60", { method: "GET" }).catch(() => ({
-      last: null,
-      chg24h: null,
-      points: [],
-    })),
+    api("/v1/market/pulse?limit=60", { method: "GET" }),
     api("/v1/market/listings?limit=60", { method: "GET" }),
     api("/v1/market/my", { method: "GET" }),
-    api("/v1/market/trades?limit=20", { method: "GET" }).catch(() => ({
-      trades: [],
-    })),
+    api("/v1/market/trades?limit=20", { method: "GET" }).catch(() => ({ trades: [] })),
   ]);
-  state.market.rules = { ...DEFAULT_RULES, ...(rules || {}) };
-  state.market.rules.minPrice = {
-    ...DEFAULT_RULES.minPrice,
-    ...(rules?.minPrice || {}),
-  };
+  state.market.rules = rules || DEFAULT_RULES;
   state.market.pulse = pulse || { last: null, chg24h: null, points: [] };
   state.market.trades = trades.trades || [];
-  const allOpen = (open.listings || []).map(normalizeCard);
-  state.market.listings = allOpen.filter(
-    (x) => x.seller_user_id !== state.userId,
-  );
-  state.market.mine = (mine.listings || []).map(normalizeCard);
+  const allOpen = open.listings || [];
+  state.market.listings = allOpen.filter((x) => x.seller_user_id !== state.userId);
+  state.market.mine = mine.listings || [];
   const openMine = state.market.mine.filter((x) => x.status === "OPEN");
   state.market.listedSet = new Set(openMine.map((x) => x.card_id));
+  safeText(el("myCount"), `(${openMine.length}/${state.market.rules.maxOpenListings})`);
   reconcileBenchWithState();
   renderPulse();
-  renderTicker();
-  renderMarketPlayersGrid();
-  renderMyListings();
+  renderListings();
   renderTrades();
-  renderMarketIntel();
   renderHomeMovers();
   renderInventory();
   renderBench();
@@ -3633,37 +3638,27 @@ async function loadSquad() {
   renderBench();
   renderSquad();
 }
+
+/* =========================
+   UI WIRES
+========================= */
 function renderTacticsShell() {
   const runtime = buildLeagueRuntime(new Date());
-  const nextKickoff =
-    runtime.registered && runtime.nextFixture
-      ? runtime.nextFixture.kickoff
-      : null;
-  const lockTime = nextKickoff
-    ? new Date(nextKickoff.getTime() - 3600000)
-    : null;
+  const nextKickoff = runtime.registered && runtime.nextFixture ? runtime.nextFixture.kickoff : null;
+  const lockTime = nextKickoff ? new Date(nextKickoff.getTime() - 3600000) : null;
   state.tacticsLocked = !!(
     lockTime &&
     Date.now() >= lockTime.getTime() &&
     Date.now() < nextKickoff.getTime()
   );
   $$("[data-formation]").forEach((btn) => {
-    btn.classList.toggle(
-      "is-active",
-      btn.dataset.formation === state.formation,
-    );
+    btn.classList.toggle("is-active", btn.dataset.formation === state.formation);
   });
   $$("[data-tactic-mode]").forEach((btn) => {
-    btn.classList.toggle(
-      "is-active",
-      btn.dataset.tacticMode === state.tacticMode,
-    );
+    btn.classList.toggle("is-active", btn.dataset.tacticMode === state.tacticMode);
   });
-  const cards = document.querySelectorAll(".tacticsTopStrip .tacticsTopCard");
-  safeText(
-    cards[0]?.querySelector(".sectionTitle"),
-    formatFormationLabel(state.formation),
-  );
+  const cards = $$(".tacticsTopStrip .tacticsTopCard");
+  safeText(cards[0]?.querySelector(".sectionTitle"), formatFormationLabel(state.formation));
   safeText(cards[1]?.querySelector(".sectionTitle"), savedTemplateLabel());
   const validation = validateTeamModel(buildTeamModel());
   const statusLabel = state.tacticsLocked
@@ -3781,23 +3776,27 @@ async function enterKickForge() {
       loadMe(),
       loadPro(),
       loadMarket(),
-      loadCoinExchange(),
       loadDaily(),
       loadCosmetics(),
+      loadCoinExchange(),
     ]);
     renderBench();
     renderTacticsShell();
     renderHomeCountdown();
     renderLeagueShell();
+    renderCoinExchangeShell();
     updateSynergy();
     setActiveView("home");
     scrollToAppShell();
     startHomeCountdown();
-    await handleCheckoutReturn();
   } catch (e) {
     alert(e.message);
   }
 }
+
+/* =========================
+   BOOT
+========================= */
 (function boot() {
   ensureBenchState();
   seedXI();
@@ -3805,29 +3804,19 @@ async function enterKickForge() {
   setUserLabel();
   initChips();
   initViewTabs();
-  initMarketTabs();
-  initMarketControls();
-  initPackMarketShell();
-  renderCoinExchangeShell();
-  initCoinExchangeShell();
-  setMarketTab(state.market.activeTab || "players");
+  bindCoinExchangeActions();
   setActiveView("home");
   safeText(el("arena-mode"), state.arenaMode);
   renderMarketSelected();
   renderHomeCountdown();
   renderTacticsShell();
   renderLeagueShell();
-  renderPulse();
-  renderTicker();
-  renderMarketPlayersGrid();
-  renderMyListings();
-  renderTrades();
-  renderMarketIntel();
-  renderHomeMovers();
+  renderCoinExchangeShell();
+  handleStripeReturn();
   healthCheck();
   el("btn-play")?.addEventListener("click", enterKickForge);
-  el("btn-pack")?.addEventListener("click", () => openPack("kickoff"));
-  el("btn-home-pack")?.addEventListener("click", () => openPack("kickoff"));
+  el("btn-pack")?.addEventListener("click", openPack);
+  el("btn-home-pack")?.addEventListener("click", openPack);
   el("btn-arena")?.addEventListener("click", playArena);
   el("btn-home-arena")?.addEventListener("click", async () => {
     jumpToView("squad");
@@ -3838,7 +3827,7 @@ async function enterKickForge() {
   el("btn-league-lock")?.addEventListener("click", handleLockTactics);
   el("btn-list")?.addEventListener("click", listSelected);
   el("btn-refresh-market")?.addEventListener("click", async () => {
-    setStatus("Refreshing market&");
+    setStatus("Refreshing market…");
     try {
       await loadMarket();
       setStatus("Market refreshed.");
@@ -3846,14 +3835,7 @@ async function enterKickForge() {
       setStatus(e.message);
     }
   });
-  el("btn-close")?.addEventListener("click", hideOverlay);
-  el("btn-close-pack-odds")?.addEventListener("click", hidePackOddsOverlay);
-  el("revealOverlay")?.addEventListener("click", (e) => {
-    if (e.target?.id === "revealOverlay") hideOverlay();
-  });
-  el("packOddsOverlay")?.addEventListener("click", (e) => {
-    if (e.target?.id === "packOddsOverlay") hidePackOddsOverlay();
-  });
+  el("btn-close")?.addEventListener("click", () => hideOverlay());
   el("btn-claim")?.addEventListener("click", async () => {
     hideOverlay();
     try {
@@ -3864,30 +3846,16 @@ async function enterKickForge() {
         loadMarket(),
         loadDaily(),
         loadCosmetics(),
+        loadCoinExchange(),
       ]);
       renderBench();
       renderTacticsShell();
       renderHomeCountdown();
       renderLeagueShell();
+      renderCoinExchangeShell();
     } catch (e) {
       alert(e.message);
     }
   });
   const revealAction = async () => {
-    if (!state.revealCards?.length) return;
-    await flipNext();
-  };
-  el("revealPack")?.addEventListener("click", revealAction);
-  el("revealCards")?.addEventListener("click", revealAction);
-  handleCheckoutReturn().catch(() => {});
-  window.KickForgeDebug = {
-    buildTeamModel,
-    validateTeamModel,
-    buildSynergyModel,
-    buildLeagueRuntime,
-    generateCardTraits,
-    renderMarketPlayersGrid,
-    renderMarketIntel,
-    showPackOddsOverlay,
-  };
-})();
+    if (!
