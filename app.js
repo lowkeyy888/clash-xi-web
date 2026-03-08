@@ -3,6 +3,7 @@ const el = (id) => document.getElementById(id);
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
 const SLOT_KEYS = [
   "GK",
   "LB",
@@ -16,6 +17,7 @@ const SLOT_KEYS = [
   "ST",
   "RW",
 ];
+
 const DEFAULT_RULES = {
   maxOpenListings: 5,
   feeBps: 500,
@@ -28,9 +30,11 @@ const DEFAULT_RULES = {
     ICON: 600,
   },
 };
+
 const FORMATIONS = ["343", "433", "442", "451", "4231", "352"];
 const TACTIC_MODES = ["balanced", "highpress", "counter", "control"];
 const MARKET_TABS = ["players", "packs", "coins"];
+
 const RARITY_ORDER = {
   COMMON: 1,
   UNCOMMON: 2,
@@ -39,6 +43,7 @@ const RARITY_ORDER = {
   LEGENDARY: 5,
   ICON: 6,
 };
+
 const PACK_MARKET_PRODUCTS = {
   kickoff: {
     key: "kickoff",
@@ -87,6 +92,7 @@ const PACK_MARKET_PRODUCTS = {
     ],
   },
 };
+
 const COIN_BUNDLE_FALLBACK = [
   {
     id: "fc_001",
@@ -143,6 +149,7 @@ const COIN_BUNDLE_FALLBACK = [
     bestValue: true,
   },
 ];
+
 const TACTICAL_ROLES = {
   GOALKEEPER: "GOALKEEPER",
   CENTER_BACK: "CENTER_BACK",
@@ -153,6 +160,7 @@ const TACTICAL_ROLES = {
   WIDE_FORWARD: "WIDE_FORWARD",
   STRIKER: "STRIKER",
 };
+
 const ROLE_OPTIONS = {
   [TACTICAL_ROLES.GOALKEEPER]: [
     "Shot Stopper",
@@ -180,6 +188,7 @@ const ROLE_OPTIONS = {
     "Advanced Forward",
   ],
 };
+
 const TRAIT_LIBRARY = [
   {
     key: "Tireless Engine",
@@ -242,6 +251,7 @@ const TRAIT_LIBRARY = [
     minRarity: "ICON",
   },
 ];
+
 const FORMATION_ROLE_MAP = {
   433: {
     GK: { role: TACTICAL_ROLES.GOALKEEPER, allowed: ["GK"] },
@@ -253,32 +263,6 @@ const FORMATION_ROLE_MAP = {
     CM2: { role: TACTICAL_ROLES.CENTRAL_MID, allowed: ["CM", "CDM"] },
     CAM: { role: TACTICAL_ROLES.ATTACKING_MID, allowed: ["CAM", "CM"] },
     LW: { role: TACTICAL_ROLES.WIDE_FORWARD, allowed: ["LW"] },
-    ST: { role: TACTICAL_ROLES.STRIKER, allowed: ["ST"] },
-    RW: { role: TACTICAL_ROLES.WIDE_FORWARD, allowed: ["RW"] },
-  },
-  442: {
-    GK: { role: TACTICAL_ROLES.GOALKEEPER, allowed: ["GK"] },
-    LB: { role: TACTICAL_ROLES.FULLBACK_WINGBACK, allowed: ["LB"] },
-    CB1: { role: TACTICAL_ROLES.CENTER_BACK, allowed: ["CB"] },
-    CB2: { role: TACTICAL_ROLES.CENTER_BACK, allowed: ["CB"] },
-    RB: { role: TACTICAL_ROLES.FULLBACK_WINGBACK, allowed: ["RB"] },
-    LW: { role: TACTICAL_ROLES.WIDE_FORWARD, allowed: ["LW", "LM"] },
-    CM1: { role: TACTICAL_ROLES.CENTRAL_MID, allowed: ["CM", "CDM"] },
-    CM2: { role: TACTICAL_ROLES.CENTRAL_MID, allowed: ["CM", "CDM"] },
-    RW: { role: TACTICAL_ROLES.WIDE_FORWARD, allowed: ["RW", "RM"] },
-    CAM: { role: TACTICAL_ROLES.STRIKER, allowed: ["ST", "CF"] },
-    ST: { role: TACTICAL_ROLES.STRIKER, allowed: ["ST", "CF"] },
-  },
-  451: {
-    GK: { role: TACTICAL_ROLES.GOALKEEPER, allowed: ["GK"] },
-    LB: { role: TACTICAL_ROLES.FULLBACK_WINGBACK, allowed: ["LB"] },
-    CB1: { role: TACTICAL_ROLES.CENTER_BACK, allowed: ["CB"] },
-    CB2: { role: TACTICAL_ROLES.CENTER_BACK, allowed: ["CB"] },
-    RB: { role: TACTICAL_ROLES.FULLBACK_WINGBACK, allowed: ["RB"] },
-    LW: { role: TACTICAL_ROLES.WIDE_FORWARD, allowed: ["LW", "LM"] },
-    CM1: { role: TACTICAL_ROLES.CENTRAL_MID, allowed: ["CM", "CDM"] },
-    CAM: { role: TACTICAL_ROLES.ATTACKING_MID, allowed: ["CAM", "CM"] },
-      LW: { role: TACTICAL_ROLES.WIDE_FORWARD, allowed: ["LW"] },
     ST: { role: TACTICAL_ROLES.STRIKER, allowed: ["ST"] },
     RW: { role: TACTICAL_ROLES.WIDE_FORWARD, allowed: ["RW"] },
   },
@@ -354,6 +338,7 @@ const FORMATION_ROLE_MAP = {
     ST: { role: TACTICAL_ROLES.STRIKER, allowed: ["ST", "CF"] },
   },
 };
+
 const FORMATION_LAYOUTS = {
   433: {
     GK: { x: 50, y: 85 },
@@ -434,6 +419,7 @@ const FORMATION_LAYOUTS = {
     ST: { x: 60, y: 16 },
   },
 };
+
 const LEAGUE_TEAM_POOL = [
   { id: "you", name: "Your Club", bot: false, base: 0 },
   { id: "topside", name: "Topside FC", bot: false, base: 84 },
@@ -446,6 +432,7 @@ const LEAGUE_TEAM_POOL = [
   { id: "stormathletic", name: "Storm Athletic", bot: true, base: 77 },
   { id: "capitalrover", name: "Capital Rovers", bot: true, base: 75 },
 ];
+
 function normalizeRarity(rarity) {
   const r = String(rarity || "COMMON")
     .trim()
@@ -454,14 +441,17 @@ function normalizeRarity(rarity) {
   if (r === "UNCO" || r === "UNCOMMON") return "UNCOMMON";
   return RARITY_ORDER[r] ? r : "COMMON";
 }
+
 function priceFmt(n) {
   const num = Number(n || 0);
   return `${num.toLocaleString("en-GB")} FC`;
 }
+
 function usdFmtFromCents(cents) {
   const num = Number(cents || 0) / 100;
   return `$${num.toFixed(2)}`;
 }
+
 function normalizeCoinBundle(raw) {
   return {
     id: String(raw?.id || raw?.key || ""),
@@ -473,6 +463,7 @@ function normalizeCoinBundle(raw) {
     bestValue: !!raw?.bestValue,
   };
 }
+
 function getCoinBundleById(bundleId) {
   const list = (
     state.market.coinBundles?.length
@@ -481,6 +472,7 @@ function getCoinBundleById(bundleId) {
   ).map(normalizeCoinBundle);
   return list.find((b) => b.id === bundleId) || null;
 }
+
 function getCoinBundleList() {
   return (
     state.market.coinBundles?.length
@@ -488,6 +480,7 @@ function getCoinBundleList() {
       : COIN_BUNDLE_FALLBACK
   ).map(normalizeCoinBundle);
 }
+
 function getCoinBundleIdFromNode(node) {
   if (!node) return null;
   const direct = node.dataset?.coinBundle || node.dataset?.coinSelect || null;
@@ -498,11 +491,6 @@ function getCoinBundleIdFromNode(node) {
   if (!row) return null;
   const rowDirect = row.dataset?.coinBundle || row.dataset?.coinSelect || null;
   if (rowDirect) return rowDirect;
-  const buttons = Array.from(
-    document.querySelectorAll(
-      "#coinExchangeGrid .coinBundleSelectBtn, #coinExchangeGrid [data-coin-select]",
-    ),
-  );
   const rowIndex = Array.from(
     document.querySelectorAll(
       "#coinExchangeGrid .coinExchangeRow, #coinExchangeGrid .coinBundleCard",
@@ -518,6 +506,7 @@ function getCoinBundleIdFromNode(node) {
   }
   return null;
 }
+
 function selectCoinBundle(bundleId) {
   const bundle = getCoinBundleById(bundleId);
   if (!bundle) {
@@ -529,6 +518,7 @@ function selectCoinBundle(bundleId) {
   renderCoinExchangeShell();
   setStatus(`${bundle.name} selected.`);
 }
+
 function debounce(fn, wait = 300) {
   let t = null;
   return (...args) => {
@@ -536,6 +526,7 @@ function debounce(fn, wait = 300) {
     t = setTimeout(() => fn(...args), wait);
   };
 }
+
 function tacticDescriptors(mode) {
   const map = {
     balanced: {
@@ -561,6 +552,7 @@ function tacticDescriptors(mode) {
   };
   return map[mode] || map.balanced;
 }
+
 function savedTemplateLabel() {
   const map = {
     balanced: "Balanced Press",
@@ -570,6 +562,7 @@ function savedTemplateLabel() {
   };
   return map[state.tacticMode] || "Balanced Press";
 }
+
 function loadBenchState() {
   try {
     const raw = JSON.parse(localStorage.getItem("kf_bench") || "[]");
@@ -581,6 +574,7 @@ function loadBenchState() {
     return Array(7).fill(null);
   }
 }
+
 function loadRoleOverrides() {
   try {
     const raw = JSON.parse(localStorage.getItem("kf_role_overrides") || "{}");
@@ -589,12 +583,14 @@ function loadRoleOverrides() {
     return {};
   }
 }
+
 function saveRoleOverrides() {
   localStorage.setItem(
     "kf_role_overrides",
     JSON.stringify(state.roleOverrides || {}),
   );
 }
+
 function defaultLeagueState() {
   return {
     joined: false,
@@ -604,6 +600,7 @@ function defaultLeagueState() {
     userSelectedMd: false,
   };
 }
+
 function loadLeagueState() {
   try {
     const raw = JSON.parse(localStorage.getItem("kf_league_state") || "null");
@@ -613,9 +610,11 @@ function loadLeagueState() {
     return defaultLeagueState();
   }
 }
+
 function saveLeagueState() {
   localStorage.setItem("kf_league_state", JSON.stringify(state.league));
 }
+
 function loadPackPityState() {
   try {
     const raw = JSON.parse(localStorage.getItem("kf_pack_pity") || "{}");
@@ -624,9 +623,11 @@ function loadPackPityState() {
     return {};
   }
 }
+
 function savePackPityState() {
   localStorage.setItem("kf_pack_pity", JSON.stringify(state.packPity || {}));
 }
+
 const state = {
   token: localStorage.getItem("cx_token") || null,
   userId: localStorage.getItem("cx_user") || null,
@@ -679,6 +680,7 @@ const state = {
   league: loadLeagueState(),
   packPity: loadPackPityState(),
 };
+
 function normalizeCard(raw) {
   if (!raw) return null;
   return {
@@ -690,74 +692,90 @@ function normalizeCard(raw) {
     rarity: normalizeRarity(raw.rarity || "COMMON"),
   };
 }
+
 function normalizePosition(pos) {
   return String(pos || "")
     .trim()
     .toUpperCase();
 }
+
 function getFormationRoleMap(formation) {
   return FORMATION_ROLE_MAP[formation] || FORMATION_ROLE_MAP["433"];
 }
+
 function getFriendlyTacticalRole(role) {
   if (!role) return "Role";
   return String(role).replaceAll("_", " ");
 }
+
 function getSlotMeta(slotKey) {
   const roleMap = getFormationRoleMap(state.formation);
   return roleMap[slotKey] || null;
 }
+
 function getSlotRoleOverride(slotKey) {
   return state.roleOverrides?.[slotKey] || "";
 }
+
 function setSlotRoleOverride(slotKey, roleName) {
   if (!slotKey) return;
   if (!roleName) delete state.roleOverrides[slotKey];
   else state.roleOverrides[slotKey] = roleName;
   saveRoleOverrides();
 }
+
 function getSlotRoleDisplay(slotKey) {
   return (
     getSlotRoleOverride(slotKey) ||
     getFriendlyTacticalRole(getSlotMeta(slotKey)?.role)
   );
 }
+
 function getShortRoleDisplay(slotKey) {
   const label = getSlotRoleDisplay(slotKey);
   return label.length > 14 ? `${label.slice(0, 12)}…` : label;
 }
+
 function ensureBenchState() {
   if (!Array.isArray(state.bench)) state.bench = Array(7).fill(null);
   state.bench = state.bench
     .slice(0, 7)
     .concat(Array(Math.max(0, 7 - state.bench.length)).fill(null));
 }
+
 function saveBenchState() {
   ensureBenchState();
   localStorage.setItem("kf_bench", JSON.stringify(state.bench));
 }
+
 function getCardById(id) {
   return state.inventory.find((c) => c.id === id) || null;
 }
+
 function getSquadSlotOfCard(cardId) {
   for (const [slotKey, id] of Object.entries(state.squad)) {
     if (id === cardId) return slotKey;
   }
   return null;
 }
+
 function findBenchIndexByCardId(cardId) {
   ensureBenchState();
   return state.bench.findIndex((id) => id === cardId);
 }
+
 function removeCardFromBench(cardId, exceptIndex = null) {
   ensureBenchState();
   state.bench = state.bench.map((id, idx) =>
     id === cardId && idx !== exceptIndex ? null : id,
   );
 }
+
 function firstEmptyBenchIndex() {
   ensureBenchState();
   return state.bench.findIndex((id) => !id);
 }
+
 function reconcileBenchWithState() {
   ensureBenchState();
   const squadIds = new Set(Object.values(state.squad).filter(Boolean));
@@ -765,6 +783,7 @@ function reconcileBenchWithState() {
     ? new Set(state.inventory.map((c) => c.id))
     : null;
   const seen = new Set();
+
   state.bench = state.bench.map((cardId) => {
     if (!cardId) return null;
     if (inventoryIds && !inventoryIds.has(cardId)) return null;
@@ -773,13 +792,16 @@ function reconcileBenchWithState() {
     seen.add(cardId);
     return cardId;
   });
+
   saveBenchState();
 }
+
 function canEquipSelected() {
   return (
     !!state.selectedCardId && !state.market.listedSet.has(state.selectedCardId)
   );
 }
+
 function hashString(str) {
   let h = 2166136261;
   for (let i = 0; i < str.length; i++) {
@@ -788,6 +810,7 @@ function hashString(str) {
   }
   return h >>> 0;
 }
+
 function mulberry32(a) {
   return function () {
     let t = (a += 0x6d2b79f5);
@@ -796,15 +819,19 @@ function mulberry32(a) {
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 }
+
 function randIntSeed(rnd, min, max) {
   return Math.floor(rnd() * (max - min + 1)) + min;
 }
+
 function clampStat(n) {
   return Math.max(35, Math.min(99, n));
 }
+
 function clamp(num, min, max) {
   return Math.max(min, Math.min(max, num));
 }
+
 function roleStyle(role) {
   const r = (role || "").toLowerCase();
   if (
@@ -824,16 +851,19 @@ function roleStyle(role) {
     return "COUNTER";
   return "PRESS";
 }
+
 function cardVisualModel(card) {
   const c = normalizeCard(card);
   const seed = hashString(
     `${c.id}|${c.display_name}|${c.position}|${c.role}|${c.rarity}`,
   );
   const rnd = mulberry32(seed);
+
   const rarityBase =
     { COMMON: 62, UNCOMMON: 67, RARE: 72, EPIC: 82, LEGENDARY: 91, ICON: 95 }[
       c.rarity
     ] ?? 62;
+
   const posBoost = {
     GK: { pace: -10, pass: 0, attack: -18, defense: 18 },
     CB: { pace: -4, pass: 1, attack: -10, defense: 15 },
@@ -851,8 +881,10 @@ function cardVisualModel(card) {
     attack: 0,
     defense: 0,
   };
+
   const boost = roleStyle(c.role);
   const mods = { pace: 0, pass: 0, attack: 0, defense: 0 };
+
   if (boost === "PRESS") {
     mods.pace += 3;
     mods.defense += 4;
@@ -876,6 +908,7 @@ function cardVisualModel(card) {
   if (state.tacticMode === "control") {
     mods.pass += 4;
   }
+
   const pace = clampStat(
     rarityBase + posBoost.pace + mods.pace + randIntSeed(rnd, -4, 6),
   );
@@ -889,12 +922,15 @@ function cardVisualModel(card) {
     rarityBase + posBoost.defense + mods.defense + randIntSeed(rnd, -4, 6),
   );
   const ovr = clampStat(Math.round((pace + pass + attack + defense) / 4));
+
   return { ovr, pace, pass, attack, defense };
 }
+
 function getDetailedStats(card) {
   const vm = cardVisualModel(card);
   const seed = hashString(`${card.id}|detail|${card.rarity}|${card.position}`);
   const rnd = mulberry32(seed);
+
   const drb = clampStat(
     Math.round(vm.pace * 0.35 + vm.attack * 0.35 + vm.pass * 0.3) +
       randIntSeed(rnd, -3, 3),
@@ -904,6 +940,7 @@ function getDetailedStats(card) {
       vm.pace * 0.3 + vm.defense * 0.3 + vm.pass * 0.2 + vm.attack * 0.2,
     ) + randIntSeed(rnd, -3, 3),
   );
+
   return [
     { key: "PAC", label: "Pace", value: vm.pace },
     { key: "SHT", label: "Shot", value: vm.attack },
@@ -913,6 +950,7 @@ function getDetailedStats(card) {
     { key: "STM", label: "Stamina", value: stm },
   ];
 }
+
 function generateCardTraits(card) {
   const rarity = normalizeRarity(card?.rarity || "COMMON");
   const count =
@@ -925,48 +963,60 @@ function generateCardTraits(card) {
           : rarity === "RARE"
             ? 2
             : 1;
+
   const position = normalizePosition(card?.position);
   const seed = hashString(
     `${card?.id}|traits|${rarity}|${position}|${card?.role || ""}`,
   );
   const rnd = mulberry32(seed);
+
   const filtered = TRAIT_LIBRARY.filter((t) => {
     const req = RARITY_ORDER[normalizeRarity(t.minRarity)] || 1;
     const have = RARITY_ORDER[rarity] || 1;
     return have >= req && t.tags.includes(position);
   });
+
   const fallback = TRAIT_LIBRARY.filter(
     (t) =>
       (RARITY_ORDER[rarity] || 1) >=
       (RARITY_ORDER[normalizeRarity(t.minRarity)] || 1),
   );
+
   const pool = filtered.length ? filtered.slice() : fallback.slice();
   const picked = [];
+
   while (pool.length && picked.length < count) {
     const idx = Math.floor(rnd() * pool.length);
     picked.push(pool.splice(idx, 1)[0]);
   }
+
   return picked;
 }
+
 function getSerialText(card) {
   const c = normalizeCard(card);
   const base = Math.abs(hashString(`${c.id}|serial`)) % 99999;
   const serial = String(base + 1).padStart(5, "0");
+
   if (normalizeRarity(c.rarity) === "ICON") {
     const cap = "5,000";
     const current = String((base % 5000) + 1).padStart(2, "0");
     return `#${current} / ${cap}`;
   }
+
   return `#${serial}`;
 }
+
 function buildTeamModel() {
   const roleMap = getFormationRoleMap(state.formation);
+
   const slots = SLOT_KEYS.map((slotKey) => {
     const card = getCardById(state.squad[slotKey]);
     const meta = roleMap[slotKey] || null;
     const allowedPositions = (meta?.allowed || []).map(normalizePosition);
     const cardPosition = normalizePosition(card?.position);
     const isNaturalFit = !!card && allowedPositions.includes(cardPosition);
+
     return {
       slotKey,
       tacticalRole: meta?.role || null,
@@ -978,6 +1028,7 @@ function buildTeamModel() {
       isNaturalFit,
     };
   });
+
   const equippedCards = slots.filter((s) => s.card).map((s) => s.card);
   const avgOvr = equippedCards.length
     ? Math.round(
@@ -985,6 +1036,7 @@ function buildTeamModel() {
           equippedCards.length,
       )
     : 0;
+
   return {
     formation: state.formation,
     tacticMode: state.tacticMode,
@@ -995,6 +1047,7 @@ function buildTeamModel() {
     avgOvr,
   };
 }
+
 function validateTeamModel(team = buildTeamModel()) {
   const missingSlots = [];
   const duplicateCards = [];
@@ -1003,6 +1056,7 @@ function validateTeamModel(team = buildTeamModel()) {
   const warnings = [];
   const seenCardIds = new Set();
   const rolelessSlots = [];
+
   team.slots.forEach((slot) => {
     if (!slot.tacticalRole) rolelessSlots.push(slot.slotKey);
     if (!slot.cardId) {
@@ -1015,6 +1069,7 @@ function validateTeamModel(team = buildTeamModel()) {
       listedConflicts.push(slot.slotKey);
     if (!slot.isNaturalFit) offPositionAssignments.push(slot.slotKey);
   });
+
   if (rolelessSlots.length)
     warnings.push(
       `Missing tactical role mapping for: ${rolelessSlots.join(", ")}`,
@@ -1023,12 +1078,14 @@ function validateTeamModel(team = buildTeamModel()) {
     warnings.push(
       `Off-position assignments: ${offPositionAssignments.join(", ")}`,
     );
+
   const isComplete = missingSlots.length === 0;
   const isReady =
     isComplete &&
     duplicateCards.length === 0 &&
     listedConflicts.length === 0 &&
     rolelessSlots.length === 0;
+
   return {
     isComplete,
     isReady,
@@ -1039,6 +1096,7 @@ function validateTeamModel(team = buildTeamModel()) {
     warnings,
   };
 }
+
 function getCardNation(card) {
   const raw =
     card?.nation ||
@@ -1048,10 +1106,12 @@ function getCardNation(card) {
     null;
   return raw ? String(raw).trim().toUpperCase() : null;
 }
+
 function getTopGroup(values = []) {
   const counts = new Map();
   let topValue = null;
   let topCount = 0;
+
   values.filter(Boolean).forEach((value) => {
     const key = String(value).trim().toUpperCase();
     const next = (counts.get(key) || 0) + 1;
@@ -1061,8 +1121,10 @@ function getTopGroup(values = []) {
       topValue = key;
     }
   });
+
   return { value: topValue, count: topCount };
 }
+
 function getBandStatus(kind, pct, available = true) {
   if (!available) return "INACTIVE";
   if (kind === "role") {
@@ -1082,9 +1144,11 @@ function getBandStatus(kind, pct, available = true) {
   }
   return "INACTIVE";
 }
+
 function buildSynergyModel(team = buildTeamModel()) {
   const equippedSlots = team.slots.filter((slot) => slot.card);
   const equippedCount = equippedSlots.length;
+
   if (!equippedCount) {
     return {
       overall: 0,
@@ -1100,10 +1164,13 @@ function buildSynergyModel(team = buildTeamModel()) {
       streetKings: { active: false },
     };
   }
+
   const roleFitCount = equippedSlots.filter((slot) => slot.isNaturalFit).length;
   const rolePct = Math.round((roleFitCount / equippedCount) * 100);
+
   const rarityTop = getTopGroup(equippedSlots.map((slot) => slot.card?.rarity));
   const rarityPct = Math.round((rarityTop.count / equippedCount) * 100);
+
   const nations = equippedSlots
     .map((slot) => getCardNation(slot.card))
     .filter(Boolean);
@@ -1112,15 +1179,18 @@ function buildSynergyModel(team = buildTeamModel()) {
   const nationPct = hasNationData
     ? Math.round((nationTop.count / equippedCount) * 100)
     : 0;
+
   const streetKingsActive =
     equippedCount === 11 &&
     equippedSlots.every(
       (slot) => normalizeRarity(slot.card?.rarity) === "COMMON",
     );
+
   let overall = Math.round(
     rolePct * 0.55 + rarityPct * 0.25 + (hasNationData ? nationPct * 0.2 : 0),
   );
   if (streetKingsActive) overall = Math.max(overall, 85);
+
   return {
     overall: clamp(overall, 0, 100),
     role: {
@@ -1144,6 +1214,7 @@ function buildSynergyModel(team = buildTeamModel()) {
     streetKings: { active: streetKingsActive },
   };
 }
+
 function rarityClass(r) {
   const rr = normalizeRarity(r);
   if (rr === "ICON") return "rLegend";
@@ -1153,6 +1224,7 @@ function rarityClass(r) {
   if (rr === "UNCOMMON") return "rRare";
   return "rCommon";
 }
+
 function rarityFrame(r) {
   const rr = normalizeRarity(r);
   if (rr === "ICON") return "kfCard--icon";
@@ -1162,6 +1234,7 @@ function rarityFrame(r) {
   if (rr === "UNCOMMON") return "kfCard--uncommon";
   return "kfCard--common";
 }
+
 function rarityShort(r) {
   const rr = normalizeRarity(r);
   if (rr === "ICON") return "ICON";
@@ -1171,30 +1244,37 @@ function rarityShort(r) {
   if (rr === "UNCOMMON") return "UNC";
   return "COM";
 }
+
 function minPriceFor(r) {
   const rules = state.market.rules || DEFAULT_RULES;
   return rules.minPrice?.[normalizeRarity(r)] ?? 10;
 }
+
 function safeText(node, value) {
   if (node) node.textContent = value;
 }
+
 function setStatus(message) {
   safeText(el("mk-status"), message || "");
 }
+
 function setConn(ok) {
   safeText(el("pill-conn"), ok ? "API: Connected" : "API: Offline");
 }
+
 function setUserLabel() {
   safeText(
     el("pill-user"),
     state.userId ? `User: ${state.userId.slice(0, 8)}` : "Guest",
   );
 }
+
 function setCoins(coins) {
   state.walletCoins = coins ?? null;
   safeText(el("pill-coins"), `Coins: ${coins ?? "—"}`);
   safeText(el("home-coins"), coins ?? "—");
 }
+
 function pulseSelectedPanel() {
   const panel = el("selectedCard");
   if (!panel) return;
@@ -1202,11 +1282,13 @@ function pulseSelectedPanel() {
   void panel.offsetWidth;
   panel.classList.add("pulseKick");
 }
+
 function scrollToAppShell() {
   const node = el("app-shell");
   if (!node) return;
   node.scrollIntoView({ behavior: "smooth", block: "start" });
 }
+
 function setActiveView(view) {
   state.activeView = view;
   $$("[data-view-tab]").forEach((btn) => {
@@ -1216,24 +1298,30 @@ function setActiveView(view) {
     panel.classList.toggle("is-active", panel.dataset.view === view);
   });
 }
+
 function jumpToView(view) {
   setActiveView(view);
   scrollToAppShell();
 }
+
 async function api(path, opts = {}) {
   const headers = { ...(opts.headers || {}) };
   if (state.token) headers.Authorization = `Bearer ${state.token}`;
   if (!headers["Content-Type"] && opts.method !== "GET")
     headers["Content-Type"] = "application/json";
+
   const res = await fetch(`${API_BASE}${path}`, { ...opts, headers });
   const txt = await res.text();
+
   let json = null;
   try {
     json = JSON.parse(txt);
   } catch {}
+
   if (!res.ok) throw new Error(json?.error || txt || "API error");
   return json;
 }
+
 async function healthCheck() {
   try {
     await api("/health", { method: "GET" });
@@ -1244,6 +1332,7 @@ async function healthCheck() {
     return false;
   }
 }
+
 async function ensureSession() {
   if (state.token && state.userId) return;
   const s = await api("/v1/session", {
@@ -1256,12 +1345,14 @@ async function ensureSession() {
   localStorage.setItem("cx_user", state.userId);
   setUserLabel();
 }
+
 function clearDropNodeStyle(node) {
   if (!node) return;
   node.style.borderColor = "";
   node.style.boxShadow = "";
   node.style.background = "";
 }
+
 function paintDropNode(node, kind) {
   if (!node) return;
   if (kind === "ok") {
@@ -1280,16 +1371,20 @@ function paintDropNode(node, kind) {
   }
   clearDropNodeStyle(node);
 }
+
 function clearAllDropStates() {
   $$(".slot, .benchSlot").forEach((node) => clearDropNodeStyle(node));
 }
+
 function setDragPayload(payload) {
   state.dragPayload = payload;
 }
+
 function clearDragPayload() {
   state.dragPayload = null;
   clearAllDropStates();
 }
+
 function resolveDragPayload(payload) {
   if (!payload?.cardId) return null;
   const squadSlot = getSquadSlotOfCard(payload.cardId);
@@ -1300,6 +1395,7 @@ function resolveDragPayload(payload) {
     return { source: "bench", benchIndex, cardId: payload.cardId };
   return { source: "inventory", cardId: payload.cardId };
 }
+
 function isCardCompatibleForSlot(card, slotKey) {
   if (!card) return false;
   const roleMap = getFormationRoleMap(state.formation);
@@ -1308,6 +1404,7 @@ function isCardCompatibleForSlot(card, slotKey) {
   const allowed = (meta.allowed || []).map(normalizePosition);
   return allowed.includes(normalizePosition(card.position));
 }
+
 function canDropOnBench(targetIndex, payload) {
   if (state.tacticsLocked) return false;
   const resolved = resolveDragPayload(payload);
@@ -1318,6 +1415,7 @@ function canDropOnBench(targetIndex, payload) {
   if (currentOccupant) return false;
   return true;
 }
+
 function canDropOnPitch(slotKey, payload) {
   if (state.tacticsLocked) return false;
   const resolved = resolveDragPayload(payload);
@@ -1326,8 +1424,10 @@ function canDropOnPitch(slotKey, payload) {
   if (!incomingCard) return false;
   if (state.market.listedSet.has(incomingCard.id)) return false;
   if (!isCardCompatibleForSlot(incomingCard, slotKey)) return false;
+
   const targetCardId = state.squad[slotKey] || null;
   if (!targetCardId || targetCardId === incomingCard.id) return true;
+
   if (resolved.source === "pitch") {
     const displaced = getCardById(targetCardId);
     return !!displaced && isCardCompatibleForSlot(displaced, resolved.slotKey);
@@ -1335,6 +1435,7 @@ function canDropOnPitch(slotKey, payload) {
   if (resolved.source === "bench") return true;
   return firstEmptyBenchIndex() !== -1;
 }
+
 function findFirstCompatibleEmptySlot(cardId) {
   const card = getCardById(cardId);
   if (!card) return null;
@@ -1345,6 +1446,7 @@ function findFirstCompatibleEmptySlot(cardId) {
     ) || null
   );
 }
+
 function getCompatibleBenchCandidatesForSlot(slotKey, excludeCardId = null) {
   ensureBenchState();
   return state.bench
@@ -1357,10 +1459,12 @@ function getCompatibleBenchCandidatesForSlot(slotKey, excludeCardId = null) {
     )
     .sort((a, b) => cardVisualModel(b.card).ovr - cardVisualModel(a.card).ovr);
 }
+
 function getBestBenchComparison(slotKey, excludeCardId = null) {
   const items = getCompatibleBenchCandidatesForSlot(slotKey, excludeCardId);
   return items.length ? items[0] : null;
 }
+
 function getQuickSellValue(card) {
   const vm = cardVisualModel(card);
   const rarityBase =
@@ -1374,10 +1478,12 @@ function getQuickSellValue(card) {
     }[normalizeRarity(card.rarity)] || 20;
   return Math.round(rarityBase + vm.ovr * 2.2);
 }
+
 async function moveCardToBench(cardId, targetBenchIndex, hintedPayload = null) {
   ensureBenchState();
   const resolved = resolveDragPayload(hintedPayload || { cardId });
   if (!resolved) return false;
+
   const targetOccupant = state.bench[targetBenchIndex] || null;
   if (
     targetOccupant &&
@@ -1386,6 +1492,7 @@ async function moveCardToBench(cardId, targetBenchIndex, hintedPayload = null) {
     setStatus("That bench slot is already occupied.");
     return false;
   }
+
   try {
     if (resolved.source === "bench") {
       if (resolved.benchIndex === targetBenchIndex) return true;
@@ -1411,6 +1518,7 @@ async function moveCardToBench(cardId, targetBenchIndex, hintedPayload = null) {
       removeCardFromBench(cardId);
       state.bench[targetBenchIndex] = cardId;
     }
+
     removeCardFromBench(cardId, targetBenchIndex);
     reconcileBenchWithState();
     state.selectedCardId = null;
@@ -1428,9 +1536,11 @@ async function moveCardToBench(cardId, targetBenchIndex, hintedPayload = null) {
     return false;
   }
 }
+
 async function moveCardToPitch(cardId, targetSlotKey, hintedPayload = null) {
   const resolved = resolveDragPayload(hintedPayload || { cardId });
   if (!resolved) return false;
+
   const incomingCard = getCardById(cardId);
   if (!incomingCard) {
     setStatus("Card not found.");
@@ -1444,32 +1554,35 @@ async function moveCardToPitch(cardId, targetSlotKey, hintedPayload = null) {
     setStatus("That player is not compatible with this position.");
     return false;
   }
+
   const targetCardId = state.squad[targetSlotKey] || null;
+
   try {
     if (resolved.source === "pitch" && resolved.slotKey === targetSlotKey)
       return true;
+
     if (resolved.source === "pitch") {
       if (targetCardId && targetCardId !== cardId) {
         const displaced = getCardById(targetCardId);
-        if (
-          !displaced ||
-          !isCardCompatibleForSlot(displaced, resolved.slotKey)
-        ) {
+        if (!displaced || !isCardCompatibleForSlot(displaced, resolved.slotKey)) {
           setStatus(
             "Swap blocked: displaced player is not compatible with the source slot.",
           );
           return false;
         }
+
         await api("/v1/squad/unequip", {
           method: "POST",
           body: JSON.stringify({ slot: targetSlotKey }),
         });
         delete state.squad[targetSlotKey];
+
         await api("/v1/squad/equip", {
           method: "POST",
           body: JSON.stringify({ slot: targetSlotKey, cardId }),
         });
         state.squad[targetSlotKey] = cardId;
+
         await api("/v1/squad/equip", {
           method: "POST",
           body: JSON.stringify({
@@ -1493,6 +1606,7 @@ async function moveCardToPitch(cardId, targetSlotKey, hintedPayload = null) {
           body: JSON.stringify({ slot: targetSlotKey }),
         });
         delete state.squad[targetSlotKey];
+
         await api("/v1/squad/equip", {
           method: "POST",
           body: JSON.stringify({ slot: targetSlotKey, cardId }),
@@ -1516,16 +1630,19 @@ async function moveCardToPitch(cardId, targetSlotKey, hintedPayload = null) {
           );
           return false;
         }
+
         await api("/v1/squad/unequip", {
           method: "POST",
           body: JSON.stringify({ slot: targetSlotKey }),
         });
         delete state.squad[targetSlotKey];
+
         await api("/v1/squad/equip", {
           method: "POST",
           body: JSON.stringify({ slot: targetSlotKey, cardId }),
         });
         state.squad[targetSlotKey] = cardId;
+
         removeCardFromBench(targetCardId);
         state.bench[emptyBench] = targetCardId;
       } else {
@@ -1536,6 +1653,7 @@ async function moveCardToPitch(cardId, targetSlotKey, hintedPayload = null) {
         state.squad[targetSlotKey] = cardId;
       }
     }
+
     removeCardFromBench(cardId);
     reconcileBenchWithState();
     state.selectedCardId = null;
@@ -1553,6 +1671,7 @@ async function moveCardToPitch(cardId, targetSlotKey, hintedPayload = null) {
     return false;
   }
 }
+
 function cardHTML(card, opts = {}) {
   const c = normalizeCard(card);
   const vm = cardVisualModel(c);
@@ -1561,6 +1680,7 @@ function cardHTML(card, opts = {}) {
   const compact = !!opts.compact;
   const selectable = opts.selectable !== false;
   const draggable = !!opts.draggable;
+
   return `
     <div
       class="kfCard ${rarityFrame(c.rarity)} ${selected ? "is-selected" : ""} ${listed ? "is-listed" : ""} ${compact ? "is-compact" : ""}"
@@ -1592,10 +1712,13 @@ function cardHTML(card, opts = {}) {
     </div>
   `;
 }
+
 function bindSourceCardInteractions(rootSelector, opts = {}) {
   const jumpOnSelect = !!opts.jumpOnSelect;
+
   $$(`${rootSelector} [data-card-id]`).forEach((node) => {
     const id = node.getAttribute("data-card-id");
+
     node.onclick = () => {
       if (state.tacticsLocked) return;
       if (state.market.listedSet.has(id)) {
@@ -1617,6 +1740,7 @@ function bindSourceCardInteractions(rootSelector, opts = {}) {
         pulseSelectedPanel();
       }
     };
+
     node.ondragstart = (e) => {
       if (state.tacticsLocked) {
         e.preventDefault();
@@ -1631,11 +1755,13 @@ function bindSourceCardInteractions(rootSelector, opts = {}) {
       e.dataTransfer.effectAllowed = "move";
       e.dataTransfer.setData("text/plain", id);
     };
+
     node.ondragend = () => {
       clearDragPayload();
     };
   });
 }
+
 function benchCardHTML(card, idx) {
   const vm = cardVisualModel(card);
   const listed = state.market.listedSet.has(card.id);
@@ -1653,15 +1779,19 @@ function benchCardHTML(card, idx) {
     </div>
   `;
 }
+
 function renderBench() {
   ensureBenchState();
   const slots = [...$$(".benchRow .benchSlot")];
   if (!slots.length) return;
+
   slots.forEach((node, idx) => {
     const cardId = state.bench[idx] || null;
     const card = getCardById(cardId);
+
     node.dataset.benchIndex = String(idx);
     node.onclick = () => onBenchClick(idx);
+
     if (!card) {
       node.innerHTML = `B${idx + 1}`;
       node.draggable = false;
@@ -1671,6 +1801,7 @@ function renderBench() {
       node.draggable = !state.tacticsLocked;
       node.style.cursor = state.tacticsLocked ? "default" : "grab";
     }
+
     node.ondragstart = card
       ? (e) => {
           if (state.tacticsLocked) {
@@ -1682,9 +1813,11 @@ function renderBench() {
           e.dataTransfer.setData("text/plain", card.id);
         }
       : null;
+
     node.ondragend = () => {
       clearDragPayload();
     };
+
     node.ondragover = (e) => {
       if (!state.dragPayload) return;
       e.preventDefault();
@@ -1692,9 +1825,11 @@ function renderBench() {
       paintDropNode(node, ok ? "ok" : "bad");
       e.dataTransfer.dropEffect = ok ? "move" : "none";
     };
+
     node.ondragleave = () => {
       clearDropNodeStyle(node);
     };
+
     node.ondrop = async (e) => {
       e.preventDefault();
       clearAllDropStates();
@@ -1706,9 +1841,11 @@ function renderBench() {
     };
   });
 }
+
 function slotLabel(k) {
   return String(k).replace("1", "").replace("2", "");
 }
+
 function shortName(name) {
   if (!name) return "Unknown";
   const parts = String(name)
@@ -1717,15 +1854,18 @@ function shortName(name) {
   if (parts.length === 1) return parts[0];
   return `${parts[0]} ${parts[parts.length - 1]}`;
 }
+
 function formatFormationLabel(code) {
   return String(code || "433")
     .split("")
     .join("-");
 }
+
 function seedXI() {
   const grid = el("xi");
   if (!grid) return;
   grid.innerHTML = "";
+
   SLOT_KEYS.forEach((slotKey) => {
     const d = document.createElement("div");
     d.className = "slot";
@@ -1734,13 +1874,16 @@ function seedXI() {
     d.onclick = () => onSlotClick(slotKey);
     grid.appendChild(d);
   });
+
   applyFormationLayout();
   refreshSlotStates();
 }
+
 function applyFormationLayout() {
   const grid = el("xi");
   if (!grid) return;
   const layout = FORMATION_LAYOUTS[state.formation] || FORMATION_LAYOUTS["433"];
+
   [...grid.querySelectorAll(".slot")].forEach((node) => {
     const slot = node.dataset.slot;
     const pos =
@@ -1750,13 +1893,18 @@ function applyFormationLayout() {
     node.style.right = "auto";
     node.style.transform = "translateX(-50%)";
     const cardId = state.squad[slot];
-    node.classList.toggle("slot-selected", !!cardId && cardId === state.selectedCardId);
+    node.classList.toggle(
+      "slot-selected",
+      !!cardId && cardId === state.selectedCardId,
+    );
   });
 }
+
 function refreshSlotStates() {
   const grid = el("xi");
   if (!grid) return;
   const armed = canEquipSelected() && !state.tacticsLocked;
+
   [...grid.querySelectorAll(".slot")].forEach((node) => {
     const k = node.dataset.slot;
     const cardId = state.squad[k];
@@ -1766,12 +1914,15 @@ function refreshSlotStates() {
     node.style.cursor = !!cardId && !state.tacticsLocked ? "grab" : "pointer";
   });
 }
+
 function attachPitchDragListeners() {
   const grid = el("xi");
   if (!grid) return;
+
   [...grid.querySelectorAll(".slot")].forEach((node) => {
     const slotKey = node.dataset.slot;
     const cardId = state.squad[slotKey] || null;
+
     node.ondragstart = cardId
       ? (e) => {
           if (state.tacticsLocked) {
@@ -1783,9 +1934,11 @@ function attachPitchDragListeners() {
           e.dataTransfer.setData("text/plain", cardId);
         }
       : null;
+
     node.ondragend = () => {
       clearDragPayload();
     };
+
     node.ondragover = (e) => {
       if (!state.dragPayload) return;
       e.preventDefault();
@@ -1793,9 +1946,11 @@ function attachPitchDragListeners() {
       paintDropNode(node, ok ? "ok" : "bad");
       e.dataTransfer.dropEffect = ok ? "move" : "none";
     };
+
     node.ondragleave = () => {
       clearDropNodeStyle(node);
     };
+
     node.ondrop = async (e) => {
       e.preventDefault();
       clearAllDropStates();
@@ -1807,15 +1962,19 @@ function attachPitchDragListeners() {
     };
   });
 }
+
 function renderSquad() {
   const grid = el("xi");
   if (!grid) return;
+
   applyFormationLayout();
+
   [...grid.querySelectorAll(".slot")].forEach((node) => {
     const k = node.dataset.slot;
     const cardId = state.squad[k];
     const meta = getSlotMeta(k);
     const roleLine = getShortRoleDisplay(k);
+
     if (!cardId) {
       node.innerHTML = `
         <div class="p">${slotLabel(k)}</div>
@@ -1823,11 +1982,13 @@ function renderSquad() {
       `;
       return;
     }
+
     const c = getCardById(cardId);
     if (!c) {
       node.innerHTML = `<div class="p">${slotLabel(k)}</div><div class="n muted">Equipped</div>`;
       return;
     }
+
     const vm = cardVisualModel(c);
     node.innerHTML = `
       <div class="p">${slotLabel(k)}</div>
@@ -1836,17 +1997,21 @@ function renderSquad() {
       <div class="muted tiny">${roleLine}</div>
     `;
   });
+
   state.teamValidation = validateTeamModel(buildTeamModel());
   refreshSlotStates();
   attachPitchDragListeners();
   updateSynergy();
 }
+
 async function onSlotClick(slotKey) {
   if (state.tacticsLocked) {
     setStatus("Tactics are locked for the next fixture.");
     return;
   }
+
   const occupiedCardId = state.squad[slotKey] || null;
+
   if (state.selectedCardId) {
     await moveCardToPitch(state.selectedCardId, slotKey, {
       source: "inventory",
@@ -1854,6 +2019,7 @@ async function onSlotClick(slotKey) {
     });
     return;
   }
+
   if (occupiedCardId) {
     state.selectedCardId = occupiedCardId;
     state.compareBench = false;
@@ -1864,12 +2030,15 @@ async function onSlotClick(slotKey) {
     pulseSelectedPanel();
   }
 }
+
 async function onBenchClick(index) {
   if (state.tacticsLocked && state.selectedCardId) {
     setStatus("Tactics are locked for the next fixture.");
     return;
   }
+
   const occupiedCardId = state.bench[index] || null;
+
   if (state.selectedCardId && !occupiedCardId) {
     await moveCardToBench(state.selectedCardId, index, {
       source: "inventory",
@@ -1877,6 +2046,7 @@ async function onBenchClick(index) {
     });
     return;
   }
+
   if (occupiedCardId) {
     state.selectedCardId = occupiedCardId;
     state.compareBench = false;
@@ -1887,16 +2057,20 @@ async function onBenchClick(index) {
     pulseSelectedPanel();
   }
 }
+
 function renderInventory() {
   const list = el("invList");
   if (!list) return;
+
   const items = state.inventory.filter((c) =>
     state.filter === "ALL" ? true : c.rarity === state.filter,
   );
+
   if (!items.length) {
     list.innerHTML = `<div class="muted tiny">No cards yet. Open your first KickForge pack.</div>`;
     return;
   }
+
   list.innerHTML = `
     <div class="kfCollectionGrid">
       ${items
@@ -1912,8 +2086,10 @@ function renderInventory() {
         .join("")}
     </div>
   `;
+
   bindSourceCardInteractions("#invList", { jumpOnSelect: true });
 }
+
 function buildStatsRowsHTML(stats, prefix) {
   return stats
     .map(
@@ -1929,6 +2105,7 @@ function buildStatsRowsHTML(stats, prefix) {
     )
     .join("");
 }
+
 function animateStatBars() {
   const fills = [...$$("[data-stat-fill]")];
   fills.forEach((fill, idx) => {
@@ -1939,10 +2116,13 @@ function animateStatBars() {
     }, 20 + idx * 45);
   });
 }
+
 function renderSelectedCard() {
   const box = el("selectedCard");
   if (!box) return;
+
   const c = state.selectedCardId ? getCardById(state.selectedCardId) : null;
+
   if (!c) {
     box.innerHTML = `
       <div class="muted tiny">Selected Player</div>
@@ -1953,6 +2133,7 @@ function renderSelectedCard() {
     `;
     return;
   }
+
   const vm = cardVisualModel(c);
   const detailStats = getDetailedStats(c);
   const traits = generateCardTraits(c);
@@ -1971,6 +2152,7 @@ function renderSelectedCard() {
   const benchLabel = bestBench
     ? `Best Bench: ${bestBench.card.display_name} (B${bestBench.idx + 1})`
     : "No compatible bench comparison";
+
   box.innerHTML = `
     <div style="display:grid;gap:14px">
       <div class="muted tiny">Selected Player</div>
@@ -2076,6 +2258,7 @@ function renderSelectedCard() {
       </div>
     </div>
   `;
+
   el("btn-selected-bench")?.addEventListener("click", async () => {
     const currentBench = findBenchIndexByCardId(c.id);
     if (currentBench !== -1) {
@@ -2092,6 +2275,7 @@ function renderSelectedCard() {
       cardId: c.id,
     });
   });
+
   el("btn-selected-auto")?.addEventListener("click", async () => {
     if (!firstFit) {
       setStatus("No compatible empty slot found.");
@@ -2102,15 +2286,18 @@ function renderSelectedCard() {
       cardId: c.id,
     });
   });
+
   el("btn-selected-market")?.addEventListener("click", () => {
     jumpToView("market");
     renderMarketSelected();
     setStatus("Set a price and list the selected card.");
   });
+
   el("btn-toggle-compare")?.addEventListener("click", () => {
     state.compareBench = !state.compareBench;
     renderSelectedCard();
   });
+
   el("selected-role-select")?.addEventListener("change", (e) => {
     if (!squadSlot) return;
     setSlotRoleOverride(squadSlot, e.target.value);
@@ -2122,8 +2309,10 @@ function renderSelectedCard() {
         : "Role override cleared.",
     );
   });
+
   setTimeout(() => animateStatBars(), 25);
 }
+
 function updateSynergy() {
   const pct = el("chemPct");
   const fill = el("chemFill");
@@ -2131,8 +2320,10 @@ function updateSynergy() {
   const team = buildTeamModel();
   const validation = validateTeamModel(team);
   const synergy = buildSynergyModel(team);
+
   safeText(pct, `${synergy.overall}%`);
   if (fill) fill.style.width = `${synergy.overall}%`;
+
   if (!team.equippedCount) {
     safeText(
       note,
@@ -2140,6 +2331,7 @@ function updateSynergy() {
     );
     return;
   }
+
   const nationText = synergy.nation.available
     ? `Nation ${synergy.nation.status} ${synergy.nation.count}/${team.equippedCount}`
     : "Nation INACTIVE";
@@ -2152,14 +2344,17 @@ function updateSynergy() {
   const offRoleText = validation.offPositionAssignments.length
     ? ` • Off-role: ${validation.offPositionAssignments.length}`
     : "";
+
   safeText(
     note,
     `Role ${synergy.role.status} ${synergy.role.count}/${team.equippedCount} • Rarity ${synergy.rarity.status} ${synergy.rarity.count}/${team.equippedCount} • ${nationText} • ${streetKingsText}${missingText}${offRoleText}`,
   );
 }
+
 function renderPackResults(cards) {
   const wrap = el("cards");
   if (!wrap) return;
+
   const normalized = (cards || []).map(normalizeCard).filter(Boolean);
   wrap.innerHTML = normalized.length
     ? `<div class="kfPackGrid">${normalized
@@ -2174,23 +2369,29 @@ function renderPackResults(cards) {
         )
         .join("")}</div>`
     : "";
+
   bindSourceCardInteractions("#cards", { jumpOnSelect: false });
 }
+
 function syncSquadPdfCopy() {
   const synergyRowText = $(".synergyPanel .row .muted.tiny");
   if (synergyRowText)
     synergyRowText.textContent = "Nation / Role / Rarity synergies.";
+
   const chipRow = $(".squadChipRow");
   if (chipRow) chipRow.style.display = "none";
+
   const benchTiny = $(".benchShell .row .muted.tiny");
   if (benchTiny)
     benchTiny.textContent =
       "Drag between bench and pitch. Collection and Latest Pack cards can be selected first, then placed.";
+
   const pitchFooter = $(".pitchFooter .muted.tiny");
   if (pitchFooter)
     pitchFooter.textContent =
       "Drag compatible players between bench and pitch. Clicking a pitch token opens the detailed player panel.";
 }
+
 function getRegistrationCountdownDate(now = new Date()) {
   const d = new Date(now);
   d.setUTCHours(20, 0, 0, 0);
@@ -2198,6 +2399,7 @@ function getRegistrationCountdownDate(now = new Date()) {
   d.setUTCDate(d.getUTCDate() + 3);
   return d;
 }
+
 function getDefaultJoinedSeasonStart(now = new Date()) {
   const d = new Date(now);
   d.setUTCHours(20, 0, 0, 0);
@@ -2205,18 +2407,22 @@ function getDefaultJoinedSeasonStart(now = new Date()) {
   else d.setUTCDate(d.getUTCDate() - 5);
   return d;
 }
+
 function getUserTeamStrength() {
   const team = buildTeamModel();
   const validation = validateTeamModel(team);
   const synergy = buildSynergyModel(team);
+
   let strength = team.avgOvr || 62;
   strength += Math.round((synergy.overall - 50) / 12);
   strength -= validation.missingSlots.length * 2.5;
   strength -= validation.offPositionAssignments.length * 1.1;
   if (team.equippedCount === 11) strength += 2;
   if (state.isPro) strength += 1;
+
   return clamp(Math.round(strength), 55, 93);
 }
+
 function getLeagueTeams() {
   return LEAGUE_TEAM_POOL.map((team) => {
     if (team.id === "you") {
@@ -2227,16 +2433,20 @@ function getLeagueTeams() {
     return { ...team, base: clamp(team.base + bonus, 60, 92) };
   });
 }
+
 function generateRoundRobinPairs(teamIds) {
   const ids = teamIds.slice();
   if (ids.length % 2 === 1) ids.push("BYE");
+
   const rounds = [];
   const fixed = ids[0];
   let rotating = ids.slice(1);
+
   for (let round = 0; round < ids.length - 1; round++) {
     const left = [fixed, ...rotating.slice(0, ids.length / 2 - 1)];
     const right = rotating.slice(ids.length / 2 - 1).reverse();
     const pairs = [];
+
     for (let i = 0; i < left.length; i++) {
       let home = left[i];
       let away = right[i];
@@ -2246,14 +2456,17 @@ function generateRoundRobinPairs(teamIds) {
         pairs.push({ homeId: home, awayId: away });
       }
     }
+
     rounds.push(pairs);
     rotating = [
       rotating[rotating.length - 1],
       ...rotating.slice(0, rotating.length - 1),
     ];
   }
+
   return rounds;
 }
+
 function buildLeagueSchedule(teams, seasonStartIso) {
   const firstLeg = generateRoundRobinPairs(teams.map((t) => t.id));
   const secondLeg = firstLeg.map((round) =>
@@ -2261,6 +2474,7 @@ function buildLeagueSchedule(teams, seasonStartIso) {
   );
   const allRounds = firstLeg.concat(secondLeg);
   const start = new Date(seasonStartIso);
+
   return allRounds.map((round, idx) => {
     const kickoff = new Date(start);
     kickoff.setUTCDate(start.getUTCDate() + idx);
@@ -2277,9 +2491,11 @@ function buildLeagueSchedule(teams, seasonStartIso) {
     };
   });
 }
+
 function getLeagueTeamsById(teams) {
   return Object.fromEntries(teams.map((t) => [t.id, t]));
 }
+
 function sampleGoals(expected, rnd) {
   let goals = 0;
   const c1 = clamp(expected / 2.2, 0.05, 0.82);
@@ -2287,22 +2503,27 @@ function sampleGoals(expected, rnd) {
   const c3 = clamp(expected / 4.0, 0.03, 0.55);
   const c4 = clamp(expected / 5.2, 0.02, 0.42);
   const c5 = clamp(expected / 6.4, 0.01, 0.28);
+
   if (rnd() < c1) goals++;
   if (rnd() < c2) goals++;
   if (rnd() < c3) goals++;
   if (rnd() < c4) goals++;
   if (rnd() < c5) goals++;
+
   return clamp(goals, 0, 5);
 }
+
 function simulateFixtureResult(fixture, teamsById) {
   const seed = hashString(
     `league|${state.league.seasonNumber}|${fixture.md}|${fixture.homeId}|${fixture.awayId}`,
   );
   const rnd = mulberry32(seed);
+
   const homeTeam = teamsById[fixture.homeId];
   const awayTeam = teamsById[fixture.awayId];
   const homeStrength = homeTeam.base + 3;
   const awayStrength = awayTeam.base;
+
   const expectedHome = clamp(
     1.12 + (homeStrength - awayStrength) / 18 + (rnd() - 0.5) * 0.45,
     0.25,
@@ -2313,12 +2534,16 @@ function simulateFixtureResult(fixture, teamsById) {
     0.2,
     3.2,
   );
+
   const homeGoals = sampleGoals(expectedHome, rnd);
   const awayGoals = sampleGoals(expectedAway, rnd);
+
   return { homeGoals, awayGoals };
 }
+
 function buildStandings(teams, playedFixtures) {
   const map = new Map();
+
   teams.forEach((team) => {
     map.set(team.id, {
       teamId: team.id,
@@ -2335,16 +2560,19 @@ function buildStandings(teams, playedFixtures) {
       base: team.base,
     });
   });
+
   playedFixtures.forEach((f) => {
     const home = map.get(f.homeId);
     const away = map.get(f.awayId);
     if (!home || !away) return;
+
     home.played += 1;
     away.played += 1;
     home.gf += f.homeGoals;
     home.ga += f.awayGoals;
     away.gf += f.awayGoals;
     away.ga += f.homeGoals;
+
     if (f.homeGoals > f.awayGoals) {
       home.won += 1;
       home.pts += 3;
@@ -2360,6 +2588,7 @@ function buildStandings(teams, playedFixtures) {
       away.pts += 1;
     }
   });
+
   const table = [...map.values()].map((row) => ({ ...row, gd: row.gf - row.ga }));
   table.sort((a, b) => {
     if (b.pts !== a.pts) return b.pts - a.pts;
@@ -2367,8 +2596,10 @@ function buildStandings(teams, playedFixtures) {
     if (b.gf !== a.gf) return b.gf - a.gf;
     return a.name.localeCompare(b.name);
   });
+
   return table.map((row, idx) => ({ ...row, pos: idx + 1 }));
 }
+
 function formatDateShortUTC(date) {
   const d = new Date(date);
   const month = d
@@ -2377,16 +2608,21 @@ function formatDateShortUTC(date) {
   const day = String(d.getUTCDate()).padStart(2, "0");
   return `${day} ${month}`;
 }
+
 function formatTimeUtc(date) {
   const d = new Date(date);
-  return `${String(d.getUTCHours()).padStart(2, "0")}:${String(d.getUTCMinutes()).padStart(2, "0")} UTC`;
+  return `${String(d.getUTCHours()).padStart(2, "0")}:${String(
+    d.getUTCMinutes(),
+  ).padStart(2, "0")} UTC`;
 }
+
 function setLeagueActiveMd(md, userSelected = true) {
   state.activeMatchday = md;
   state.league.userSelectedMd = userSelected;
   localStorage.setItem("kf_active_md", String(md));
   saveLeagueState();
 }
+
 function getLeagueTierDescriptor(runtime) {
   if (!runtime.registered) {
     return {
@@ -2397,6 +2633,7 @@ function getLeagueTierDescriptor(runtime) {
         : "Free ladder access • register to enter the current season.",
     };
   }
+
   const yourRow = runtime.standings.find((x) => x.teamId === "you");
   if (state.isPro && yourRow && yourRow.pos <= 2) {
     return {
@@ -2405,6 +2642,7 @@ function getLeagueTierDescriptor(runtime) {
       copy: "Top 2 currently on Champions Cup qualification path.",
     };
   }
+
   if (state.isPro) {
     return {
       badge: "PRO",
@@ -2412,12 +2650,14 @@ function getLeagueTierDescriptor(runtime) {
       copy: "Battle Pass access active • compete for Elite qualification and Champions Cup path.",
     };
   }
+
   return {
     badge: "OPEN",
     name: "Open Division",
     copy: "Free ladder access • top performance pushes toward Pro and Elite competition.",
   };
 }
+
 function buildLeagueRuntime(now = new Date()) {
   if (!state.league.joined || !state.league.seasonStartIso) {
     return {
@@ -2430,8 +2670,10 @@ function buildLeagueRuntime(now = new Date()) {
       activeMd: 1,
     };
   }
+
   const teams = getLeagueTeams();
   const teamsById = getLeagueTeamsById(teams);
+
   const rounds = buildLeagueSchedule(teams, state.league.seasonStartIso).map(
     (round) => {
       const kickoff = new Date(round.kickoffIso);
@@ -2448,19 +2690,23 @@ function buildLeagueRuntime(now = new Date()) {
       };
     },
   );
+
   const playedFixtures = rounds.flatMap((r) => r.fixtures.filter((f) => f.played));
   const standings = buildStandings(teams, playedFixtures);
+
   const nextFixture =
     rounds
       .flatMap((r) => r.fixtures)
       .find(
         (f) => (f.homeId === "you" || f.awayId === "you") && !f.played,
       ) || null;
+
   const currentMd = nextFixture ? nextFixture.md : rounds.length;
   const activeMd =
     state.activeMatchday > 0
       ? clamp(state.activeMatchday, 1, rounds.length)
       : currentMd;
+
   return {
     registered: true,
     teams,
@@ -2473,6 +2719,7 @@ function buildLeagueRuntime(now = new Date()) {
     activeMd,
   };
 }
+
 function getFixturePerspectiveClass(fixture) {
   if (!fixture.played) return "result-live";
   const involvesYou = fixture.homeId === "you" || fixture.awayId === "you";
@@ -2486,13 +2733,16 @@ function getFixturePerspectiveClass(fixture) {
   if (myGoals < oppGoals) return "result-loss";
   return "result-draw";
 }
+
 function getFixtureDisplayScore(fixture) {
   if (!fixture.played) return formatTimeUtc(fixture.kickoff);
   return `${fixture.homeGoals} - ${fixture.awayGoals}`;
 }
+
 function renderHomeLeagueStanding(runtime) {
   const wrap = el("standingsHome");
   if (!wrap) return;
+
   if (!runtime.registered) {
     wrap.innerHTML = `
       <div class="standingRow standingHead">
@@ -2515,9 +2765,11 @@ function renderHomeLeagueStanding(runtime) {
     if (note) note.textContent = "Join a league to see live standings.";
     return;
   }
+
   const yourIndex = runtime.standings.findIndex((x) => x.teamId === "you");
   const start = Math.max(0, Math.min(yourIndex - 1, runtime.standings.length - 4));
   const rows = runtime.standings.slice(start, start + 4);
+
   wrap.innerHTML = `
     <div class="standingRow standingHead">
       <div>#</div>
@@ -2536,18 +2788,25 @@ function renderHomeLeagueStanding(runtime) {
       )
       .join("")}
   `;
+
   const note = $(".standingNote");
   if (note) note.textContent = "League table now syncs with the League Hub state.";
 }
+
 function renderHomeMatchCard(runtime) {
   const btnPrimary = el("btn-lock-tactics");
   const btnSecondary = el("btn-home-arena");
+
   if (!runtime.registered) {
     safeText(el("home-match-title"), "Register for a League");
-    safeText(el("home-match-sub"), "Season 4 starts in 3 days. Join now to lock your place.");
+    safeText(
+      el("home-match-sub"),
+      "Season 4 starts in 3 days. Join now to lock your place.",
+    );
     safeText(el("cd-days"), "03");
     safeText(el("cd-hours"), "00");
     safeText(el("cd-mins"), "00");
+
     if (btnPrimary) {
       btnPrimary.textContent = "Register League";
       btnPrimary.disabled = false;
@@ -2563,6 +2822,7 @@ function renderHomeMatchCard(runtime) {
     }
     return;
   }
+
   if (!runtime.nextFixture) {
     safeText(el("home-match-title"), "Season Complete");
     safeText(el("home-match-sub"), "No more fixtures left in the current schedule.");
@@ -2577,16 +2837,28 @@ function renderHomeMatchCard(runtime) {
     const opp = runtime.teamsById[oppId];
     const kickoff = runtime.nextFixture.kickoff;
     const lockTime = new Date(kickoff.getTime() - 3600000);
+
     safeText(el("home-match-title"), opp?.name || "League Opponent");
     safeText(
       el("home-match-sub"),
       `Kickoff ${kickoff.toUTCString().replace("GMT", "UTC")} • lock ${formatTimeUtc(lockTime)}`,
     );
+
     const diff = Math.max(0, kickoff.getTime() - Date.now());
-    safeText(el("cd-days"), String(Math.floor(diff / 86400000)).padStart(2, "0"));
-    safeText(el("cd-hours"), String(Math.floor((diff % 86400000) / 3600000)).padStart(2, "0"));
-    safeText(el("cd-mins"), String(Math.floor((diff % 3600000) / 60000)).padStart(2, "0"));
+    safeText(
+      el("cd-days"),
+      String(Math.floor(diff / 86400000)).padStart(2, "0"),
+    );
+    safeText(
+      el("cd-hours"),
+      String(Math.floor((diff % 86400000) / 3600000)).padStart(2, "0"),
+    );
+    safeText(
+      el("cd-mins"),
+      String(Math.floor((diff % 3600000) / 60000)).padStart(2, "0"),
+    );
   }
+
   if (btnPrimary) {
     btnPrimary.textContent = state.tacticsLocked ? "Locked" : "Lock Tactics";
     btnPrimary.disabled = state.tacticsLocked;
@@ -2601,13 +2873,16 @@ function renderHomeMatchCard(runtime) {
     };
   }
 }
+
 function renderLeagueMatchdayTabs(runtime) {
   const wrap = el("leagueMatchdays");
   if (!wrap) return;
+
   if (!runtime.registered) {
     wrap.innerHTML = `<button class="fixtureTab is-active" type="button">MD1</button>`;
     return;
   }
+
   wrap.innerHTML = runtime.rounds
     .map(
       (round) => `
@@ -2617,6 +2892,7 @@ function renderLeagueMatchdayTabs(runtime) {
   `,
     )
     .join("");
+
   wrap.querySelectorAll("[data-md]").forEach((btn) => {
     btn.onclick = () => {
       setLeagueActiveMd(Number(btn.dataset.md), true);
@@ -2625,9 +2901,11 @@ function renderLeagueMatchdayTabs(runtime) {
     };
   });
 }
+
 function renderLeagueFixtures(runtime) {
   const wrap = el("leagueFixtures");
   if (!wrap) return;
+
   if (!runtime.registered) {
     const regDate = getRegistrationCountdownDate();
     wrap.innerHTML = `
@@ -2639,11 +2917,13 @@ function renderLeagueFixtures(runtime) {
     `;
     return;
   }
+
   const round = runtime.rounds.find((r) => r.md === runtime.activeMd);
   if (!round) {
     wrap.innerHTML = `<div class="muted tiny">No fixtures.</div>`;
     return;
   }
+
   wrap.innerHTML = round.fixtures
     .map((fixture) => {
       const home = runtime.teamsById[fixture.homeId];
@@ -2658,9 +2938,11 @@ function renderLeagueFixtures(runtime) {
     })
     .join("");
 }
+
 function renderLeagueTable(runtime) {
   const wrap = el("leagueTable");
   if (!wrap) return;
+
   if (!runtime.registered) {
     wrap.innerHTML = `
       <div class="leagueTableHead">
@@ -2680,6 +2962,7 @@ function renderLeagueTable(runtime) {
     `;
     return;
   }
+
   wrap.innerHTML = `
     <div class="leagueTableHead">
       <div>#</div>
@@ -2703,9 +2986,11 @@ function renderLeagueTable(runtime) {
       .join("")}
   `;
 }
+
 function renderLeagueRegistrationPanel(runtime) {
   const panel = el("leagueRegisterEmpty");
   if (!panel) return;
+
   if (!runtime.registered) {
     const regDate = runtime.registrationDate;
     panel.innerHTML = `
@@ -2718,6 +3003,7 @@ function renderLeagueRegistrationPanel(runtime) {
     el("btn-register-league")?.addEventListener("click", registerForLeague);
     return;
   }
+
   const yourRow = runtime.standings.find((x) => x.teamId === "you");
   panel.innerHTML = `
     <div class="muted tiny">League Registration</div>
@@ -2729,10 +3015,12 @@ function renderLeagueRegistrationPanel(runtime) {
     jumpToView("home");
   });
 }
+
 function renderLeagueRules(runtime) {
   const list = $(".leagueRulesList");
   if (!list) return;
   const tier = getLeagueTierDescriptor(runtime);
+
   list.innerHTML = `
     <div class="leagueRuleItem">
       <span>Tier Stack</span>
@@ -2752,9 +3040,11 @@ function renderLeagueRules(runtime) {
     </div>
   `;
 }
+
 function renderLeagueShell() {
   const runtime = buildLeagueRuntime(new Date());
   const tier = getLeagueTierDescriptor(runtime);
+
   safeText(el("league-tier-badge"), tier.badge);
   safeText(el("league-tier-name"), tier.name);
   safeText(el("league-tier-copy"), tier.copy);
@@ -2762,7 +3052,9 @@ function renderLeagueShell() {
     el("league-status-badge"),
     !runtime.registered ? "NOT REGISTERED" : state.tacticsLocked ? "LOCK WINDOW" : "SEASON LIVE",
   );
+
   const lockBtn = el("btn-league-lock");
+
   if (!runtime.registered) {
     const regDate = runtime.registrationDate;
     safeText(el("league-next-opponent"), "Register for Season 4");
@@ -2775,6 +3067,7 @@ function renderLeagueShell() {
     safeText(el("league-cd-days"), "03");
     safeText(el("league-cd-hours"), "00");
     safeText(el("league-cd-mins"), "00");
+
     if (lockBtn) {
       lockBtn.textContent = "Register League";
       lockBtn.disabled = false;
@@ -2788,6 +3081,7 @@ function renderLeagueShell() {
     safeText(el("league-cd-days"), "00");
     safeText(el("league-cd-hours"), "00");
     safeText(el("league-cd-mins"), "00");
+
     if (lockBtn) {
       lockBtn.textContent = "Open Tactics Room";
       lockBtn.disabled = false;
@@ -2797,11 +3091,15 @@ function renderLeagueShell() {
     const kickoff = runtime.nextFixture.kickoff;
     const lockTime = new Date(kickoff.getTime() - 3600000);
     const diff = Math.max(0, kickoff.getTime() - Date.now());
+
     safeText(
       el("league-next-opponent"),
       `${runtime.teamsById[runtime.nextFixture.homeId].name} vs ${runtime.teamsById[runtime.nextFixture.awayId].name}`,
     );
-    safeText(el("league-next-kickoff"), `Kickoff ${kickoff.toUTCString().replace("GMT", "UTC")}`);
+    safeText(
+      el("league-next-kickoff"),
+      `Kickoff ${kickoff.toUTCString().replace("GMT", "UTC")}`,
+    );
     safeText(el("league-lock-status"), state.tacticsLocked ? "Locked" : "Open");
     safeText(
       el("league-lock-clock"),
@@ -2809,29 +3107,44 @@ function renderLeagueShell() {
         ? `Locked until ${kickoff.toUTCString().replace("GMT", "UTC")}`
         : `Open now • lock at ${formatTimeUtc(lockTime)}`,
     );
-    safeText(el("league-cd-days"), String(Math.floor(diff / 86400000)).padStart(2, "0"));
-    safeText(el("league-cd-hours"), String(Math.floor((diff % 86400000) / 3600000)).padStart(2, "0"));
-    safeText(el("league-cd-mins"), String(Math.floor((diff % 3600000) / 60000)).padStart(2, "0"));
+
+    safeText(
+      el("league-cd-days"),
+      String(Math.floor(diff / 86400000)).padStart(2, "0"),
+    );
+    safeText(
+      el("league-cd-hours"),
+      String(Math.floor((diff % 86400000) / 3600000)).padStart(2, "0"),
+    );
+    safeText(
+      el("league-cd-mins"),
+      String(Math.floor((diff % 3600000) / 60000)).padStart(2, "0"),
+    );
+
     if (lockBtn) {
       lockBtn.textContent = "Open Tactics Room";
       lockBtn.disabled = false;
       lockBtn.onclick = handleLockTactics;
     }
   }
+
   if (runtime.registered && !state.league.userSelectedMd) {
     setLeagueActiveMd(runtime.currentMd, false);
   }
+
   renderLeagueTable(runtime);
   renderLeagueMatchdayTabs(runtime);
   renderLeagueFixtures(runtime);
   renderLeagueRegistrationPanel(runtime);
   renderLeagueRules(runtime);
 }
+
 function renderHomeCountdown() {
   const runtime = buildLeagueRuntime(new Date());
   renderHomeMatchCard(runtime);
   renderHomeLeagueStanding(runtime);
 }
+
 function startHomeCountdown() {
   if (state.countdownTimer) clearInterval(state.countdownTimer);
   renderHomeCountdown();
@@ -2842,6 +3155,7 @@ function startHomeCountdown() {
     renderLeagueShell();
   }, 1000);
 }
+
 function registerForLeague() {
   state.league.joined = true;
   state.league.tier = state.isPro ? "PRO" : "OPEN";
@@ -2863,31 +3177,40 @@ function showOverlay() {
   o.classList.remove("hidden");
   o.setAttribute("aria-hidden", "false");
 }
+
 function hideOverlay() {
   const o = el("revealOverlay");
   if (!o) return;
   o.classList.add("hidden");
   o.setAttribute("aria-hidden", "true");
 }
+
 function setOverlaySub(t) {
   safeText(el("overlaySub"), t);
 }
+
 function resetRevealUI() {
   state.revealIndex = 0;
   state.revealCards = [];
   state.revealing = false;
+
   const inner = el("overlayInner");
   if (inner) inner.classList.remove("legendaryBurst");
+
   const claim = el("btn-claim");
   if (claim) {
     claim.disabled = true;
     claim.textContent = "Claim";
   }
+
   safeText(el("revealHint"), "Tap to reveal");
+
   const pack = el("revealPack");
   if (pack) pack.classList.add("shake");
+
   const list = el("revealCards");
   if (!list) return;
+
   list.innerHTML = "";
   for (let i = 0; i < 3; i++) {
     const card = document.createElement("div");
@@ -2920,19 +3243,24 @@ function resetRevealUI() {
     list.appendChild(card);
   }
 }
+
 function injectRevealData(cards) {
   const list = el("revealCards");
   if (!list) return;
+
   [...list.querySelectorAll(".flipCard")].forEach((node, i) => {
     const c = normalizeCard(cards[i]);
     if (!c) return;
     const vm = cardVisualModel(c);
+
     const badge = node.querySelector(".badge");
     const name = node.querySelector(".cardName");
     const meta = node.querySelector(".cardMeta");
     const statsWrap = node.querySelector(".kfRevealStats");
+
     node.classList.remove("rCommon", "rRare", "rEpic", "rLegend");
     node.classList.add(rarityClass(c.rarity));
+
     if (badge) badge.textContent = c.rarity;
     if (name) name.textContent = c.display_name;
     if (meta) meta.textContent = `${c.position} • ${c.role}`;
@@ -2946,6 +3274,7 @@ function injectRevealData(cards) {
     }
   });
 }
+
 function legendaryBurst() {
   const inner = el("overlayInner");
   if (!inner) return;
@@ -2953,14 +3282,17 @@ function legendaryBurst() {
   void inner.offsetWidth;
   inner.classList.add("legendaryBurst");
 }
+
 async function flipNext() {
   if (state.revealing) return;
   if (state.revealIndex >= state.revealCards.length) return;
+
   state.revealing = true;
   const i = state.revealIndex;
   const card = normalizeCard(state.revealCards[i]);
   const node = el("revealCards")?.querySelector(`.flipCard[data-i="${i}"]`);
   if (node) node.classList.add("flipped");
+
   if (card?.rarity === "LEGENDARY" || card?.rarity === "ICON") {
     legendaryBurst();
     setOverlaySub("Legendary pull.");
@@ -2971,9 +3303,12 @@ async function flipNext() {
   } else {
     setOverlaySub("Common pull.");
   }
+
   await sleep(550);
+
   state.revealIndex += 1;
   state.revealing = false;
+
   if (state.revealIndex >= state.revealCards.length) {
     const pack = el("revealPack");
     if (pack) pack.classList.remove("shake");
@@ -2983,18 +3318,22 @@ async function flipNext() {
     safeText(el("revealHint"), "Done");
   }
 }
+
 async function openPack() {
   const btn = el("btn-pack");
   const btnHome = el("btn-home-pack");
+
   [btn, btnHome].forEach((b) => {
     if (b) {
       b.disabled = true;
       b.textContent = "Opening…";
     }
   });
+
   showOverlay();
   resetRevealUI();
   setOverlaySub("Generating pack…");
+
   try {
     await ensureSession();
     const data = await api("/v1/packs/open", {
@@ -3034,27 +3373,33 @@ function updateBattlePassUI(bp) {
   safeText(el("bpTextHome"), `${bp.xp} / ${bp.need} XP`);
   safeText(el("home-bp"), `Lv ${bp.level}`);
 }
+
 async function loadMe() {
   const data = await api("/v1/me", { method: "GET" });
   setCoins(data.coins);
   updateBattlePassUI(data.battlepass);
 }
+
 async function loadPro() {
   const data = await api("/v1/pro/status", { method: "GET" });
   state.isPro = !!data.isPro;
   safeText(el("proTag"), state.isPro ? "PRO" : "FREE");
 }
+
 async function playArena() {
   const log = el("arenaLog");
   const btn = el("btn-arena");
   const homeBtn = el("btn-home-arena");
+
   [btn, homeBtn].forEach((b) => {
     if (b) {
       b.disabled = true;
       b.textContent = "Playing…";
     }
   });
+
   safeText(log, "Match starting…");
+
   try {
     const res = await api("/v1/arena/play", {
       method: "POST",
@@ -3078,6 +3423,7 @@ async function playArena() {
     });
   }
 }
+
 function attachDailyClaimHandlers(rootSelector, attrName) {
   $$(`${rootSelector} [${attrName}]`).forEach((btn) => {
     btn.addEventListener("click", async () => {
@@ -3097,10 +3443,12 @@ function attachDailyClaimHandlers(rootSelector, attrName) {
     });
   });
 }
+
 function dailyRowHTML(t, attrName) {
   const done = t.completed;
   const canClaim = done && !t.claimed;
   const status = t.claimed ? "CLAIMED" : done ? "READY" : "IN PROGRESS";
+
   return `
     <div class="dailyItem">
       <div>
@@ -3115,16 +3463,20 @@ function dailyRowHTML(t, attrName) {
     </div>
   `;
 }
+
 function renderDaily(d) {
   const date = el("daily-date");
   const list = el("dailyList");
   const chestBtn = el("btn-chest");
   const chestStatus = el("chestStatus");
+
   safeText(date, d.date || "—");
+
   if (list) {
     list.innerHTML = (d.tasks || []).map((t) => dailyRowHTML(t, "data-claim")).join("");
     attachDailyClaimHandlers("#view-progress", "data-claim");
   }
+
   if (chestBtn) chestBtn.disabled = !(d.chest?.available) || d.chest?.opened;
   if (chestStatus) {
     if (d.chest?.opened) {
@@ -3137,6 +3489,7 @@ function renderDaily(d) {
       chestStatus.textContent = "Complete + claim all 3 to unlock.";
     }
   }
+
   if (chestBtn) {
     chestBtn.onclick = async () => {
       chestBtn.disabled = true;
@@ -3154,33 +3507,43 @@ function renderDaily(d) {
     };
   }
 }
+
 function renderDailyHome(d) {
   safeText(el("daily-date-home"), d.date || "—");
   const list = el("dailyListHome");
   if (!list) return;
-  list.innerHTML = (d.tasks || []).map((t) => dailyRowHTML(t, "data-claim-home")).join("");
+
+  list.innerHTML = (d.tasks || [])
+    .map((t) => dailyRowHTML(t, "data-claim-home"))
+    .join("");
   attachDailyClaimHandlers("#view-home", "data-claim-home");
 }
+
 async function loadDaily() {
   const d = await api("/v1/challenges/today", { method: "GET" });
   state.daily = d;
   renderDaily(d);
   renderDailyHome(d);
 }
+
 function applyTheme(themeKey) {
   document.body.classList.remove("theme-obsidian", "theme-neon", "theme-emerald");
   document.body.classList.add(`theme-${themeKey || "obsidian"}`);
 }
+
 async function loadCosmetics() {
   const data = await api("/v1/cosmetics", { method: "GET" });
   state.cosmetics = data.items || [];
   renderCosmetics(state.cosmetics);
 }
+
 function renderCosmetics(items) {
   const wrap = el("cosList");
   if (!wrap) return;
+
   const theme = items.find((x) => x.type === "THEME" && x.equipped);
   applyTheme(theme?.meta?.theme || "obsidian");
+
   wrap.innerHTML = items.length
     ? items
         .map((c) => {
@@ -3199,6 +3562,7 @@ function renderCosmetics(items) {
         })
         .join("")
     : `<div class="muted tiny">No cosmetics yet.</div>`;
+
   $$("[data-equip]").forEach((btn) => {
     btn.addEventListener("click", async () => {
       const id = btn.getAttribute("data-equip");
@@ -3224,22 +3588,26 @@ function renderMarketSelected() {
   const min = el("mk-min");
   const btn = el("btn-list");
   const c = state.selectedCardId ? getCardById(state.selectedCardId) : null;
+
   if (!c) {
     safeText(n, "None");
     safeText(min, "Min: —");
     if (btn) btn.disabled = false;
     return;
   }
+
   const isListed = state.market.listedSet.has(c.id);
   const minP = minPriceFor(c.rarity);
   safeText(n, `${c.display_name} (${c.rarity})`);
   safeText(min, `Min: ${minP} coins`);
   if (btn) btn.disabled = isListed;
 }
+
 function listingHTML(x, isMine = false) {
   const right = isMine
     ? `<button class="smallBtn danger" data-cancel="${x.listing_id}">Cancel</button>`
     : `<button class="smallBtn primary" data-buy="${x.listing_id}">Buy</button>`;
+
   return `
     <div class="listing">
       <div>
@@ -3253,6 +3621,7 @@ function listingHTML(x, isMine = false) {
     </div>
   `;
 }
+
 function formatAgo(ts) {
   const s = Math.max(1, Math.floor((Date.now() - ts) / 1000));
   if (s < 60) return `${s}s ago`;
@@ -3261,9 +3630,11 @@ function formatAgo(ts) {
   const h = Math.floor(m / 60);
   return `${h}h ago`;
 }
+
 function renderHomeMovers() {
   const wrap = el("moversHome");
   if (!wrap) return;
+
   const trades = state.market.trades || [];
   if (!trades.length) {
     wrap.innerHTML = `
@@ -3273,6 +3644,7 @@ function renderHomeMovers() {
     `;
     return;
   }
+
   const top = trades.slice(0, 3);
   wrap.innerHTML = top
     .map((x, i) => {
@@ -3287,6 +3659,7 @@ function renderHomeMovers() {
             : String(x.rarity || "COMMON").toLowerCase() === "legendary"
               ? "legendary"
               : "common";
+
       return `
         <div class="moverRow">
           <div class="moverDot ${dotClass}"></div>
@@ -3297,8 +3670,12 @@ function renderHomeMovers() {
     })
     .join("");
 }
+
 function renderOnePulse(svgId, lastId, chgId) {
-  safeText(el(lastId), state.market.pulse.last == null ? "—" : String(state.market.pulse.last));
+  safeText(
+    el(lastId),
+    state.market.pulse.last == null ? "—" : String(state.market.pulse.last),
+  );
   safeText(
     el(chgId),
     state.market.pulse.chg24h == null
@@ -3307,20 +3684,25 @@ function renderOnePulse(svgId, lastId, chgId) {
         ? `+${state.market.pulse.chg24h}`
         : `${state.market.pulse.chg24h}`,
   );
+
   const pts = state.market.pulse.points || [];
   const svg = el(svgId);
   if (!svg) return;
+
   const w = 300;
   const h = 64;
+
   if (!pts.length) {
     svg.innerHTML = `<path d="M0 ${h - 8} L${w} ${h - 8}" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="2"/>`;
     return;
   }
+
   const prices = pts.map((p) => p.price);
   const min = Math.min(...prices);
   const max = Math.max(...prices);
   const span = Math.max(1, max - min);
   const yOf = (price) => (h - 10) - ((price - min) / span) * (h - 18);
+
   if (pts.length === 1) {
     const y = yOf(pts[0].price);
     svg.innerHTML = `
@@ -3330,6 +3712,7 @@ function renderOnePulse(svgId, lastId, chgId) {
     `;
     return;
   }
+
   const step = w / (pts.length - 1);
   const d = pts
     .map((p, i) => {
@@ -3338,29 +3721,35 @@ function renderOnePulse(svgId, lastId, chgId) {
       return `${i === 0 ? "M" : "L"}${x.toFixed(2)} ${y.toFixed(2)}`;
     })
     .join(" ");
+
   svg.innerHTML = `
     <path d="${d}" fill="none" stroke="rgba(232,184,75,.90)" stroke-width="2.2" />
     <path d="${d} L${w} ${h} L0 ${h} Z" fill="rgba(232,184,75,.10)" />
   `;
 }
+
 function renderPulse() {
   renderOnePulse("sparkSvg", "m-last", "m-chg");
   renderOnePulse("sparkSvgHome", "m-last-home", "m-chg-home");
 }
+
 function renderListings() {
   const openWrap = el("openListings");
   const myWrap = el("myListings");
+
   if (openWrap) {
     openWrap.innerHTML = state.market.listings.length
       ? state.market.listings.map((x) => listingHTML(x, false)).join("")
       : `<div class="muted tiny">No open listings.</div>`;
   }
+
   const openMine = state.market.mine.filter((x) => x.status === "OPEN");
   if (myWrap) {
     myWrap.innerHTML = openMine.length
       ? openMine.map((x) => listingHTML(x, true)).join("")
       : `<div class="muted tiny">No active listings.</div>`;
   }
+
   $$("[data-buy]").forEach((btn) => {
     btn.addEventListener("click", async () => {
       const id = btn.getAttribute("data-buy");
@@ -3382,6 +3771,7 @@ function renderListings() {
       }
     });
   });
+
   $$("[data-cancel]").forEach((btn) => {
     btn.addEventListener("click", async () => {
       const id = btn.getAttribute("data-cancel");
@@ -3401,9 +3791,11 @@ function renderListings() {
     });
   });
 }
+
 function renderTrades() {
   const wrap = el("tradeList");
   if (!wrap) return;
+
   const t = state.market.trades || [];
   wrap.innerHTML = t.length
     ? t
@@ -3421,20 +3813,26 @@ function renderTrades() {
         .join("")
     : `<div class="muted tiny">No trades yet.</div>`;
 }
+
 async function listSelected() {
   const price = Number(el("mk-price")?.value || 0);
+
   if (!state.selectedCardId) {
     setStatus("Select a card first.");
     return;
   }
+
   const c = getCardById(state.selectedCardId);
   const minP = minPriceFor(c?.rarity);
+
   if (!Number.isFinite(price) || price < minP) {
     setStatus(`Min price for ${c?.rarity} is ${minP}.`);
     return;
   }
+
   const btn = el("btn-list");
   if (btn) btn.disabled = true;
+
   try {
     await api("/v1/market/list", {
       method: "POST",
@@ -3450,6 +3848,7 @@ async function listSelected() {
     if (btn) btn.disabled = false;
   }
 }
+
 async function loadCoinExchange() {
   state.market.coinLoading = true;
   try {
@@ -3466,17 +3865,20 @@ async function loadCoinExchange() {
     renderCoinExchangeShell();
   }
 }
+
 function renderCoinExchangeShell() {
   const bundles = getCoinBundleList();
   if (!state.market.selectedCoinBundle && bundles.length) {
     state.market.selectedCoinBundle = bundles[0].id;
   }
+
   const selected = getCoinBundleById(state.market.selectedCoinBundle);
   const grid =
     el("coinExchangeGrid") ||
     el("coinBundleGrid") ||
     $(".coinExchangeGrid") ||
     $(".coinBundleGrid");
+
   if (grid) {
     grid.innerHTML = bundles
       .map(
@@ -3510,6 +3912,7 @@ function renderCoinExchangeShell() {
       )
       .join("");
   }
+
   safeText(el("coinSelectedName"), selected?.name || "No bundle selected");
   safeText(el("coinSelectedAmount"), selected ? priceFmt(selected.fcAmount) : "—");
   safeText(el("coinSelectedPrice"), selected ? usdFmtFromCents(selected.amountCents) : "—");
@@ -3518,25 +3921,34 @@ function renderCoinExchangeShell() {
     `Monthly spend: ${usdFmtFromCents(state.market.monthlySpendCents)} / ${usdFmtFromCents(state.market.spendCapCents)}`,
   );
   safeText(el("coinExchangeError"), state.market.coinExchangeError || "");
+
   $$("[data-coin-bundle]").forEach((row) => {
-    row.classList.toggle("is-active", row.dataset.coinBundle === state.market.selectedCoinBundle);
+    row.classList.toggle(
+      "is-active",
+      row.dataset.coinBundle === state.market.selectedCoinBundle,
+    );
   });
 }
+
 async function beginCoinCheckout(bundleId) {
   const bundle = getCoinBundleById(bundleId);
   if (!bundle) {
     setStatus("Bundle not found.");
     return;
   }
+
   state.market.selectedCoinBundle = bundle.id;
   state.market.coinCheckoutBusy = true;
   state.market.coinExchangeError = "";
   renderCoinExchangeShell();
   setStatus(`Starting checkout for ${bundle.name}…`);
+
   try {
     await ensureSession();
+
     const successUrl = `${window.location.origin}${window.location.pathname}?stripe=success`;
     const cancelUrl = `${window.location.origin}${window.location.pathname}?stripe=cancel`;
+
     let res = null;
     try {
       res = await api("/v1/stripe/create-checkout", {
@@ -3553,11 +3965,13 @@ async function beginCoinCheckout(bundleId) {
         throw firstErr;
       }
     }
+
     const url = res?.url || res?.checkoutUrl || res?.sessionUrl || null;
     if (!url) throw new Error("Checkout session was created without a redirect URL.");
     window.location.href = url;
   } catch (e) {
-    state.market.coinExchangeError = e.message || "Unable to start Stripe checkout.";
+    state.market.coinExchangeError =
+      e.message || "Unable to start Stripe checkout.";
     setStatus(state.market.coinExchangeError);
     renderCoinExchangeShell();
   } finally {
@@ -3565,32 +3979,42 @@ async function beginCoinCheckout(bundleId) {
     renderCoinExchangeShell();
   }
 }
+
 const coinExchangeClickProxy = async (e) => {
   const trigger = e.target.closest(
     "[data-coin-select], .coinBundleSelectBtn, #coinExchangeGrid .btn, #coinExchangeGrid .smallBtn, .coinExchangeRow .btn, .coinExchangeRow .smallBtn",
   );
   if (!trigger) return;
+
   const bundleId = getCoinBundleIdFromNode(trigger);
   if (!bundleId) return;
+
   e.preventDefault();
   await beginCoinCheckout(bundleId);
 };
+
 function bindCoinExchangeActions() {
   document.removeEventListener("click", coinExchangeClickProxy);
   document.addEventListener("click", coinExchangeClickProxy);
 }
+
 function handleStripeReturn() {
   const url = new URL(window.location.href);
   const stripeStatus = url.searchParams.get("stripe");
   if (!stripeStatus) return;
+
   if (stripeStatus === "success") {
-    setStatus("Stripe checkout completed. Wallet will refresh after webhook confirmation.");
+    setStatus(
+      "Stripe checkout completed. Wallet will refresh after webhook confirmation.",
+    );
   } else if (stripeStatus === "cancel") {
     setStatus("Stripe checkout cancelled.");
   }
+
   url.searchParams.delete("stripe");
   window.history.replaceState({}, "", url.toString());
 }
+
 async function loadMarket() {
   const [rules, pulse, open, mine, trades] = await Promise.all([
     api("/v1/market/rules", { method: "GET" }).catch(() => DEFAULT_RULES),
@@ -3599,15 +4023,23 @@ async function loadMarket() {
     api("/v1/market/my", { method: "GET" }),
     api("/v1/market/trades?limit=20", { method: "GET" }).catch(() => ({ trades: [] })),
   ]);
+
   state.market.rules = rules || DEFAULT_RULES;
   state.market.pulse = pulse || { last: null, chg24h: null, points: [] };
   state.market.trades = trades.trades || [];
+
   const allOpen = open.listings || [];
   state.market.listings = allOpen.filter((x) => x.seller_user_id !== state.userId);
   state.market.mine = mine.listings || [];
+
   const openMine = state.market.mine.filter((x) => x.status === "OPEN");
   state.market.listedSet = new Set(openMine.map((x) => x.card_id));
-  safeText(el("myCount"), `(${openMine.length}/${state.market.rules.maxOpenListings})`);
+
+  safeText(
+    el("myCount"),
+    `(${openMine.length}/${state.market.rules.maxOpenListings})`,
+  );
+
   reconcileBenchWithState();
   renderPulse();
   renderListings();
@@ -3620,6 +4052,7 @@ async function loadMarket() {
   renderMarketSelected();
   renderTacticsShell();
 }
+
 async function loadInventory() {
   const data = await api("/v1/inventory", { method: "GET" });
   state.inventory = (data.cards || []).map(normalizeCard).filter(Boolean);
@@ -3631,6 +4064,7 @@ async function loadInventory() {
   renderSquad();
   renderMarketSelected();
 }
+
 async function loadSquad() {
   const data = await api("/v1/squad", { method: "GET" });
   state.squad = data.slots || {};
@@ -3644,22 +4078,28 @@ async function loadSquad() {
 ========================= */
 function renderTacticsShell() {
   const runtime = buildLeagueRuntime(new Date());
-  const nextKickoff = runtime.registered && runtime.nextFixture ? runtime.nextFixture.kickoff : null;
+  const nextKickoff =
+    runtime.registered && runtime.nextFixture ? runtime.nextFixture.kickoff : null;
   const lockTime = nextKickoff ? new Date(nextKickoff.getTime() - 3600000) : null;
+
   state.tacticsLocked = !!(
     lockTime &&
     Date.now() >= lockTime.getTime() &&
     Date.now() < nextKickoff.getTime()
   );
+
   $$("[data-formation]").forEach((btn) => {
     btn.classList.toggle("is-active", btn.dataset.formation === state.formation);
   });
+
   $$("[data-tactic-mode]").forEach((btn) => {
     btn.classList.toggle("is-active", btn.dataset.tacticMode === state.tacticMode);
   });
+
   const cards = $$(".tacticsTopStrip .tacticsTopCard");
   safeText(cards[0]?.querySelector(".sectionTitle"), formatFormationLabel(state.formation));
   safeText(cards[1]?.querySelector(".sectionTitle"), savedTemplateLabel());
+
   const validation = validateTeamModel(buildTeamModel());
   const statusLabel = state.tacticsLocked
     ? "Locked"
@@ -3668,6 +4108,7 @@ function renderTacticsShell() {
       : validation.isComplete
         ? "Open"
         : "Incomplete";
+
   safeText(cards[2]?.querySelector(".sectionTitle"), statusLabel);
   safeText(
     cards[2]?.querySelector(".muted.tiny:last-child"),
@@ -3677,15 +4118,18 @@ function renderTacticsShell() {
         ? "Squad is valid and ready for the next lock window."
         : "Complete the XI and fix conflicts before the next fixture.",
   );
+
   const desc = tacticDescriptors(state.tacticMode);
   safeText(el("tactic-front-shape"), desc.front);
   safeText(el("tactic-mid-core"), desc.mid);
   safeText(el("tactic-def-line"), desc.def);
+
   [el("btn-lock-tactics"), el("btn-lock-tactics-side")].forEach((btn) => {
     if (!btn) return;
     btn.textContent = state.tacticsLocked ? "Locked" : "Lock Tactics";
     btn.disabled = state.tacticsLocked && runtime.registered;
   });
+
   state.teamValidation = validation;
   syncSquadPdfCopy();
   applyFormationLayout();
@@ -3693,6 +4137,7 @@ function renderTacticsShell() {
   renderSelectedCard();
   updateSynergy();
 }
+
 function initChips() {
   $$("[data-filter]").forEach((b) => {
     b.addEventListener("click", () => {
@@ -3702,6 +4147,7 @@ function initChips() {
       renderInventory();
     });
   });
+
   $$("[data-style]").forEach((b) => {
     if (b.dataset.style === state.style) b.classList.add("active");
     b.addEventListener("click", () => {
@@ -3712,6 +4158,7 @@ function initChips() {
       updateSynergy();
     });
   });
+
   $$("[data-arena]").forEach((b) => {
     if (b.dataset.arena === state.arenaMode) b.classList.add("active");
     b.addEventListener("click", () => {
@@ -3721,6 +4168,7 @@ function initChips() {
       safeText(el("arena-mode"), state.arenaMode);
     });
   });
+
   $$("[data-formation]").forEach((b) => {
     if (b.dataset.formation === state.formation) b.classList.add("is-active");
     b.addEventListener("click", () => {
@@ -3732,6 +4180,7 @@ function initChips() {
       renderSquad();
     });
   });
+
   $$("[data-tactic-mode]").forEach((b) => {
     if (b.dataset.tacticMode === state.tacticMode) b.classList.add("is-active");
     b.addEventListener("click", () => {
@@ -3745,30 +4194,37 @@ function initChips() {
     });
   });
 }
+
 function initViewTabs() {
   $$("[data-view-tab]").forEach((btn) => {
     btn.addEventListener("click", () => {
       setActiveView(btn.dataset.viewTab);
     });
   });
+
   $$("[data-view-tab-jump]").forEach((btn) => {
     btn.addEventListener("click", () => {
       jumpToView(btn.dataset.viewTabJump);
     });
   });
 }
+
 function handleLockTactics() {
   jumpToView("squad");
   renderTacticsShell();
 }
+
 async function enterKickForge() {
   const ok = await healthCheck();
   if (!ok) {
     alert("API offline. Check your Worker.");
     return;
   }
+
   await ensureSession();
+
   if (el("btn-pack")) el("btn-pack").disabled = false;
+
   try {
     await Promise.all([
       loadInventory(),
@@ -3780,6 +4236,7 @@ async function enterKickForge() {
       loadCosmetics(),
       loadCoinExchange(),
     ]);
+
     renderBench();
     renderTacticsShell();
     renderHomeCountdown();
@@ -3814,6 +4271,7 @@ async function enterKickForge() {
   renderCoinExchangeShell();
   handleStripeReturn();
   healthCheck();
+
   el("btn-play")?.addEventListener("click", enterKickForge);
   el("btn-pack")?.addEventListener("click", openPack);
   el("btn-home-pack")?.addEventListener("click", openPack);
@@ -3857,5 +4315,21 @@ async function enterKickForge() {
       alert(e.message);
     }
   });
+
   const revealAction = async () => {
-    if (!
+    if (!state.revealCards.length) return;
+    await flipNext();
+  };
+
+  el("revealPack")?.addEventListener("click", revealAction);
+  el("revealCards")?.addEventListener("click", revealAction);
+
+  el("revealOverlay")?.addEventListener("click", (e) => {
+    if (
+      e.target?.id === "revealOverlay" &&
+      state.revealIndex >= state.revealCards.length
+    ) {
+      hideOverlay();
+    }
+  });
+})();
